@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Standard RPYS Graphs</title>
+    <link rel="stylesheet" href="styles.css">
+    <script type="text/javascript" src="d3/d3.js"></script>
+  </head>
+
+  <body>
+
+    <div id="container" class="container">
+    </div>
+
+    <div id="tooltip" class="hidden">
+      <p><span id="value"></p>
+    </div>
+    <div id="tablecontainer" class = "container hidden">
+      <br></br>
+
+      <table id="TopCitationsTable" border="0" cellpadding="3">
+        <tr>
+          <th><b>Rank</b></th>
+          <th><b>Author</b></th>
+          <th><b>Journal</b></th>
+          <th><b>Publication Year</b></th>
+          <th><b>Number of Citations</b></th>
+        </tr>
+      </table>
+    </div>
+
+    <script type="text/javascript" src="standard_rpys.js">
+    </script>
+  </body>
