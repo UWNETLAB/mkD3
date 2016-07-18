@@ -8,24 +8,29 @@
   </head>
 
   <body>
-
-    <div id="container" class="container">
+    <!-- Visualization Container  -->
+    <div id="container" class="container visualization">
     </div>
 
+    <!-- Pop up information -->
     <div id="tooltip" class="hidden">
       <p><span id="value"></p>
     </div>
+
+    <!-- Table Container -->
     <div id="tablecontainer" class = "container hidden">
       <br></br>
 
       <table id="TopCitationsTable" border="0" cellpadding="3">
-        <tr>
-          <th><b>Rank</b></th>
-          <th><b>Author</b></th>
-          <th><b>Journal</b></th>
-          <th><b>Publication Year</b></th>
-          <th><b>Number of Citations</b></th>
-        </tr>
+        <thead>
+          <tr>
+            <th width=10%><b>Rank</b></th>
+            <th width=22%><b>Author</b></th>
+            <th width=35%><b>Journal</b></th>
+            <th width=17%><b>Year Published</b></th>
+            <th width=15%><b>Times Cited</b></th>
+          </tr>
+        </thead>
       </table>
     </div>
 

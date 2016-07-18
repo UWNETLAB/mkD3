@@ -9,7 +9,8 @@ table {
   width: 80%;
   position: absolute;
   margin-left: 10%;
- }
+  table-layout: fixed;
+}
  th{
    padding: 8px;
    text-align: left;
@@ -71,6 +72,11 @@ td {
   stroke-width: 3px;
   pointer-events: none;
 }
+#tablecontainer{
+  overflow-y: visible;
+  column-width: 10px;
+}
+
 #TopCitationsTable.hidden{
   display: none;
 }

@@ -3,6 +3,7 @@ var w = 800;
 var h = 400;
 var outerpadding = 60;
 var relWidth = 0.8;
+var tooltipShow = true;
 
 var rpysFile = "recs.csv";
 var citsFile = "cits.csv";
@@ -371,13 +372,13 @@ function make_icons(svg){
       .attr("width", tabw-4)
       .attr("height", tabh-8);
 
-    // selection
-    //   .append("rect")
-    //   .attr("fill", colour)
-    //   .attr("x", tabx+9)
-    //   .attr("y", taby+6)
-    //   .attr("width", tabb)
-    //   .attr("height", tabh-8);
+    selection
+      .append("rect")
+      .attr("fill", colour)
+      .attr("x", tabx+9)
+      .attr("y", taby+6)
+      .attr("width", tabb)
+      .attr("height", tabh-8);
     // //
     // selection
     //   .append("rect")
@@ -387,13 +388,13 @@ function make_icons(svg){
     //   .attr("width", tabb)
     //   .attr("height", tabh-8);
     //
-    // selection
-    //   .append("rect")
-    //   .attr("fill", colour)
-    //   .attr("x", tabx + 2)
-    //   .attr("y", taby+9)
-    //   .attr("width", tabw-4)
-    //   .attr("height", 2);
+    selection
+      .append("rect")
+      .attr("fill", colour)
+      .attr("x", tabx + 2)
+      .attr("y", taby+11)
+      .attr("width", tabw-4)
+      .attr("height", 2);
     //
     // selection
     //   .append("rect")
@@ -420,7 +421,6 @@ function make_icons(svg){
 
   }
 
-  var tooltipShow = true;
   svg.append("g")
      .call(infoButton)
      .attr("class", "info icon")
@@ -444,6 +444,24 @@ function make_icons(svg){
          d3.select(this)
            .select("#showHideText")
            .text("Show Pop-up Info");
+       } else {
+         // Set tooltipShow to true
+         tooltipShow = true;
+
+         // Show Tooltips
+
+         // Change the icon to colour
+         d3.select(this)
+           .select("circle")
+           .attr("fill", colour);
+
+         d3.select(this)
+           .select("text")
+           .attr("fill", colour);
+
+         d3.select(this)
+           .select("#showHideText")
+           .text("Hide Pop-up Info");
        }
 
      });
@@ -500,18 +518,24 @@ function make_tooltip(xPos, yPos, d){
           "Top Citation(s): " + "<strong id='citation'>" + get_top_cite(d.year) + "</strong>") ;
 
   // Show the tooltip
-  d3.select("#tooltip").classed("hidden", false);
+  if (tooltipShow == true){
+    d3.select("#tooltip").classed("hidden", false);
+  }
 
 }
 
 function make_table(year){
   // Create the header
-  headNames = ["Rank", "Author", "Journal", "Publication Year", "Number of Citations"];
-  header = "<tr>";
+  headNames = ["Rank", "Author", "Journal", "Year Published", "Times Cited"];
+  header = "<thead><tr>";
   for (var i = 0; i < headNames.length; i++){
     header += "<th><b>" + headNames[i] + "</b></th>";
   };
-  header += "</tr>";
+  header += "</tr></thead>";
+
+  header =     d3.select("#TopCitationsTable")
+                 .html().split('<tbody>')[0];
+
 
   // Create the rows
   rows = ""
@@ -534,24 +558,26 @@ function make_table(year){
 
       // Find the cutoff value for top ten citations & filter
       // Note, if the tenth top citation is tied)
-      tenval = yearData[10].num_cites;
+      tenval = yearData[14].num_cites;
       yearData =  yearData.filter(function(d){
                     return +d.num_cites >= tenval;
                   })
 
       // Create the html for the top 10 values
       // Note:
-      rows = ""
+      rows = "<tbody>"
       // Iterate through each citation in a year
       for (i=0; i < yearData.length; i++){
         rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i].num_cites];
         rows += "<tr>";
         // Append each piece of information for the citation
         for (var j=0; j < rowvals.length; j++){
+
           rows += "<td>" + rowvals[j] + "</td>";
         }
         rows += "</tr>";
       }
+      rows += "</tbody>"
     }
     d3.select("#TopCitationsTable")
       .html(header + rows);
