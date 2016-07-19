@@ -12,7 +12,31 @@
     var rpysFile;
     var citFile;
     var ShowSBToolTip = true;
+    // var plotType;
 
+    function standardLine(RPYSFile, CitationFile){
+      rpysFile = RPYSFile;
+      citFile = CitationFile;
+
+      // Create the canvas (svg)
+      var svg = d3.select("div#standardLine")
+                  .append("svg")
+                  .attr("id", "plot")
+                  .attr("preserveAspectRatio", "xMinYMin meet")
+                  .attr("viewBox", "0 0 800 400")
+                  .classed("svg-content", true);
+
+      // Read in the dataset
+      var dataset;
+      d3.csv(RPYSFile, function(error, data){
+        if (error){
+          console.log(error);
+        } else {
+          dataset = data;
+          standardLineHelper(data, svg);
+        }
+      })
+    }
 
     function standardBar(RPYSFile, CitationFile){
       rpysFile = RPYSFile;
@@ -37,8 +61,95 @@
       });
     }
 
+    function standardLineHelper(dataset, svg){
+      // Set up important values
+      var darkcolour = "#EC7063";
+      var lightcolour = "#F4ACA4";
+      var plotType = "standardLine";
+      var pointWidth = w / dataset.length * relWidth
+      var plotMargin = w * (2-relWidth)/(2*dataset.length);
+          // ^Equivalent to barwidth/2 +(w/dataset.length * (1-relWidth))
+
+      // Create the scale for the x axis
+      var xScale = d3.scaleLinear()
+                     .domain([d3.min(dataset, function(d){return d.year;}),
+                              d3.max(dataset, function(d){return d.year;})])
+                    .range([outerPadding+plotMargin, w-plotMargin]);
+
+      // Create the scale for the y axis
+      var yScale = d3.scaleLinear()
+                     .domain([d3.min(dataset, function(d){return +d.abs_deviation;}),
+                              d3.max(dataset, function(d){return +d.abs_deviation;})])
+                     .range([h-outerPadding-plotMargin, outerPadding+plotMargin]);
+
+      // Make title
+      var title = "Standard RPYS - Deviation from 5yr Median";
+      makeTitle(svg, title);
+
+      // Make axes
+      var xname = "Reference Publication Year";
+      var yname = "Difference from 5-year Median";
+      makeStandardAxes(svg, xScale, yScale, xname, yname);
+
+      // Make icons
+      makeIcons(svg, darkcolour);
+
+      // Initialize the tooltip and table
+      initToolTip();
+      initTable(plotType);
+
+      // Make line
+      var line = d3.line()
+                   .curve(d3.curveNatural)
+                   .x(function(d) { return xScale(d.year); })
+                   .y(function(d) { return yScale(d.abs_deviation); });
+
+      svg.append("path")
+          .data([dataset])
+          .attr("class", "line")
+          .attr("d", line)
+          .attr("stroke", darkcolour);
+
+      // Make points
+      svg.selectAll("circle")
+         .data(dataset)
+         .enter()
+         .append("circle")
+         .attr("class", "point")
+         .attr("cx", function(d) {return xScale(d.year);})
+         .attr("cy", function(d) {return yScale(d.abs_deviation);})
+         .attr("fill", darkcolour)
+         .on("mouseover", function(d){
+           // Highlight the point
+           d3.select(this)
+             .attr("fill", lightcolour);
+           // Make tooltip
+           var xPos = event.clientX + 20;
+           var yPos = event.clientY - 20;
+           makeStandardToolTip(xPos, yPos, d);
+           makeStandardTable(d.year, plotType);
+         })
+         .on("mouseout", function(d){
+           // Unhighlight the point
+           d3.select(this)
+             .attr("fill", darkcolour);
+           // Remove the tooltip
+           d3.select("#tooltip")
+             .classed("hidden", true);
+         })
+         .on("click", function(d){
+           makeStandardTable(d.year, plotType);
+
+         });
+
+
+    }
+
     function standardBarHelper(dataset, svg){
       // Set up important values
+      var darkcolour = "#52BE80"
+      var lightcolour = "#A9DFBF"
+      var plotType = "standardBar"
       var barWidth = w / dataset.length * relWidth;
       var plotMargin = w * (2-relWidth)/(2*dataset.length)
           // ^ Equivalent to barWidth/2 + (w/dataset.length * (1-relWidth))
@@ -54,7 +165,7 @@
                      .domain([0,d3.max(dataset, function(d){return  +d.count;})])
                      .range([h-outerPadding, outerPadding]);
 
-      // make title
+      // Make title
       var title = "Standard RPYS - Raw Frequency";
       makeTitle(svg, title);
 
@@ -64,11 +175,11 @@
       makeStandardAxes(svg, xScale, yScale, xname, yname);
 
       // make icons (toggles)
-      makeIcons(svg);
+      makeIcons(svg, darkcolour);
 
       // Initialize the tooltip and table
       initToolTip();
-      initTable();
+      initTable(plotType);
 
       // make bars
       svg.selectAll("rect")
@@ -79,30 +190,31 @@
          .attr("y", function(d){return yScale(d.count);})
          .attr("width", barWidth)
          .attr("height", function(d){return h - outerPadding - yScale(d.count);})
-         .attr("fill", "#52BE80")
+         .attr("fill", darkcolour)
          .attr("stroke", "white")
          .attr("stroke-width", 1)
          .on("mouseover", function(d){
            //Highlight bar
            d3.select(this)
-             .attr("fill", "#A9DFBF");
+             .attr("fill", lightcolour);
 
            // Add the tooltip
            var xPos = event.clientX + 20;
            var yPos = event.clientY - 20;
-           makeStandardToolTip(xPos, yPos, d)})
+           makeStandardToolTip(xPos, yPos, d)
+           makeStandardTable(d.year, plotType);         // New Line
+          })
          .on("mouseout", function(d){
            // Unhighlight the bar
            d3.select(this)
-             .attr("fill", "#52BE80");
+             .attr("fill", darkcolour);
            // Remove the tooltip
            d3.select("#tooltip")
              .classed("hidden", true);
          })
          .on("click", function(d){
-           makeStandardTable(d.year);
+           makeStandardTable(d.year, plotType);
          });
-
     }
 
     function initToolTip(){
@@ -114,29 +226,32 @@
       paragraph.appendChild(sp);
       divToolTip.appendChild(paragraph);
       document.body.appendChild(divToolTip);
-      divToolTip.id = "tooltipStandardBar";
+      divToolTip.id = "tooltip";
       divToolTip.className = "hidden";
     }
 
-    function initTable(){
+    function initTable(plotType){
       // Initialize the table
       var divTable = document.createElement('div');
-      divTable.id = "TableContainer";
+      divTable.id = "TableContainer" + plotType;
       divTable.className = "container hidden";
 
       var table = document.createElement('table');
-      table.id = "TopCitationsTable"
+      table.id = "TopCitationsTable" + plotType;
       table.border = "0";
       table.cellpadding = "3";
 
       divTable.appendChild(table);
-      document.body.appendChild(divTable);
+      var plotDiv = document.getElementById(plotType);
+      document.body.insertBefore(divTable, plotDiv.nextSibling);
+      // document.body.appendChild(divTable);
 
       var header = "<thead><tr><th width=10%><b>Rank</b></th><th width=22%><b>Author</b></th>" +
                    "<th width=35%><b>Journal</b></th><th width=17%><b>Year Published</b></th>" +
                   "<th width=15%><b>Times Cited</b></th></tr></thead>"
 
-      d3.select("#TopCitationsTable")
+      var tableName = "#TopCitationsTable" + plotType;
+      d3.select(tableName)
                  .html(header);
     }
 
@@ -184,9 +299,10 @@
          .text(yname);
     }
 
-    function makeStandardToolTip(xPos, yPos, d){
+    function makeStandardToolTip(xPos, yPos, d, mode){
+      var ttname =
       // Update the tooltip position and values
-      d3.select("#tooltipStandardBar")
+      d3.select("#tooltip")
         .style("left", xPos + "px")
         .style("top", yPos + "px")
         .select("#value")
@@ -197,13 +313,14 @@
 
       // Show the tooltip
       if (ShowSBToolTip == true){
-        d3.select("#tooltipStandardBar").classed("hidden", false);
+        d3.select("#tooltip").classed("hidden", false);
       }
     }
 
-    function makeStandardTable(year){
+    function makeStandardTable(year, plotType){
       // Create the header
-      header = d3.select("#TopCitationsTable")
+      var tableName = "#TopCitationsTable" + plotType;
+      header = d3.select(tableName)
                  .html().split('<tbody>')[0];
 
       // Create the rows
@@ -225,10 +342,14 @@
                       })
 
           // Find the cutoff value for top 15 citations & filter
-          tenval = yearData[14].num_cites;
-          yearData =  yearData.filter(function(d){
-                        return +d.num_cites >= tenval;
-                      })
+          var topnum = 15;
+          if (yearData.length > topnum){
+            topval = yearData[topnum-1].num_cites;
+
+            yearData =  yearData.filter(function(d){
+                          return +d.num_cites >= topval;
+                        })
+          }
 
           // Create the html for the top 10 values
           // Note:
@@ -246,15 +367,15 @@
             rows += "</tbody>"
           }
 
-          d3.select("#TopCitationsTable")
+          d3.select("#TopCitationsTable" + plotType)
             .html(header + rows);
         })
 
     }
 
-    function makeIcons(svg){
+    function makeIcons(svg, colour="grey"){
       // Make the info button
-      var colour = "#2ECC71";
+      var colour = colour;
 
       function infoButton(selection){
         infox = 0;
@@ -376,7 +497,6 @@
          .call(infoButton)
          .attr("class", "info icon")
          .attr("transform", "translate(686,375), scale(0.4)")
-         .on("mouseover", function(d){console.log("here");})
          .on("click", function(d){
            if (ShowSBToolTip == true){
              // Set tooltipShow to false
@@ -424,7 +544,7 @@
              // Set tableShow to false
              tableShow = false;
              // Hide the table
-             d3.select("#TopCitationsTable").classed("hidden", true);
+             d3.select("#TopCitationsTable" + plotType).classed("hidden", true);
              // Change the icon to greyscale
              d3.select(this)
                .select("rect")
@@ -439,7 +559,7 @@
              // Change tableShow to true
              tableShow = true;
              // Show the table
-             d3.select("#TopCitationsTable").classed("hidden", false);
+             d3.select("#TopCitationsTable" + plotType).classed("hidden", false);
              // Change the icon to colour
              d3.select(this)
                .select("rect")
@@ -491,28 +611,5 @@
     }
 
     exports.standardBar = standardBar;
+    exports.standardLine = standardLine;
   })))
-
-
-  // function standard_bar(rpysFile, citationFile){
-  // // Create the 'canvas'
-  //
-  // // Read in the data
-  //
-  //
-  // make_bars(rpysFile)
-  // make_axes()
-  // make_tooltip()
-  // make_table()
-  // }
-  //
-  // function standard_line(){
-  // // Create the 'canvas'
-  //
-  // // Read in the data
-  //
-  // make_line()
-  // make_axes()
-  // make_tooltip()
-  // make_table()
-  // }

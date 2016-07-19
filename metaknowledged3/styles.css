@@ -22,7 +22,7 @@ td {
      padding: 8px;
      text-align: left;
      border-bottom: 1px solid #ddd;
-     font-size: 14px;
+     font-size: 12px;
  }
 
 .container {
@@ -42,10 +42,6 @@ td {
   top: 0;
   left: 0;
 }
-
-/*.info {
-  pointer-events: none;
-}*/
 
 .axis path,
 .axis line {
@@ -68,7 +64,6 @@ td {
 
 .line {
   fill: none;
-  stroke: #EC7063;
   stroke-width: 3px;
   pointer-events: none;
 }
@@ -77,10 +72,10 @@ td {
   column-width: 10px;
 }
 
-#TopCitationsTable.hidden{
+#TopCitationsTablestandardBar.hidden, #TopCitationsTablestandardLine.hidden{
   display: none;
 }
-#tooltipStandardBar {
+#tooltip {
   position: absolute;
   width: auto;
   height: auto;
@@ -96,11 +91,11 @@ td {
   pointer-events: none;
 }
 
-#tooltipStandardBar.hidden {
+#tooltip.hidden {
   display: none;
 }
 
-#tooltipStandardBar p {
+#tooltip p {
   margin: 0;
   font-size: 16px;
   line-height: 20px;
