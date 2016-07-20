@@ -1,3 +1,19 @@
+// *********************************************************************************************
+// Copyright (C) 2016 Jillian Anderson and Dr. John McLevey
+//
+// This file is part of the metaknowledged3 framework developed for Dr John McLevey's Networks
+// Lab at the University of Waterloo. For more information, see http://networkslab.org/.
+//
+// metaknowledged3 is free software: you can redistribute it and/or modify it under the terms
+// of a GNU General Public License as published by the Free Software Foundation. metaknowledged3
+// is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
+// the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License along with metaknowledged3.
+// If not, see <http://www.gnu.org/licenses/>.
+// *********************************************************************************************
+
 (function (global, factory) {
   if (typeof exports === 'object' && typeof module !== 'undefined'){
     factory(exports);
@@ -12,7 +28,6 @@
     var rpysFile;
     var citFile;
     var ShowSBToolTip = true;
-    // var plotType;
 
     function standardLine(RPYSFile, CitationFile){
       rpysFile = RPYSFile;
@@ -63,8 +78,8 @@
 
     function standardLineHelper(dataset, svg){
       // Set up important values
-      var darkcolour = "#EC7063";
-      var lightcolour = "#F4ACA4";
+      var darkcolour = "#AA3543";
+      var lightcolour = "#e7b1b8";
       var plotType = "standardLine";
       var pointWidth = w / dataset.length * relWidth
       var plotMargin = w * (2-relWidth)/(2*dataset.length);
@@ -89,10 +104,10 @@
       // Make axes
       var xname = "Reference Publication Year";
       var yname = "Difference from 5-year Median";
-      makeStandardAxes(svg, xScale, yScale, xname, yname);
+      makeAxes(svg, xScale, yScale, xname, yname);
 
       // Make icons
-      makeIcons(svg, darkcolour);
+      makeIcons(svg, darkcolour, plotType);
 
       // Initialize the tooltip and table
       initToolTip();
@@ -100,7 +115,7 @@
 
       // Make line
       var line = d3.line()
-                   .curve(d3.curveNatural)
+                   .curve(d3.curveMonotoneX)
                    .x(function(d) { return xScale(d.year); })
                    .y(function(d) { return yScale(d.abs_deviation); });
 
@@ -147,8 +162,8 @@
 
     function standardBarHelper(dataset, svg){
       // Set up important values
-      var darkcolour = "#52BE80"
-      var lightcolour = "#A9DFBF"
+      var darkcolour = "#2479C1"
+      var lightcolour = "#bedbf3"
       var plotType = "standardBar"
       var barWidth = w / dataset.length * relWidth;
       var plotMargin = w * (2-relWidth)/(2*dataset.length)
@@ -172,10 +187,10 @@
       // make axes
       var xname = "Reference Publication Year";
       var yname = "Citation References";
-      makeStandardAxes(svg, xScale, yScale, xname, yname);
+      makeAxes(svg, xScale, yScale, xname, yname);
 
       // make icons (toggles)
-      makeIcons(svg, darkcolour);
+      makeIcons(svg, darkcolour, plotType);
 
       // Initialize the tooltip and table
       initToolTip();
@@ -247,7 +262,7 @@
       // document.body.appendChild(divTable);
 
       var header = "<thead><tr><th width=10%><b>Rank</b></th><th width=22%><b>Author</b></th>" +
-                   "<th width=35%><b>Journal</b></th><th width=17%><b>Year Published</b></th>" +
+                   "<th width=35%><b>Source Title</b></th><th width=17%><b>Year Published</b></th>" +
                   "<th width=15%><b>Times Cited</b></th></tr></thead>"
 
       var tableName = "#TopCitationsTable" + plotType;
@@ -264,7 +279,7 @@
          .text(title);
     }
 
-    function makeStandardAxes(svg, xScale, yScale, xname, yname){
+    function makeAxes(svg, xScale, yScale, xname, yname){
       var formatAsChar = d3.format("c");
 
       var xAxis = d3.axisBottom(xScale)
@@ -273,6 +288,7 @@
 
       var yAxis = d3.axisLeft(yScale)
                     .tickSizeInner(-w)
+                    .tickFormat(formatAsChar)
                     .ticks(5);
 
       svg.append("g")
@@ -373,7 +389,7 @@
 
     }
 
-    function makeIcons(svg, colour="grey"){
+    function makeIcons(svg, colour="grey", plotType){
       // Make the info button
       var colour = colour;
 
@@ -612,4 +628,5 @@
 
     exports.standardBar = standardBar;
     exports.standardLine = standardLine;
+    // exports.multiRPYS = multiRPYS;
   })))
