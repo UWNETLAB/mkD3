@@ -279,7 +279,8 @@
          .text(title);
     }
 
-    function makeAxes(svg, xScale, yScale, xname, yname){
+    function makeAxes(svg, xScale, yScale, xname, yname, tickSize = -w){
+
       var formatAsChar = d3.format("c");
 
       var xAxis = d3.axisBottom(xScale)
@@ -287,7 +288,7 @@
                     .tickArguments([5]);
 
       var yAxis = d3.axisLeft(yScale)
-                    .tickSizeInner(-w)
+                    .tickSizeInner(tickSize)
                     .tickFormat(formatAsChar)
                     .ticks(5);
 
@@ -347,8 +348,6 @@
           console.log(error);
         // Otherwise, continue
         } else {
-          console.log(Object.keys(data[0]));
-
           // Filter the data to only include one year
           var yearData = data.filter(function(d){
               return Math.floor(d.year) == year;
@@ -709,15 +708,14 @@
       var CPYmin = d3.min(dataset, function(d){return +d.CPY;})
       var CPYmax = d3.max(dataset, function(d){return +d.CPY;})
       var pointWidth = w / (RPYmax-RPYmin +1)
-      var plotMargin = w * (2-relWidth)/(2*(RPYmax-RPYmin + 1));
+      var plotMargin = pointWidth;
+      // var plotMargin = w * (2-relWidth)/(2*(RPYmax-RPYmin + 1));
           // ^Equivalent to barwidth/2 +(w/dataset.length * (1-relWidth))
 
       // Create the scale for the x axis
-      // var yearmin = d3.min(dataset, function(d){return +d.year;});
-      // var yearmax = d3.max(dataset, function(d){return +d.year;});
       var xScale = d3.scaleLinear()
                      .domain([RPYmin, RPYmax])
-                     .range([outerPadding+plotMargin, w-plotMargin]);
+                     .range([outerPadding+plotMargin*2, w-plotMargin*2]);
 
       // Create the scale for the y axis
       var yScale = d3.scaleLinear()
@@ -737,7 +735,11 @@
       // Make axes
       var xname = "Referenced Documents";
       var yname = "Citing Documents";
-      makeAxes(svg, xScale, yScale, xname, yname);
+      makeAxes(svg, xScale, yScale, xname, yname, tickSize=5);
+      d3.select("g")
+        .select("path")
+        .style("display", "flex")
+
 
       // Make legend
       makeLegend(svg, cScale);
@@ -758,9 +760,8 @@
          .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
          .attr("width", boxWidth)
          .attr("height", boxHeight)
-         .attr("fill", function(d){return cScale(d.rank);})
-        //  .attr("stroke", "white")
-        //  .attr("stroke-width", 1)
+         .attr("fill", function(d){return cScale(d.rank);});
+
     }
 
     exports.standardBar = standardBar;
