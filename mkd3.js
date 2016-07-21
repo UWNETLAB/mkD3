@@ -1,5 +1,5 @@
 // *********************************************************************************************
-// Copyright (C) 2016 Jillian Anderson and Dr. John McLevey
+// Copyright (C) 2016 Jillian Anderson
 //
 // This file is part of the metaknowledged3 framework developed for Dr John McLevey's Networks
 // Lab at the University of Waterloo. For more information, see http://networkslab.org/.
@@ -25,8 +25,8 @@
     var h = 400;
     var outerPadding = 60;
     var relWidth = 0.8;
-    var rpysFile;
-    var citFile;
+    var rpysFile = undefined;
+    var citFile = undefined;
     var ShowSBToolTip = true;
 
     function standardLine(RPYSFile, CitationFile){
@@ -48,6 +48,7 @@
           console.log(error);
         } else {
           dataset = data;
+          console.log(Object.keys(data[0]));
           standardLineHelper(data, svg);
         }
       })
@@ -340,39 +341,45 @@
                  .html().split('<tbody>')[0];
 
       // Create the rows
-      rows = ""
+      rows = "";
       d3.csv(citFile, function(error, data){
         // If there is an error, print it
         if (error){
           console.log(error);
         // Otherwise, continue
         } else {
+          console.log(Object.keys(data[0]));
+
           // Filter the data to only include one year
           var yearData = data.filter(function(d){
               return Math.floor(d.year) == year;
           });
-
           // Sort the year's Articles by the number of citations
           yearData =  yearData.sort(function(a, b){
                         return b.num_cites - a.num_cites;
+                        // return b["num-cites"] - a["num-cites"];
                       })
 
           // Find the cutoff value for top 15 citations & filter
           var topnum = 15;
           if (yearData.length > topnum){
             topval = yearData[topnum-1].num_cites;
+            // topval = yearData[topnum-1]["num-cites"];
 
             yearData =  yearData.filter(function(d){
                           return +d.num_cites >= topval;
+                          // return + d["num-cites"] >= topval;
                         })
           }
 
-          // Create the html for the top 10 values
+          // Create the html for the top values
           // Note:
           rows = "<tbody>"
           // Iterate through each citation in a year
+
           for (i=0; i < yearData.length; i++){
             rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i].num_cites];
+            // rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i]["num-cites"]];
             rows += "<tr>";
             // Append each piece of information for the citation
             for (var j=0; j < rowvals.length; j++){
@@ -626,65 +633,136 @@
       return ret;
     }
 
-    function multiRPYS(RPYSFile, CitationFile){
-      rpysFile = RPYSFile;
-      citFile = CitationFile;
-
-      console.log("here!");
-      // Make canvas
-      var svg = d3.select("div#multiRPYS")
-                  .append("svg")
-                  .attr("id", "plot")
-                  .attr("preserveAspectRatio", "xMinYMin meet")
-                  .attr("viewBox", "0 0 800 400")
-                  .classed("svg-content", true);
-
-      // Read in the data
-      // Read in the dataset
-      var dataset;
-      d3.csv(RPYSFile, function(error, data){
-        if (error){
-          console.log(error);
-        } else {
-          dataset = data;
-          multiRPYSHelper(dataset, svg);
-        }
-        // Make axes
-        // Make legend
-        // Make tooltip
-        // Make table
-        // Make heatmap
-      });
-    }
-
-    function multiRPYSHelper(dataset, svg){
-      var pointWidth = w / dataset.length * relWidth
-      var plotMargin = w * (2-relWidth)/(2*dataset.length);
-          // ^Equivalent to barwidth/2 +(w/dataset.length * (1-relWidth))
-
-      // Create the scale for the x axis
-      var yearmin = d3.min(dataset, function(d){return d.year;});
-      var yearmax = d3.max(dataset, function(d){return d.year;});
-      var xScale = d3.scaleLinear()
-                     .domain([yearmin, yearmax])
-                     .range([outerPadding+plotMargin, w-plotMargin]);
-
-      // Create the scale for the y axis
-      var yScale = d3.scaleLinear()
-                     .domain([yearmin, yearmax])
-                     .range([h-outerPadding-plotMargin, outerPadding+plotMargin]);
-
-      // Make title
-      title = "Multi RPYS - Rank Transformed";
-      makeTitle(svg, title);
-
-      // Make axes
-      var xname = "Referenced Documents";
-      var yname = "Citing Documents";
-      makeAxes(svg, xScale, yScale, xname, yname);
-    }
+    // function makeLegend(svg, colourScale){
+    //   var width = 200;
+    //   var height = 20;
+    //   var start = colourScale.range()[0];
+    //   var pivot = colourScale.range()[1];
+    //   var end = colourScale.range()[2];
+    //
+    //   var gradient = svg.append("defs")
+    //       .append("linearGradient")
+    //       .attr("id", "gradient")
+    //       .attr("x1", "0%")
+    //       .attr("x2", "100%")
+    //       .attr("spreadMethod", "pad");
+    //
+    //   gradient.append("stop")
+    //     .attr("offset", "0%")
+    //     .attr("stop-color", start)
+    //     .attr("stop-opacity", 1);
+    //
+    //   gradient.append("stop")
+    //     .attr("offset", "50%")
+    //     .attr("stop-color", pivot)
+    //     .attr("stop-opacity", 1);
+    //
+    //   gradient.append("stop")
+    //     .attr("offset", "100%")
+    //     .attr("stop-color", end)
+    //     .attr("stop-opacity", 1);
+    //
+    //   svg.append("rect")
+    //     .attr("width", width)
+    //     .attr("height", height)
+    //     .attr("x", (w - width-2))
+    //     .attr("y", (h-height-2))
+    //     .attr("stroke-width", "2px")
+    //     .attr("stroke-linecap", "butt")
+    //     .attr("stroke", "gainsboro")
+    //     .style("fill", "url(#gradient)");
+    //
+    // }
+    //
+    // function multiRPYS(RPYSFile, CitationFile){
+    //   rpysFile = RPYSFile;
+    //   citFile = CitationFile;
+    //
+    //   // Make canvas
+    //   var svg = d3.select("div#multiRPYS")
+    //               .append("svg")
+    //               .attr("id", "plot")
+    //               .attr("preserveAspectRatio", "xMinYMin meet")
+    //               .attr("viewBox", "0 0 800 400")
+    //               .classed("svg-content", true);
+    //
+    //   // Read in the data
+    //   // Read in the dataset
+    //   var dataset;
+    //   d3.csv(RPYSFile, function(error, data){
+    //     if (error){
+    //       console.log(error);
+    //     } else {
+    //       dataset = data;
+    //       multiRPYSHelper(dataset, svg);
+    //     }
+    //     // Make axes
+    //     // Make legend
+    //     // Make tooltip
+    //     // Make table
+    //     // Make heatmap
+    //   });
+    // }
+    //
+    // function multiRPYSHelper(dataset, svg){
+    //   var RPYmin = d3.min(dataset, function(d){return +d.RPY;})
+    //   var RPYmax = d3.max(dataset, function(d){return +d.RPY;})
+    //   var CPYmin = d3.min(dataset, function(d){return +d.CPY;})
+    //   var CPYmax = d3.max(dataset, function(d){return +d.CPY;})
+    //   var pointWidth = w / (RPYmax-RPYmin +1)
+    //   var plotMargin = w * (2-relWidth)/(2*(RPYmax-RPYmin + 1));
+    //       // ^Equivalent to barwidth/2 +(w/dataset.length * (1-relWidth))
+    //
+    //   // Create the scale for the x axis
+    //   // var yearmin = d3.min(dataset, function(d){return +d.year;});
+    //   // var yearmax = d3.max(dataset, function(d){return +d.year;});
+    //   var xScale = d3.scaleLinear()
+    //                  .domain([RPYmin, RPYmax])
+    //                  .range([outerPadding+plotMargin, w-plotMargin]);
+    //
+    //   // Create the scale for the y axis
+    //   var yScale = d3.scaleLinear()
+    //                  .domain([CPYmin, CPYmax+1])
+    //                  .range([h-outerPadding, outerPadding]);
+    //
+    //   // Create the colour scale
+    //   var maxRank = d3.max(dataset, function(d){return  + d.rank});
+    //   var cScale = d3.scaleLinear()
+    //                  .domain([0, maxRank*0.9, maxRank]) // 0.9 sets the pivot point. Closer to 1 Higlights large deviations
+    //                  .range(['#ffffd9', '#41b6c4','#081d58'])
+    //
+    //   // Make title
+    //   title = "Multi RPYS - Rank Transformed";
+    //   makeTitle(svg, title);
+    //
+    //   // Make axes
+    //   var xname = "Referenced Documents";
+    //   var yname = "Citing Documents";
+    //   makeAxes(svg, xScale, yScale, xname, yname);
+    //
+    //   // Make legend
+    //   makeLegend(svg, cScale);
+    //   // Make boxes
+    //   var plotMargin = w * (2 + dataset.length) / (2*dataset.length);
+    //       // ^ Equivalent to barWidth/2 + (w/dataset.length * (1-relWidth))
+    //
+    //   var boxWidth = (w-outerPadding) / (RPYmax-RPYmin+1);
+    //   var boxHeight = (h-(outerPadding*2)) / (CPYmax-CPYmin+1);
+    //   // var boxHeight = ;
+    //   svg.selectAll("rect")
+    //      .data(dataset)
+    //      .enter()
+    //      .append("rect")
+    //      .attr("x", function(d){return xScale(+ d.RPY)-(boxWidth/2);})
+    //      .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
+    //      .attr("width", boxWidth)
+    //      .attr("height", boxHeight)
+    //      .attr("fill", function(d){return cScale(d.rank);})
+    //     //  .attr("stroke", "white")
+    //     //  .attr("stroke-width", 1)
+    // }
 
     exports.standardBar = standardBar;
     exports.standardLine = standardLine;
-    exports.multiRPYS = multiRPYS;
+    // exports.multiRPYS = multiRPYS;
   })))
