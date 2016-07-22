@@ -17,32 +17,29 @@
 import metaknowledge as mk
 import pandas
 
-minYear = 1900
-maxYear = 2000
-RC = mk.RecordCollection("/Users/filepath")  # Create the Record Collection you want make a RPYS
-                                             # visualization of. Documentation can be found at
-                                             # http://networkslab.org/metaknowledge/
-fileOut = "/Users/filepath/'name.csv'/" # Specify where the resulting csv should be saved.
+minYear = 1900  # Specify the minimum Year you want to consider
+maxYear = 2010  # Specify the maximum Year you want to consider
+years = range(minYear, maxYear+1)
+RC = mk.RecordCollection("/Users/filepath") # Create the RecordCollection you want to analyze
 
-def get_multi_data (minYear, maxYear, RC, fileOut):
-    dictionary = {"CPY": [],
-                  "rank": [],
-                  "RPY": []}
-    years = range(minYear, maxYear+1)
-
-    for i in years:
-        try:
-            RCyear = RC.yearSplit(i, i)
-            rpys = RCyear.rpys(minYear=minYear, maxYear=maxYear)
+dictionary = {"CPY": [],
+              "rank": [],
+              "RPY": []}
+for i in years:
+    try:
+        RCyear = RC.yearSplit(i, i)
+        if len(RCyear) > 0:
+            rpys = RCyear.rpys(minYear=1900, maxYear=2000)
             length = len(rpys['year'])
             rpys['CPY'] = [i]*length
 
             dictionary['CPY'] += rpys['CPY']
             dictionary['rank'] += rpys['rank']
             dictionary['RPY'] += rpys['year']
-        except:
-            pass
+    except:
+        pass
 
-    df = pandas.DataFrame.from_dict(dictionary)
+df = pandas.DataFrame.from_dict(dictionary)
 
-    df.to_csv(fileOut)
+FileOut = "Users/path/file.csv"  # Specify the path to write the csv to
+df.to_csv(FileOut)

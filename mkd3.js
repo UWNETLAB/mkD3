@@ -725,7 +725,7 @@
       // Create the colour scale
       var maxRank = d3.max(dataset, function(d){return  + d.rank});
       var cScale = d3.scaleLinear()
-                     .domain([0, maxRank*0.5, maxRank]) // 0.5 sets the pivot point. Closer to 1 Higlights large deviations
+                     .domain([0, maxRank*0.9, maxRank]) // 0.5 sets the pivot point. Closer to 1 Higlights large deviations
                      .range(['#ffffd9', '#41b6c4','#081d58'])
 
       // Make title
