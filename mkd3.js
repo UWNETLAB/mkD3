@@ -263,6 +263,9 @@
     }
 
     function multiRPYSHelper(dataset, svg){
+      // Setup important values
+      var plotType = "multiRPYS"
+
       var RPYmin = d3.min(dataset, function(d){return +d.RPY;})
       var RPYmax = d3.max(dataset, function(d){return +d.RPY;})
       var CPYmin = d3.min(dataset, function(d){return +d.CPY;})
@@ -292,6 +295,9 @@
       title = "Multi RPYS - Rank Transformed";
       makeTitle(svg, title);
 
+      // Initialize the tooltip and table
+      initToolTip();
+
       // Make axes
       var xname = "Referenced Documents";
       var yname = "Citing Documents";
@@ -307,22 +313,28 @@
       var boxDataset = dataset.filter(function(d){
           return d.CPY >= d.RPY;
       })
-      console.log(boxDataset.length);
 
       svg.selectAll("rect.heatmap")
          .data(boxDataset)
          .enter()
          .append("rect")
-         .attr("x", function(d, i){console.log(i);return xScale(+ d.RPY);})
+         .attr("x", function(d, i){return xScale(+ d.RPY);})
          .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
          .attr("width", boxWidth)
          .attr("height", boxHeight)
          .attr("fill", function(d){return cScale(d.rank);})
          .on("mouseover", function(d){
+           // Highlight the box
            d3.select(this)
              .attr("fill", 'lightsalmon');
+
+           // Make tooltip
+           var xPos = event.clientX + 20;
+           var yPos = event.clientY - 20;
+           makeMultiToolTip(xPos, yPos, d);
          })
          .on("mouseout", function(d){
+           // Unhighlight the box
            d3.select(this)
              .attr("fill", function(d){return cScale(d.rank);});
          })
@@ -414,7 +426,6 @@
     }
 
     function makeStandardToolTip(xPos, yPos, d, mode){
-      var ttname =
       // Update the tooltip position and values
       d3.select("#tooltip")
         .style("left", xPos + "px")
@@ -429,6 +440,22 @@
       if (ShowSBToolTip == true){
         d3.select("#tooltip").classed("hidden", false);
       }
+    }
+
+    function makeMultiToolTip(xPos, yPos, d){
+      // Update the tooltip position and values
+      d3.select("#tooltip")
+        .style("left", xPos + "px")
+        .style("top", yPos + "px")
+        .select("#value")
+        .html("CPY: <strong>"+ d.CPY+ "</strong><br/>" +
+              "RPY: <strong>" + d.RPY + "</strong><br/>" +
+              "Raw Frequency: " + "<strong>" + d.num_cites + "</strong>"+ "<br/>" +
+              "Difference from Median: " + "<strong>" + d.abs_deviation + "</strong>" + "<br/>");
+              // "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
+
+      // Show the tooltip
+      d3.select("#tooltip").classed("hidden", false);
     }
 
     function makeStandardTable(year, plotType){
