@@ -23,7 +23,7 @@
 
     var w = 800;
     var h = 400;
-    var outerPadding = 60;
+    var outerPadding = 70;
     var relWidth = 0.8;
     var rpysFile = undefined;
     var citFile = undefined;
@@ -73,6 +73,36 @@
           dataset = data;
           standardBarHelper(data, svg);
         }
+      });
+    }
+
+    function multiRPYS(RPYSFile, CitationFile){
+      rpysFile = RPYSFile;
+      citFile = CitationFile;
+
+      // Make canvas
+      var svg = d3.select("div#multiRPYS")
+                  .append("svg")
+                  .attr("id", "plot")
+                  .attr("preserveAspectRatio", "xMinYMin meet")
+                  .attr("viewBox", "0 0 800 400")
+                  .classed("svg-content", true);
+
+      // Read in the data
+      // Read in the dataset
+      var dataset;
+      d3.csv(RPYSFile, function(error, data){
+        if (error){
+          console.log(error);
+        } else {
+          dataset = data;
+          multiRPYSHelper(dataset, svg);
+        }
+        // Make axes
+        // Make legend
+        // Make tooltip
+        // Make table
+        // Make heatmap
       });
     }
 
@@ -230,6 +260,73 @@
          .on("click", function(d){
            makeStandardTable(d.year, plotType);
          });
+    }
+
+    function multiRPYSHelper(dataset, svg){
+      var RPYmin = d3.min(dataset, function(d){return +d.RPY;})
+      var RPYmax = d3.max(dataset, function(d){return +d.RPY;})
+      var CPYmin = d3.min(dataset, function(d){return +d.CPY;})
+      var CPYmax = d3.max(dataset, function(d){return +d.CPY;})
+      var boxWidth = (w-outerPadding) / (RPYmax-RPYmin+1);
+      var boxHeight = (h-(outerPadding*2)) / (CPYmax-CPYmin+1);
+      var plotMargin = boxWidth * 1.5;
+
+      // Create the scale for the x axis
+      var xScale = d3.scaleLinear()
+                     .domain([RPYmin, RPYmax])
+                     .range([outerPadding+plotMargin*2, w-plotMargin*2]);
+
+      // Create the scale for the y axis
+      var yScale = d3.scaleLinear()
+                     .domain([CPYmin, CPYmax+1])
+                     .range([outerPadding, h-outerPadding]);
+
+      // Create the colour scale
+      var maxRank = d3.max(dataset, function(d){return  + d.rank});
+      var cScale = d3.scaleLinear()
+                     .domain([0, maxRank*0.9, maxRank]) // 0.5 sets the pivot point. Closer to 1 Higlights large deviations
+                     .range(['#ffffd9', '#41b6c4','#081d58'])
+                    //  .range(['#ffecb3', '#e85255', '#6A1B9A'])
+
+      // Make title
+      title = "Multi RPYS - Rank Transformed";
+      makeTitle(svg, title);
+
+      // Make axes
+      var xname = "Referenced Documents";
+      var yname = "Citing Documents";
+      makeAxes(svg, xScale, yScale, xname, yname, tickSize=-5);
+      d3.select("g")
+        .select("path")
+        .style("display", "flex");
+
+      // Make legend
+      makeLegend(svg, dataset, cScale);
+
+      // Make boxes
+      var boxDataset = dataset.filter(function(d){
+          return d.CPY >= d.RPY;
+      })
+      console.log(boxDataset.length);
+
+      svg.selectAll("rect.heatmap")
+         .data(boxDataset)
+         .enter()
+         .append("rect")
+         .attr("x", function(d, i){console.log(i);return xScale(+ d.RPY);})
+         .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
+         .attr("width", boxWidth)
+         .attr("height", boxHeight)
+         .attr("fill", function(d){return cScale(d.rank);})
+         .on("mouseover", function(d){
+           d3.select(this)
+             .attr("fill", 'lightsalmon');
+         })
+         .on("mouseout", function(d){
+           d3.select(this)
+             .attr("fill", function(d){return cScale(d.rank);});
+         })
+
     }
 
     function initToolTip(){
@@ -631,7 +728,7 @@
       return ret;
     }
 
-    function makeLegend(svg, colourScale){
+    function makeLegend(svg, dataset, colourScale){
       var width = 200;
       var height = 20;
       var start = colourScale.range()[0];
@@ -651,7 +748,7 @@
         .attr("stop-opacity", 1);
 
       gradient.append("stop")
-        .attr("offset", "50%")
+        .attr("offset", "90%")
         .attr("stop-color", pivot)
         .attr("stop-opacity", 1);
 
@@ -664,105 +761,40 @@
         .attr("width", width)
         .attr("height", height)
         .attr("x", (w - width-2))
-        .attr("y", (h-height-2))
+        .attr("y", (h-height*2))
         .attr("stroke-width", "2px")
         .attr("stroke-linecap", "butt")
         .attr("stroke", "gainsboro")
         .style("fill", "url(#gradient)");
 
+      var gScale = d3.scaleLinear()
+                     .domain([0,d3.max(dataset, function(d){return + d.rank;})])
+                     .range([0, 200])
+
+      var gAxis = d3.axisBottom(gScale)
+                    .tickSize(-height)
+                    .tickArguments([5]);
+
+      svg.append("g")
+         .attr("class", "x axis")
+         .attr("transform", "translate(" + (w - width-2) + "," + (h-height) + ")")
+         .call(gAxis)
+
+
+      var formatAsChar = d3.format("c");
+
+      var gAxis = d3.axisBottom(gScale)
+                    .tickFormat(formatAsChar)
+                    .tickArguments([4]);
+
+      svg.append("g")
+         .attr("class", "g axis")
+         .attr("transform", "translate(" + 100 + "," +400 + ")")
+         .call(gAxis)
+
+
     }
 
-    function multiRPYS(RPYSFile, CitationFile){
-      rpysFile = RPYSFile;
-      citFile = CitationFile;
-
-      // Make canvas
-      var svg = d3.select("div#multiRPYS")
-                  .append("svg")
-                  .attr("id", "plot")
-                  .attr("preserveAspectRatio", "xMinYMin meet")
-                  .attr("viewBox", "0 0 800 400")
-                  .classed("svg-content", true);
-
-      // Read in the data
-      // Read in the dataset
-      var dataset;
-      d3.csv(RPYSFile, function(error, data){
-        if (error){
-          console.log(error);
-        } else {
-          dataset = data;
-          multiRPYSHelper(dataset, svg);
-        }
-        // Make axes
-        // Make legend
-        // Make tooltip
-        // Make table
-        // Make heatmap
-      });
-    }
-
-    function multiRPYSHelper(dataset, svg){
-      var RPYmin = d3.min(dataset, function(d){return +d.RPY;})
-      var RPYmax = d3.max(dataset, function(d){return +d.RPY;})
-      var CPYmin = d3.min(dataset, function(d){return +d.CPY;})
-      var CPYmax = d3.max(dataset, function(d){return +d.CPY;})
-      var pointWidth = w / (RPYmax-RPYmin +1)
-      var plotMargin = pointWidth;
-      // var plotMargin = w * (2-relWidth)/(2*(RPYmax-RPYmin + 1));
-          // ^Equivalent to barwidth/2 +(w/dataset.length * (1-relWidth))
-
-      // Create the scale for the x axis
-      var xScale = d3.scaleLinear()
-                     .domain([RPYmin, RPYmax])
-                     .range([outerPadding+plotMargin*2, w-plotMargin*2]);
-
-      // Create the scale for the y axis
-      var yScale = d3.scaleLinear()
-                     .domain([CPYmin, CPYmax+1])
-                     .range([outerPadding, h-outerPadding]);
-
-      // Create the colour scale
-      var maxRank = d3.max(dataset, function(d){return  + d.rank});
-      var cScale = d3.scaleLinear()
-                     .domain([0, maxRank*0.9, maxRank]) // 0.5 sets the pivot point. Closer to 1 Higlights large deviations
-                     .range(['#ffffd9', '#41b6c4','#081d58'])
-
-      // Make title
-      title = "Multi RPYS - Rank Transformed";
-      makeTitle(svg, title);
-
-      // Make axes
-      var xname = "Referenced Documents";
-      var yname = "Citing Documents";
-      makeAxes(svg, xScale, yScale, xname, yname, tickSize=5);
-      d3.select("g")
-        .select("path")
-        .style("display", "flex")
-
-
-      // Make legend
-      makeLegend(svg, cScale);
-      // Make boxes
-      var plotMargin = w * (2 + dataset.length) / (2*dataset.length);
-          // ^ Equivalent to barWidth/2 + (w/dataset.length * (1-relWidth))
-
-      var boxWidth = (w-outerPadding) / (RPYmax-RPYmin+1);
-      var boxHeight = (h-(outerPadding*2)) / (CPYmax-CPYmin+1);
-      var boxDataset = dataset.filter(function(d){
-          return d.CPY >= d.RPY;
-      })
-      svg.selectAll("rect")
-         .data(boxDataset)
-         .enter()
-         .append("rect")
-         .attr("x", function(d){return xScale(+ d.RPY)-(boxWidth/2);})
-         .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
-         .attr("width", boxWidth)
-         .attr("height", boxHeight)
-         .attr("fill", function(d){return cScale(d.rank);});
-
-    }
 
     exports.standardBar = standardBar;
     exports.standardLine = standardLine;
