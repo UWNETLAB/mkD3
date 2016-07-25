@@ -85,7 +85,7 @@
       });
     }
 
-    function multiRPYS(RPYSFile, CitationFile){
+    function multiRPYS(MultiRPYSFile, MultiCitationFile){
       plotType = 'multiRPYS'
       rpysFile = RPYSFile;
       citFile = CitationFile;
