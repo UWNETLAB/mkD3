@@ -32,6 +32,10 @@
     function standardLine(RPYSFile, CitationFile){
       rpysFile = RPYSFile;
       citFile = CitationFile;
+      plotType = "standardLine"
+
+      // Create the div container
+      initDiv(plotType);
 
       // Create the canvas (svg)
       var svg = d3.select("div#standardLine")
@@ -56,6 +60,11 @@
     function standardBar(RPYSFile, CitationFile){
       rpysFile = RPYSFile;
       citFile = CitationFile;
+      plotType = "standardBar"
+
+      // Create the div container
+      initDiv(plotType);
+
       // Create the canvas(svg)
       var svg = d3.select("div#standardBar")
                   .append("svg")
@@ -77,8 +86,12 @@
     }
 
     function multiRPYS(RPYSFile, CitationFile){
+      plotType = 'multiRPYS'
       rpysFile = RPYSFile;
       citFile = CitationFile;
+
+      // Create the div container
+      initDiv(plotType);
 
       // Make canvas
       var svg = d3.select("div#multiRPYS")
@@ -88,7 +101,6 @@
                   .attr("viewBox", "0 0 800 400")
                   .classed("svg-content", true);
 
-      // Read in the data
       // Read in the dataset
       var dataset;
       d3.csv(RPYSFile, function(error, data){
@@ -98,11 +110,6 @@
           dataset = data;
           multiRPYSHelper(dataset, svg);
         }
-        // Make axes
-        // Make legend
-        // Make tooltip
-        // Make table
-        // Make heatmap
       });
     }
 
@@ -355,6 +362,18 @@
 
     }
 
+    function initDiv(plotType){
+      // Initialize the multiRPYS div
+
+      // Create the Div
+      var div = document.createElement('div');
+      div.id = plotType;
+      div.className = "container";
+
+      // Add the Div
+      document.body.appendChild(div);
+    }
+
     function initToolTip(){
       var divToolTip = document.createElement('div');
       var paragraph = document.createElement('p');
@@ -400,11 +419,6 @@
       divTable.appendChild(table);
       var plotDiv = document.getElementById(plotType);
       document.body.insertBefore(divTable, plotDiv.nextSibling);
-      // document.body.appendChild(divTable);
-
-      // var header = "<thead><tr><th width=10%><b>Rank</b></th><th width=22%><b>Author</b></th>" +
-      //              "<th width=35%><b>Source Title</b></th><th width=17%><b>Year Published</b></th>" +
-      //             "<th width=15%><b>Times Cited</b></th></tr></thead>"
 
       var tableName = "#TopCitationsTable" + plotType;
       d3.select(tableName)
