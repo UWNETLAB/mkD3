@@ -27,7 +27,7 @@
     var relWidth = 0.8;
     var rpysFile = undefined;
     var citFile = undefined;
-    var ShowSBToolTip = true;
+    var ShowToolTip = true;
 
     function standardLine(RPYSFile, CitationFile){
       rpysFile = RPYSFile;
@@ -298,6 +298,9 @@
       title = "Multi RPYS - Rank Transformed";
       makeTitle(svg, title);
 
+      // make icons (toggles)
+      makeIcons(svg, "#081d58", plotType);
+
       // Initialize the tooltip and table
       initToolTip();
       initMultiTable(plotType);
@@ -311,7 +314,7 @@
         .style("display", "flex");
 
       // Make legend
-      makeLegend(svg, dataset, cScale);
+      makeLegend(svg, dataset, cScale, plotMargin);
 
       // Make boxes
       var boxDataset = dataset.filter(function(d){
@@ -445,7 +448,7 @@
 
       svg.append("text")
          .attr("x", w/2)
-         .attr("y", h)
+         .attr("y", h-5)
          .attr("text-anchor", "middle")
          .text(xname);
 
@@ -469,7 +472,7 @@
               "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
 
       // Show the tooltip
-      if (ShowSBToolTip == true){
+      if (ShowToolTip == true){
         d3.select("#tooltip").classed("hidden", false);
       }
     }
@@ -487,7 +490,9 @@
               // "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
 
       // Show the tooltip
-      d3.select("#tooltip").classed("hidden", false);
+      if (ShowToolTip == true){
+        d3.select("#tooltip").classed("hidden", false);
+      }
     }
 
     function makeMultiTable(CPY, RPY, plotType){
@@ -542,7 +547,6 @@
               }
             rows += "</tbody>"
 
-            console.log("here!")
             d3.select("#TopCitationsTable" + plotType)
               .html(header + rows);
 
@@ -734,10 +738,11 @@
          .call(infoButton)
          .attr("class", "info icon")
          .attr("transform", "translate(686,375), scale(0.4)")
+         .attr("transform", "translate(686,20), scale(0.4)")
          .on("click", function(d){
-           if (ShowSBToolTip == true){
+           if (ShowToolTip == true){
              // Set tooltipShow to false
-             ShowSBToolTip = false;
+             ShowToolTip = false;
 
              // Change the icon to greyscale
              d3.select(this)
@@ -753,7 +758,7 @@
                .text("Show Pop-up Info");
            } else {
              // Set tooltipShow to true
-             ShowSBToolTip = true;
+             ShowToolTip = true;
 
              // Change the icon to colour
              d3.select(this)
@@ -775,7 +780,7 @@
       svg.append("g")
          .call(tableButton)
          .attr("class", "table button")
-         .attr("transform", "translate(680,385) scale(0.4)")
+         .attr("transform", "translate(680,30) scale(0.4)")
          .on("click", function(d){
            if (tableShow == true){
              // Set tableShow to false
@@ -847,7 +852,7 @@
       return ret;
     }
 
-    function makeLegend(svg, dataset, colourScale){
+    function makeLegend(svg, dataset, colourScale, plotMargin){
       var width = 200;
       var height = 20;
       var start = colourScale.range()[0];
@@ -880,37 +885,28 @@
         .attr("width", width)
         .attr("height", height)
         .attr("x", (w - width-2))
-        .attr("y", (h-height*2))
+        // .attr("x", (outerPadding + 20))
+        .attr("y", (h-height-2))
+        // .attr("y", height)
         .attr("stroke-width", "2px")
         .attr("stroke-linecap", "butt")
         .attr("stroke", "gainsboro")
         .style("fill", "url(#gradient)");
 
-      var gScale = d3.scaleLinear()
-                     .domain([0,d3.max(dataset, function(d){return + d.rank;})])
-                     .range([0, 200])
+      svg.append("text")
+         .text("Low Rank")
+         .attr("x", (w - width-2))
+         .attr("y", (h-height-6))
+         .attr("font-size", 10)
+         .attr("text-anchor", "start")
 
-      var gAxis = d3.axisBottom(gScale)
-                    .tickSize(-height)
-                    .tickArguments([5]);
+      svg.append("text")
+         .text("High Rank")
+         .attr("x", (w - width-2 + width))
 
-      svg.append("g")
-         .attr("class", "x axis")
-         .attr("transform", "translate(" + (w - width-2) + "," + (h-height) + ")")
-         .call(gAxis)
-
-
-      var formatAsChar = d3.format("c");
-
-      var gAxis = d3.axisBottom(gScale)
-                    .tickFormat(formatAsChar)
-                    .tickArguments([4]);
-
-      svg.append("g")
-         .attr("class", "g axis")
-         .attr("transform", "translate(" + 100 + "," +400 + ")")
-         .call(gAxis)
-
+         .attr("y", (h-height-6))
+         .attr("font-size", 10)
+         .attr("text-anchor", "end")
 
     }
 
