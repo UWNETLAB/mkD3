@@ -141,7 +141,7 @@
 
       // Initialize the tooltip and table
       initToolTip();
-      initTable(plotType);
+      initStandardTable(plotType);
 
       // Make line
       var line = d3.line()
@@ -224,7 +224,7 @@
 
       // Initialize the tooltip and table
       initToolTip();
-      initTable(plotType);
+      initStandardTable(plotType);
 
       // make bars
       svg.selectAll("rect")
@@ -288,8 +288,11 @@
       var maxRank = d3.max(dataset, function(d){return  + d.rank});
       var cScale = d3.scaleLinear()
                      .domain([0, maxRank*0.9, maxRank]) // 0.5 sets the pivot point. Closer to 1 Higlights large deviations
-                     .range(['#ffffd9', '#41b6c4','#081d58'])
-                    //  .range(['#ffecb3', '#e85255', '#6A1B9A'])
+                     .range(['#ffffd9', '#41b6c4','#081d58']) // Yellow, Green, Blue
+                    //  .range(['#e9f3fb', '#2479c1','#081b2b']) // Blue
+                    //  .range(['#f9eced', '#c23d4d','#270c0f']) // Red
+                    //  .range(['#ffecb3', '#e85255', '#6A1B9A']) // Yellow, Red, Purple
+
 
       // Make title
       title = "Multi RPYS - Rank Transformed";
@@ -297,6 +300,7 @@
 
       // Initialize the tooltip and table
       initToolTip();
+      initMultiTable(plotType);
 
       // Make axes
       var xname = "Referenced Documents";
@@ -337,6 +341,13 @@
            // Unhighlight the box
            d3.select(this)
              .attr("fill", function(d){return cScale(d.rank);});
+
+           // Remove the tooltip
+           d3.select("#tooltip")
+             .classed("hidden", true);
+         })
+         .on("click", function(d){
+           makeMultiTable(d.CPY, d.RPY,  plotType);
          })
 
     }
@@ -354,7 +365,25 @@
       divToolTip.className = "hidden";
     }
 
-    function initTable(plotType){
+    function initStandardTable(plotType){
+      var header = "<thead><tr><th width=10%><b>Rank</b></th><th width=22%><b>Author</b></th>" +
+                   "<th width=35%><b>Source Title</b></th><th width=17%><b>Year Published</b></th>" +
+                  "<th width=15%><b>Times Cited</b></th></tr></thead>"
+
+      initTable(plotType, header);
+
+    }
+
+    function initMultiTable(plotType){
+      var header = "<thead><tr><th width=12%><b>RPY</b></th><th width=23%><b>Author</b></th>" +
+                   "<th width=35%><b>Source Title</b></th>" +
+                  "<th width=20%><b>Times Cited</b></th><th width=12%><b>CPY</b></th></tr></thead>"
+
+      initTable(plotType, header);
+
+    }
+
+    function initTable(plotType, header){
       // Initialize the table
       var divTable = document.createElement('div');
       divTable.id = "TableContainer" + plotType;
@@ -370,13 +399,16 @@
       document.body.insertBefore(divTable, plotDiv.nextSibling);
       // document.body.appendChild(divTable);
 
-      var header = "<thead><tr><th width=10%><b>Rank</b></th><th width=22%><b>Author</b></th>" +
-                   "<th width=35%><b>Source Title</b></th><th width=17%><b>Year Published</b></th>" +
-                  "<th width=15%><b>Times Cited</b></th></tr></thead>"
+      // var header = "<thead><tr><th width=10%><b>Rank</b></th><th width=22%><b>Author</b></th>" +
+      //              "<th width=35%><b>Source Title</b></th><th width=17%><b>Year Published</b></th>" +
+      //             "<th width=15%><b>Times Cited</b></th></tr></thead>"
 
       var tableName = "#TopCitationsTable" + plotType;
       d3.select(tableName)
                  .html(header);
+
+      header = d3.select(tableName)
+                 .html();
     }
 
     function makeTitle(svg, title){
@@ -456,6 +488,66 @@
 
       // Show the tooltip
       d3.select("#tooltip").classed("hidden", false);
+    }
+
+    function makeMultiTable(CPY, RPY, plotType){
+      // Copy the header
+      var tableName = "#TopCitationsTable" + plotType;
+      header = d3.select(tableName)
+                 .html().split('<tbody>')[0];
+
+      // Create the rows
+      rows = "";
+      d3.csv(citFile, function(error, data){
+        // If there is an error, print it
+        if (error){console.log(error);}
+        // Otherwise, continue
+        else {
+            // Filter the data to include the right CPY & RPY
+            var yearData = data.filter(function(d){
+              return (Math.floor(d.CPY) == CPY && Math.floor(d.RPY) == RPY);
+            })
+
+            // Sort the years data by number of citations
+            yearData =  yearData.sort(function(a, b){
+                          return b.num_cites - a.num_cites;
+                          // return b["num-cites"] - a["num-cites"];
+                        })
+
+            // Find the cutoff value for top 15 citations & filter
+            var topnum = 15;
+            if (yearData.length > topnum){
+              topval = yearData[topnum-1].num_cites;
+              // topval = yearData[topnum-1]["num-cites"];
+
+              yearData =  yearData.filter(function(d){
+                            return +d.num_cites >= topval;
+                            // return + d["num-cites"] >= topval;
+                          })
+            }
+
+            // Create the html for the top values
+            rows = "<tbody>"
+            // Iterate through each citation in a year
+            for (i=0; i < yearData.length; i++){
+              rowvals = [Math.floor(yearData[i].RPY), yearData[i].author, yearData[i].journal, yearData[i].num_cites, Math.floor(yearData[i].CPY)];
+              // rowvals = [yearData[i].RPY, yearData[i].author, yearData[i].journal, yearData[i]["num_cites"], Math.floor(yearData[i].CPY)];
+
+              rows += "<tr>";
+              // Append each piece of information for the citation
+              for (var j=0; j < rowvals.length; j++){
+                rows += "<td>" + rowvals[j] + "</td>";
+              }
+                rows += "</tr>";
+              }
+            rows += "</tbody>"
+
+            console.log("here!")
+            d3.select("#TopCitationsTable" + plotType)
+              .html(header + rows);
+
+        }
+      })
     }
 
     function makeStandardTable(year, plotType){

@@ -33,7 +33,8 @@ td {
   vertical-align: top;
   margin-left: 10%;
   margin-right: 10%;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: scroll;
 }
 
 .svg-content {
@@ -68,24 +69,28 @@ td {
   pointer-events: none;
 }
 #TableContainer{
-  overflow-y: visible;
+  overflow-y: scroll;
   column-width: 10px;
 }
 
-#TopCitationsTablestandardBar.hidden, #TopCitationsTablestandardLine.hidden{
+#TopCitationsTablestandardBar.hidden,
+#TopCitationsTablestandardLine.hidden,
+#TopCitationsTablemultiRPYS.hidden{
   display: none;
+  overflow-y: scroll;
+
 }
 #tooltip {
   position: absolute;
   width: auto;
   height: auto;
   padding: 5px;
-  /*background-color: white;*/
+  background-color: white;
   background-color: rgba(254, 254, 254, 0.8);
-  /*-webkit-border-radius: 5px;*/
+  -webkit-border-radius: 5px;
   -moz-border-radius: 5px;
   border-radius: 5px;
-  /*-webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);*/
+  -webkit-box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
   -moz-box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4);
   box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4);
   pointer-events: none;
