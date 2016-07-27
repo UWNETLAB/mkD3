@@ -87,8 +87,8 @@
 
     function multiRPYS(MultiRPYSFile, MultiCitationFile){
       plotType = 'multiRPYS'
-      rpysFile = RPYSFile;
-      citFile = CitationFile;
+      rpysFile = MultiRPYSFile;
+      citFile = MultiCitationFile;
 
       // Create the div container
       initDiv(plotType);
@@ -103,7 +103,7 @@
 
       // Read in the dataset
       var dataset;
-      d3.csv(RPYSFile, function(error, data){
+      d3.csv(rpysFile, function(error, data){
         if (error){
           console.log(error);
         } else {
