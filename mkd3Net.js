@@ -30,7 +30,7 @@ function CitationGraph(edgeFile, nodeFile){
                        return d.ID;
                      }).distance([width/100]))
                      .force("charge", d3.forceManyBody().strength([-(w/100)]))
-                    //  .force("collide", d3.forceCollide().radius([20]))
+                     .force("collide", d3.forceCollide().radius([1]))
                      .force("x", d3.forceX(width / 2))
                      .force("y", d3.forceY(height / 2))
                      .force("center", d3.forceCenter(width/2, height/2));
@@ -71,11 +71,17 @@ function CitationGraph(edgeFile, nodeFile){
                   //         .on("end", dragended));
                   .on("mouseover", function(d){
                     d3.select(this)
-                      .attr("fill", "pink");
+                      .attr("fill", "pink")
+
+                    // Fix the node's position
+                    d.fx = d.x;
+                    d.fy = d.y;
+
                     // Make tooltip
                     var xPos = event.clientX + 20;
                     var yPos = event.clientY - 20;
                     makeNetworkToolTip(xPos, yPos, d);
+
                     // Repel nodes
                     repelNodes(simulation, d);
                   })
@@ -83,10 +89,17 @@ function CitationGraph(edgeFile, nodeFile){
                     d3.select(this)
                       .attr("fill", "steelblue");
 
-                    simulation.force("charge", d3.forceManyBody().strength([-(w/100)]));
-                    if (!d3.event.active) simulation.alphaTarget(0);
+                    // Unfix the node's position
+                    d.fx = null;
+                    d.fy = null;
 
-                    // simulation.force("charge").start();
+                    // Remove the tooltip
+                    d3.select("#tooltip")
+                      .classed("hidden", true);
+
+                    simulation.force("collide", d3.forceCollide().radius([1]));
+                    simulation.restart();
+
                   })
     simulation
          .nodes(nodes)
@@ -191,19 +204,12 @@ function makeNetworkToolTip(xPos, yPos, d){
 }
 
 function repelNodes(simulation, d){
-  if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+  simulation.force("collide", d3.forceCollide().radius(function(d2){
+              if (d2.ID == d.ID){return 30;}
+              else {return 1;}
+            }))
 
-  simulation.force("charge")
-            .strength(function(d2){
-              if (d2.ID == d.ID){return -200 - d.degree;}
-              else{return -(w/100);}
-            })
-              // .strength(function(d2){
-  //   if(d2 != d){
-  //     return [-10];
-  //   } else {
-  //     console.log("here");
-  //     return [-200];
-  //   }
-  // })
+  if (!d3.event.active){
+    simulation.alphaTarget(0.3).restart();
+  }
 }
