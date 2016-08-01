@@ -16,7 +16,7 @@ function CitationGraph(edgeFile, nodeFile){
   var svg = d3.select("div")
               .style("padding-bottom", "80%")
               .append("svg")
-              .attr("id", "networkPlot")
+              .attr("id", "CitationGraphPlot")
               .attr("preserveAspectRatio", "xMinYMin meet")
               .attr("viewBox", "0 0 800 800")
               .classed("svg-content", true);
@@ -36,6 +36,10 @@ function CitationGraph(edgeFile, nodeFile){
                      .force("x", d3.forceX(width / 2))
                      .force("y", d3.forceY(height / 2))
                      .force("center", d3.forceCenter(width/2, height/2));
+
+  // Make the Options Panel (Console)
+  initConsole("CitationNetwork");
+
 
   d3.csv(nodeFile, function(error, nodes){
   if (error){
@@ -62,7 +66,27 @@ function CitationGraph(edgeFile, nodeFile){
                   .data(edges)
                   .enter()
                   .append("line")
-                  .attr("stroke-width", 2);
+                  .attr("stroke-width", 2)
+                  .style("marker-end",  "url(#end)"); //Added
+
+    //---Insert-------
+    svg.append("svg:defs").selectAll("marker")
+       .data(["end"])      // Different link/path types can be defined here
+       .enter().append("svg:marker")    // This section adds in the arrows
+       .attr("id", String)
+       .attr("viewBox", "0 -5 10 10")
+       .attr("refX", 15)
+       .attr("refY", 0)
+       .attr("markerWidth", 3)
+       .attr("markerHeight", 3)
+       .attr("orient", "auto")
+       .attr("fill", "gainsboro")
+       .style("opacity", "0.6")
+       .append("svg:path")
+       .attr("d", "M0,-5L10,0L0,5");
+
+
+    //---End Insert---
 
     // Create the nodes
     var node = svg.append("g")
@@ -141,14 +165,6 @@ function CitationGraph(edgeFile, nodeFile){
                return rScale(0);
            }})
 
-    // simulation
-    //     .force("x")
-    //     .strength([0])
-    //
-    // simulation
-    //     .force("y")
-    //     .strength([0])
-
     function ticked() {
       link
          .attr("x1", function(d) { return d.source.x; })
@@ -161,7 +177,8 @@ function CitationGraph(edgeFile, nodeFile){
          .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
     }
 
-    makeNetworkIcons(svg);
+    makeConsole(nodes)
+    // makeNetworkIcons(svg);
   }})
   }});
 }
@@ -195,7 +212,7 @@ function assignDegree(edges, nodes){
 
   // Assign Degree to nodes
   for (var e = 0; e < edges.length; e++){
-    // Add to the source's degree and outdegree
+    // Add to the source's degree and oudegree
     source = edges[e].source;
     deg = nodeById.get(source).degree;
     odeg = nodeById.get(source).degreeO;
@@ -272,7 +289,151 @@ function repelNodes(simulation, d){
   }
 }
 
-function makeNetworkIcons(svg){
+
+function row(d){
+  // console.log(d);
+  return {
+     source: d.From,
+     target: d.To
+   };
+}
+
+function initConsole(plotType){
+    // Initialize the console's container
+    var divConsole = document.createElement('div');
+    divConsole.id = "ConsoleContainer";
+    divConsole.className = "console hidden";
+
+    // Find the Object I want to insert before
+    var something = document.getElementById("CitationGraph");
+    // Insert before
+    document.body.insertBefore(divConsole, something)
+    // document.body.appendChild(divConsole);
+
+}
+
+function makeConsole(nodes){
+  // Set up the Console's Canvas
+  var canvas = d3.select("#ConsoleContainer")
+                 .append("svg")
+                 .attr("id", "ConsoleCanvas")
+                 .attr("preserveAspectRatio", "xMinYMin meet")
+                 .attr("viewBox", "0 0 800 100")
+
+  // Node Options
+  canvas.append("text")
+    .text("Node Options")
+    .attr("x", 200)
+    .attr("y", 24)
+    .attr("font-size", 24)
+    .attr("text-anchor", "middle")
+
+  // Isolates Toggle
+    isolates(canvas)
+
+  // Add the Size Choice
+  sizeOptions(canvas, nodes);
+
+  // Edge Options
+  canvas.append("text")
+    .text("Edge Options")
+    .style("style", "bold")
+    .attr("x", 600)
+    .attr("y", 24)
+    .attr("font-size", 24)
+    .attr("text-anchor", "middle")
+
+  // Add the Directed Graph toggle
+  directed();
+
+  // Add the edgeWidth Option
+  edgeWidth ();
+
+
+}
+
+function sizeOptions(canvas, nodes){
+  var sizeParameter = "degree"
+
+  function sizeButton(selection){
+    selection
+      .append("text")
+      .attr("id", "optionText")
+      .text("Size")
+      .attr("x", 10)
+      .attr("y", 0);
+  }
+
+  var radiusScale = d3.scaleLinear()
+                      .range([3,20])
+  canvas.append("g")
+        .call(sizeButton)
+        .attr("transform", "translate(150, 70)")
+        .on("click", function(d){
+          if (sizeParameter == "degree"){
+            // Change sizeParameter to "degreeI"
+            sizeParameter = "degreeI"
+
+            // Change the radius Scale's domain
+            radiusScale = radiusScale.domain([0,
+                                              d3.max(nodes, function(d){return d.degreeI;})]);
+
+            // Change the nodes' radii to be a function of the nodes' in-degree
+            d3.select("#CitationGraphPlot")
+              .selectAll("circle")
+              .attr("r", function(d){
+                // console.log(d.degreeI);
+                if (d.degreeI == undefined){
+                  return radiusScale(0);
+                } else {
+                  return radiusScale(d.degreeI);
+                }
+              })
+
+          }
+          else if (sizeParameter == "degreeI"){
+            // Change sizeParameter to "degreeO"
+            sizeParameter = "degreeO"
+
+            // Change the radius Scale's domain
+            radiusScale = radiusScale.domain([0,
+                                              d3.max(nodes, function(d){return d.degreeO;})]);
+
+            // Change the nodes' radii to be a function of the nodes' out-degree
+            d3.select("#CitationGraphPlot")
+              .selectAll("circle")
+              .attr("r", function(d){
+                if (d.degreeO == undefined){
+                  return radiusScale(0);
+                } else {
+                  return radiusScale(d.degreeO);
+                }
+              })
+          }
+          else if (sizeParameter == "degreeO"){
+            // Change sizeParameter to "degree"
+            sizeParameter = "degree"
+
+            // Change the radius Scale's domain
+            radiusScale = radiusScale.domain([0,
+                                              d3.max(nodes, function(d){return d.degree;})]);
+
+            // Change the nodes' radii to be a function of the nodes' degree
+            d3.select("#CitationGraphPlot")
+              .selectAll("circle")
+              .attr("r", function(d){
+                if (d.degree == undefined){
+                  return radiusScale(0);
+                } else {
+                  return radiusScale(d.degree);
+                }
+              })
+          }
+        })
+}
+
+
+function isolates(canvas){
   var showIsolates = false;
 
   function isolatesButton(selection){
@@ -282,51 +443,72 @@ function makeNetworkIcons(svg){
     selection
       .append("text")
       .attr("id", "showHideText")
-      .text("Show Isolates")
-      .attr("x", infox)
-      .attr("y", infoy)
-      .attr("font-size", "24px");
+      .text("Isolates")
+      // .text("Show Isolates")
+      .attr("x", infox + 10)
+      .attr("y", infoy);
+
+    selection
+      .append("circle")
+      .attr("r", 6)
+      .attr("cx", 0)
+      .attr("cy", -6)
+      .attr("stroke", "#fff")
+      .attr("stroke-width", "1px")
+      .attr("fill", "gainsboro")
   }
 
 
-  svg.append("g")
+  canvas.append("g")
      .call(isolatesButton)
-     .attr("class", "info icon")
-     .attr("transform", "translate(600,20)")
+    //  .attr("class", "info icon")
+     .attr("transform", "translate(150,50)")
      .on("click", function(d){
        if (showIsolates == false){
-         // Set showIsolates to false
+         // Set showIsolates to true
          showIsolates = true;
+
          // Show the Isolates
-         svg.selectAll("circle")
+         d3.select("#CitationGraphPlot").selectAll("circle")
             .classed("hidden", false);
-         // Change the icon to greyscale
+
+         // Change the icon to colour
+         d3.select(this)
+           .select("circle")
+           .attr("fill", "steelblue")
 
          // Change the text to 'Hide Isolates'
-         d3.select(this)
-           .select("#showHideText")
-           .text("Hide Isolates")
+        //  d3.select(this)
+        //    .select("#showHideText")
+        //    .text("Hide Isolates")
+
        } else {
          // Set showIsolates to false
          showIsolates = false;
-         // Show the Isolates
-         svg.selectAll("circle")
-            .classed("hidden", function(d){if(d.degree == undefined){return true;}else return false});
-         // Change the icon to greyscale
 
-         // Change the text to 'Hide Isolates'
+         // Hide the Isolates
+         d3.select("#CitationGraphPlot").selectAll("circle")
+            .classed("hidden", function(d){if(d.degree == undefined){return true;}else return false});
+
+         // Change the icon to greyscale
          d3.select(this)
-           .select("#showHideText")
-           .text("Show Isolates")
+           .select("circle")
+           .attr("fill", "gainsboro")
+
+         // Change the text to 'Show Isolates'
+        //  d3.select(this)
+        //    .select("#showHideText")
+        //    .text("Show Isolates")
 
        }
      })
 }
 
-function row(d){
-  // console.log(d);
-  return {
-     source: d.From,
-     target: d.To
-   };
+
+function directed(){
+  console.log("Directed")
+}
+
+function edgeWidth(){
+  console.log("Edge Width")
 }
