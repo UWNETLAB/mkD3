@@ -35,6 +35,10 @@ td {
    stroke-width: 1.5px;
  }
 
+.nodes circle.hidden{
+  display: none;
+}
+
 .container {
   display: inline-block;
   position: relative;

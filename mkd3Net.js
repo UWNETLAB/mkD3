@@ -16,6 +16,7 @@ function CitationGraph(edgeFile, nodeFile){
   var svg = d3.select("div")
               .style("padding-bottom", "80%")
               .append("svg")
+              .attr("id", "networkPlot")
               .attr("preserveAspectRatio", "xMinYMin meet")
               .attr("viewBox", "0 0 800 800")
               .classed("svg-content", true);
@@ -28,23 +29,31 @@ function CitationGraph(edgeFile, nodeFile){
                      .alphaDecay(0.1)
                      .force("link", d3.forceLink().id(function(d) {
                        return d.ID;
-                     }).distance([width/100]))
-                     .force("charge", d3.forceManyBody().strength([-(w/100)]))
+                     })
+                     .distance([10]))
+                     .force("charge", d3.forceManyBody().strength([-8]))
                      .force("collide", d3.forceCollide().radius([1]))
                      .force("x", d3.forceX(width / 2))
                      .force("y", d3.forceY(height / 2))
                      .force("center", d3.forceCenter(width/2, height/2));
 
-  d3.csv("pos_network_nodeAttributes.csv", function(error, nodes){
+  d3.csv(nodeFile, function(error, nodes){
   if (error){
   console.log(error);
   } else {
-  d3.csv("pos_network_edgeList.csv", function(error, edges){
+  d3.csv(edgeFile, row, function(error, edges){
   if (error){
     console.log(error);
   } else {
     assignDegree(edges, nodes);
     initToolTip();
+
+    // Create a scale for the radius
+    var rScale = d3.scaleLinear()
+                   .domain([0,
+                            d3.max(nodes, function(d){return d.degree;})])
+                  //  .range([width/Math.sqrt(nodes.length)/20, width/Math.sqrt(nodes.length)/5]);
+                   .range([3, 20]);
 
     // Create the links (aka edges)
     var link = svg.append("g")
@@ -62,13 +71,15 @@ function CitationGraph(edgeFile, nodeFile){
                   .data(nodes)
                   .enter()
                   .append("circle")
-                  .attr("r", function(d){if(d.degree == undefined){return 3;}else{return d.degree/4 + 2;}})
-                  // .attr("r", function(d){return d.degree + 3;})
+                  .classed("hidden", function(d){if(d.degree == undefined){return true;}else return false})
+                  // .attr("r", function(d){if(d.degree == undefined){return 3;}else{return d.degree/4 + 3;}})
+                  .attr("r", function(d){
+                    if (d.degree != undefined){
+                      return rScale(d.degree);
+                    } else {
+                        return rScale(0);
+                    }})
                   .attr("fill", "steelblue")
-                  // .call(d3.drag()
-                  //         .on("start", dragstarted)
-                  //         .on("drag", dragged)
-                  //         .on("end", dragended));
                   .on("mouseover", function(d){
                     d3.select(this)
                       .attr("fill", "pink")
@@ -98,16 +109,45 @@ function CitationGraph(edgeFile, nodeFile){
                       .classed("hidden", true);
 
                     simulation.force("collide", d3.forceCollide().radius([1]));
-                    simulation.restart();
+                    simulation.alphaTarget(0).restart();
 
                   })
+
     simulation
          .nodes(nodes)
          .on("tick", ticked);
 
     simulation
          .force("link")
-         .links(edges);
+         .links(edges)
+        //  .distance(function(d){return 40;})s
+         .distance([width/Math.sqrt(nodes.length)]); // Relative Distance
+
+    simulation
+         .force("charge")
+         .strength(function(d){
+           if(d.degree != undefined){
+             return -width/1.5/Math.sqrt(nodes.length);
+           } else {
+             return -1;
+           }})
+
+    simulation
+         .force("collide")
+         .radius(function(d){
+           if (d.degree != undefined){
+             return rScale(d.degree);
+           } else {
+               return rScale(0);
+           }})
+
+    // simulation
+    //     .force("x")
+    //     .strength([0])
+    //
+    // simulation
+    //     .force("y")
+    //     .strength([0])
 
     function ticked() {
       link
@@ -120,6 +160,8 @@ function CitationGraph(edgeFile, nodeFile){
          .attr("cx", function(d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
          .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
     }
+
+    makeNetworkIcons(svg);
   }})
   }});
 }
@@ -153,23 +195,36 @@ function assignDegree(edges, nodes){
 
   // Assign Degree to nodes
   for (var e = 0; e < edges.length; e++){
-    // Add to the source's degree
+    // Add to the source's degree and outdegree
     source = edges[e].source;
-    sdeg = nodeById.get(source).degree;
-    if (sdeg != undefined){
-      nodeById.get(source).degree += 1;
-    } else {
+    deg = nodeById.get(source).degree;
+    odeg = nodeById.get(source).degreeO;
+    if (deg == undefined && odeg == undefined){
       nodeById.get(source).degree = 1;
+      nodeById.get(source).degreeO = 1;
+    } else if (deg != undefined && odeg == undefined){
+      nodeById.get(source).degree += 1;
+      nodeById.get(source).degreeO = 1;
+    } else if (deg != undefined && odeg != undefined){
+      nodeById.get(source).degree += 1;
+      nodeById.get(source).degreeO += 1;
     }
 
-    // Add to the target's degree
+    // Add to the target's degree and indegree
     target = edges[e].target;
-    tdeg = nodeById.get(source).degree;
-    if (tdeg != undefined){
-      nodeById.get(source).degree += 1;
-    } else {
-      nodeById.get(source).degree = 1;
+    deg = nodeById.get(target).degree;
+    ideg = nodeById.get(target).degreeI;
+    if (deg == undefined && ideg == undefined){
+      nodeById.get(target).degree = 1;
+      nodeById.get(target).degreeI = 1;
+    } else if (deg != undefined && ideg == undefined){
+      nodeById.get(target).degree += 1;
+      nodeById.get(target).degreeI = 1;
+    } else if (deg != undefined && ideg != undefined){
+      nodeById.get(target).degree += 1;
+      nodeById.get(target).degreeI += 1;
     }
+
   }
 }
 
@@ -193,11 +248,14 @@ function makeNetworkToolTip(xPos, yPos, d){
     .style("top", yPos + "px")
     .select("#value")
     .html("<strong>" + d.ID + "</strong><br/>" +
-          "Degree: <strong>" + d.degree + "</strong>")
-    // .html("<emphasis>"+d.year+"</emphasis><br/>" +
-    //       "Raw Frequency: " + "<strong>" + d.count + "</strong>"+ "<br/>" +
-    //       "Difference from Median: " + "<strong>" + d.abs_deviation + "</strong>" + "<br/>" +
-    //       "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
+          "Degree: <strong>" + getAttr("degree") + "</strong><br/>" +
+          "In Degree: <strong>" + getAttr("degreeI") + "</strong><br/>" +
+          "Out Degree: <strong>" + getAttr('degreeO') + "</strong>")
+
+  function getAttr(type){
+    if (d[type] == undefined){return 0;}
+    else {return d[type]}
+  }
 
   // Show the tooltip
     d3.select("#tooltip").classed("hidden", false);
@@ -212,4 +270,63 @@ function repelNodes(simulation, d){
   if (!d3.event.active){
     simulation.alphaTarget(0.3).restart();
   }
+}
+
+function makeNetworkIcons(svg){
+  var showIsolates = false;
+
+  function isolatesButton(selection){
+    infox = 0;
+    infoy = 0;
+
+    selection
+      .append("text")
+      .attr("id", "showHideText")
+      .text("Show Isolates")
+      .attr("x", infox)
+      .attr("y", infoy)
+      .attr("font-size", "24px");
+  }
+
+
+  svg.append("g")
+     .call(isolatesButton)
+     .attr("class", "info icon")
+     .attr("transform", "translate(600,20)")
+     .on("click", function(d){
+       if (showIsolates == false){
+         // Set showIsolates to false
+         showIsolates = true;
+         // Show the Isolates
+         svg.selectAll("circle")
+            .classed("hidden", false);
+         // Change the icon to greyscale
+
+         // Change the text to 'Hide Isolates'
+         d3.select(this)
+           .select("#showHideText")
+           .text("Hide Isolates")
+       } else {
+         // Set showIsolates to false
+         showIsolates = false;
+         // Show the Isolates
+         svg.selectAll("circle")
+            .classed("hidden", function(d){if(d.degree == undefined){return true;}else return false});
+         // Change the icon to greyscale
+
+         // Change the text to 'Hide Isolates'
+         d3.select(this)
+           .select("#showHideText")
+           .text("Show Isolates")
+
+       }
+     })
+}
+
+function row(d){
+  // console.log(d);
+  return {
+     source: d.From,
+     target: d.To
+   };
 }
