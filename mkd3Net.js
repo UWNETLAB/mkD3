@@ -9,6 +9,19 @@ var radius = 20;
 var height = w;
 var width = w;
 
+var darkColour = "#2479C1"
+// var lightColour = "#FF9A20";
+var lightColour = "#FF8A75"
+
+// var darkColour = "cornflowerblue";
+// var lightColour = "#EDBC64"
+
+// var darkColour = "dodgerblue";
+// var lightColour = "darkorange";
+
+// var darkColour = "royalblue";
+// var lightColour = "#E1B941"
+
 function CitationGraph(edgeFile, nodeFile){
 
   // This will need to include initDiv, etc.
@@ -100,10 +113,10 @@ function CitationGraph(edgeFile, nodeFile){
                     } else {
                         return rScale(0);
                     }})
-                  .attr("fill", "steelblue")
+                  .attr("fill", darkColour)
                   .on("mouseover", function(d){
                     d3.select(this)
-                      .attr("fill", "pink")
+                      .attr("fill", lightColour)
 
                     // Fix the node's position
                     d.fx = d.x;
@@ -119,7 +132,7 @@ function CitationGraph(edgeFile, nodeFile){
                   })
                   .on("mouseout", function(d){
                     d3.select(this)
-                      .attr("fill", "steelblue");
+                      .attr("fill", darkColour);
 
                     // Unfix the node's position
                     d.fx = null;
@@ -286,13 +299,13 @@ function repelNodes(simulation, d){
   }
 }
 
-
 function row(d){
   // console.log(d);
   return {
      source: d.From,
      target: d.To,
-     weight: d.weight
+     weight: d.weight,
+     self_ref: d.From == d.To
    };
 }
 
@@ -336,7 +349,6 @@ function makeConsole(nodes, edges){
   // Edge Options
   canvas.append("text")
     .text("Edge Options")
-    .style("style", "bold")
     .attr("x", 600)
     .attr("y", 24)
     .attr("font-size", 24)
@@ -348,6 +360,75 @@ function makeConsole(nodes, edges){
   // Add the edgeAlpha Option
   edgeWeight (canvas, edges);
 
+  // Add the self_referencing Option (loops)
+  selfReferenced (canvas, edges);
+
+
+}
+
+function selfReferenced(canvas){
+  // The graph defaults to showing loops
+  var loops = true;
+
+  function loopButton(selection){
+    // Add the text
+    selection
+      .append("text")
+      .attr("id", "showHideText")
+      .text("Loops")
+      .attr("x", 10)
+
+      // Add circle
+      selection
+        .append("circle")
+        .attr("r", 6)
+        .attr("cx", 0)
+        .attr("cy", -6)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", "1px")
+        .attr("fill", darkColour)
+  }
+
+  canvas.append("g")
+        .call(loopButton)
+        .attr("transform", "translate(550, 90)")
+        .on("click", function(d){
+          if (loops == true){
+            // Set loops to false
+            loops = false;
+
+            // Hide loops (self referencing edges)
+            // Note: Loops only appear in the form of arrow heads
+            d3.select("#CitationGraphPlot")
+              .select("#links")
+              .selectAll("line")
+              .classed("hidden", function(e){return e.self_ref;});
+
+            // Adjust the degree
+            // Change the icon to grey scale
+            d3.select(this)
+              .select("circle")
+              .attr("fill", "gainsboro")
+
+          }
+          else if (loops == false){
+            // Set loops to true
+            loops = true;
+
+            // Show loops (self referencing edges)
+            d3.select("#CitationGraphPlot")
+              .select("#links")
+              .selectAll("line")
+              .classed("hidden", false)
+
+            // Change the icon to colour
+            d3.select(this)
+              .select("circle")
+              .attr("fill", darkColour)
+          }
+
+
+        })
 
 }
 
@@ -416,7 +497,7 @@ function edgeWeight(canvas, edges){
             // Turn icon to colour
             d3.select(this)
               .select("circle")
-              .attr("fill", "steelblue")
+              .attr("fill", darkColour)
           }
           else if (eWeight == true){
             // Set eWeight to false
@@ -453,7 +534,7 @@ function directed(canvas){
     //   selection
     //     .append("path")
     //     .attr("d", "M-4,-8L8,-12L4,0")
-    //     .attr("fill", "steelblue")
+    //     .attr("fill", darkColour)
     //
     //
     // selection
@@ -462,7 +543,7 @@ function directed(canvas){
     //   .attr("x2", -8)
     //   .attr("y1", -4)
     //   .attr("y2", 4)
-    //   .attr("stroke", "steelblue")
+    //   .attr("stroke", darkColour)
     //   .attr("stroke-width", 3)
 
       selection
@@ -491,7 +572,7 @@ function directed(canvas){
          // Change the icon to colour
          d3.select(this)
            .select("circle")
-           .attr("fill", "steelblue")
+           .attr("fill", darkColour)
        }
        else if (showArrows == true){
          // Set showArrows to false
@@ -542,7 +623,6 @@ function isolates(canvas){
     //  .attr("class", "info icon")
      .attr("transform", "translate(150,50)")
      .on("click", function(d){
-       console.log(showIsolates)
        if (showIsolates == false){
          // Set showIsolates to true
          showIsolates = true;
@@ -554,7 +634,7 @@ function isolates(canvas){
          // Change the icon to colour
          d3.select(this)
            .select("circle")
-           .attr("fill", "steelblue")
+           .attr("fill", darkColour)
 
          // Change the text to 'Hide Isolates'
         //  d3.select(this)
