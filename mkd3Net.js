@@ -52,11 +52,12 @@ function CitationGraph(edgeFile, nodeFile){
   initConsole("CitationNetwork");
 
 
-  d3.csv(nodeFile, function(error, nodes){
+  d3.csv(nodeFile, nodesRow, function(error, nodes){
   if (error){
   console.log(error);
   } else {
-  d3.csv(edgeFile, row, function(error, edges){
+    console.log(nodes)
+  d3.csv(edgeFile, edgesRow, function(error, edges){
   if (error){
     console.log(error);
   } else {
@@ -222,36 +223,16 @@ function assignDegree(edges, nodes){
 
   // Assign Degree to nodes
   for (var e = 0; e < edges.length; e++){
-    // Add to the source's degree and oudegree
+    weight = + edges[e].weight;
+    // Add to the source's degree and out-degree
     source = edges[e].source;
-    deg = nodeById.get(source).degree;
-    odeg = nodeById.get(source).degreeO;
-    if (deg == undefined && odeg == undefined){
-      nodeById.get(source).degree = 1;
-      nodeById.get(source).degreeO = 1;
-    } else if (deg != undefined && odeg == undefined){
-      nodeById.get(source).degree += 1;
-      nodeById.get(source).degreeO = 1;
-    } else if (deg != undefined && odeg != undefined){
-      nodeById.get(source).degree += 1;
-      nodeById.get(source).degreeO += 1;
-    }
+    nodeById.get(source).degree += weight;
+    nodeById.get(source).degreeO += weight;
 
-    // Add to the target's degree and indegree
+    // Add to the target's degree and in-degree
     target = edges[e].target;
-    deg = nodeById.get(target).degree;
-    ideg = nodeById.get(target).degreeI;
-    if (deg == undefined && ideg == undefined){
-      nodeById.get(target).degree = 1;
-      nodeById.get(target).degreeI = 1;
-    } else if (deg != undefined && ideg == undefined){
-      nodeById.get(target).degree += 1;
-      nodeById.get(target).degreeI = 1;
-    } else if (deg != undefined && ideg != undefined){
-      nodeById.get(target).degree += 1;
-      nodeById.get(target).degreeI += 1;
-    }
-
+    nodeById.get(target).degree += weight;
+    nodeById.get(target).degreeI += weight;
   }
 }
 
@@ -299,7 +280,7 @@ function repelNodes(simulation, d){
   }
 }
 
-function row(d){
+function edgesRow(d){
   // console.log(d);
   return {
      source: d.From,
@@ -309,6 +290,16 @@ function row(d){
    };
 }
 
+function nodesRow(d){
+  return {
+    ID: d.ID,
+    degree: 0,
+    degreeI: 0,
+    degreeO: 0,
+    index: d.index,
+    info: d.info
+  }
+}
 function initConsole(plotType){
     // Initialize the console's container
     var divConsole = document.createElement('div');
@@ -405,6 +396,7 @@ function selfReferenced(canvas){
               .classed("hidden", function(e){return e.self_ref;});
 
             // Adjust the degree
+
             // Change the icon to grey scale
             d3.select(this)
               .select("circle")
@@ -420,6 +412,8 @@ function selfReferenced(canvas){
               .select("#links")
               .selectAll("line")
               .classed("hidden", false)
+
+            // Reset the degree
 
             // Change the icon to colour
             d3.select(this)
@@ -671,7 +665,7 @@ function sizeOptions(canvas, nodes){
     selection
       .append("text")
       .attr("id", "optionText")
-      .text("Size")
+      .text("Size By")
       .attr("x", 10)
       .attr("y", 0);
   }
