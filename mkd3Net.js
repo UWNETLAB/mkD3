@@ -20,8 +20,6 @@ function CitationGraph(edgeFile, nodeFile){
               .attr("preserveAspectRatio", "xMinYMin meet")
               .attr("viewBox", "0 0 800 800")
               .classed("svg-content", true);
-              // .attr("width", width)
-              // .attr("height", height);
 
   var color = d3.scaleOrdinal(d3.schemeCategory20);
 
@@ -62,6 +60,7 @@ function CitationGraph(edgeFile, nodeFile){
     // Create the links (aka edges)
     var link = svg.append("g")
                   .attr("class", "links")
+                  .attr("id", "links")
                   .selectAll("line")
                   .data(edges)
                   .enter()
@@ -69,7 +68,7 @@ function CitationGraph(edgeFile, nodeFile){
                   .attr("stroke-width", 2)
                   .style("marker-end",  "url(#end)"); //Added
 
-    //---Insert-------
+// Code directly below adapted from http://bl.ocks.org/d3noob/5141278
     svg.append("svg:defs").selectAll("marker")
        .data(["end"])      // Different link/path types can be defined here
        .enter().append("svg:marker")    // This section adds in the arrows
@@ -77,17 +76,14 @@ function CitationGraph(edgeFile, nodeFile){
        .attr("viewBox", "0 -5 10 10")
        .attr("refX", 15)
        .attr("refY", 0)
-       .attr("markerWidth", 3)
+       .attr("markerWidth", 4)
        .attr("markerHeight", 3)
        .attr("orient", "auto")
        .append("svg:path")
        .attr("class", "hidden")
        .attr("d", "M0,-5L10,0L0,5")
-       .attr("fill", "gainsboro")
-       .style("opacity", "0.6")
-
-
-    //---End Insert---
+       .attr("fill", "404040")
+       .style("opacity", "0.8")
 
     // Create the nodes
     var node = svg.append("g")
@@ -178,7 +174,7 @@ function CitationGraph(edgeFile, nodeFile){
          .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
     }
 
-    makeConsole(nodes)
+    makeConsole(nodes, edges)
     // makeNetworkIcons(svg);
   }})
   }});
@@ -295,7 +291,8 @@ function row(d){
   // console.log(d);
   return {
      source: d.From,
-     target: d.To
+     target: d.To,
+     weight: d.weight
    };
 }
 
@@ -313,7 +310,7 @@ function initConsole(plotType){
 
 }
 
-function makeConsole(nodes){
+function makeConsole(nodes, edges){
   // Set up the Console's Canvas
   var canvas = d3.select("#ConsoleContainer")
                  .append("svg")
@@ -335,8 +332,6 @@ function makeConsole(nodes){
   // Add the Size Choice
   sizeOptions(canvas, nodes);
 
-  // Add the Directed Graph toggle
-  directed(canvas);
 
   // Edge Options
   canvas.append("text")
@@ -347,11 +342,99 @@ function makeConsole(nodes){
     .attr("font-size", 24)
     .attr("text-anchor", "middle")
 
+  // Add the Directed Graph toggle
+  directed(canvas);
 
-  // Add the edgeWidth Option
-  edgeWidth ();
+  // Add the edgeAlpha Option
+  edgeWeight (canvas, edges);
 
 
+}
+
+function edgeWeight(canvas, edges){
+  // The graph defaults to a standard stroke-width
+  var eWeight = false;
+
+  function eWeightButton(selection){
+    // Add the text
+    selection
+      .append("text")
+      .attr("id", "showHideText")
+      .text("Weighted Edges")
+      .attr("x", 10)
+
+    // Add circle
+    selection
+      .append("circle")
+      .attr("r", 6)
+      .attr("cx", 0)
+      .attr("cy", -6)
+      .attr("stroke", "#fff")
+      .attr("stroke-width", "1px")
+      .attr("fill", "gainsboro")
+  }
+
+  canvas.append("g")
+        .call(eWeightButton)
+        .attr("transform", "translate(550, 70)")
+        .on("click", function(d){
+          if (eWeight == false){
+            // Set eWeight to true
+            eWeight = true;
+
+            // Create an alpha scale
+            var aScale = d3.scalePow()
+                           .domain([d3.min(edges, function(d){return d.weight;}),
+                                    d3.max(edges, function(d){return d.weight;})])
+                           .range([0.2, 1])
+                           .exponent([8])
+
+            // Adjust edges' opacity and colour
+            d3.select("#CitationGraphPlot")
+              .select("#links")
+              .selectAll("line")
+              // Adjust edges' width
+              // .attr("stroke-width", function(d){
+              //   if (d.weight == undefined){
+              //     return 2;
+              //   }
+              //   else {
+              //     return d.weight*2 + 1;
+              //   }
+              // })
+              // Adjust the opacity
+              .style("opacity", function(d){
+                if (d.weight == undefined){
+                  return 0.6;
+                } else {
+                  return aScale(d.weight);
+                }
+              })
+              // Change the colour
+              // .style("stroke", "black")
+
+            // Turn icon to colour
+            d3.select(this)
+              .select("circle")
+              .attr("fill", "steelblue")
+          }
+          else if (eWeight == true){
+            // Set eWeight to false
+            eWeight = false;
+
+            // Adjust edge width
+            d3.select("#CitationGraphPlot")
+              .select("#links")
+              .selectAll("line")
+              .style("opacity", 0.4)
+              .style("stroke", "#404040")
+
+            // Turn icon to greyscale
+            d3.select(this)
+              .select("circle")
+              .attr("fill", "gainsboro")
+          }
+        })
 }
 
 function directed(canvas){
@@ -427,48 +510,6 @@ function directed(canvas){
        }
      })
 }
-
-// function directed(canvas){
-//   // The graph begins without arrows
-//   var arrows = false;
-//
-//   function directedButton(selection){
-//     // Add the text
-//     selection
-//       .append("text")
-//       .attr("id", "directedText")
-//       .text("Directed")
-//       .attr("x", 10)
-//       .attr("y", 0);
-//
-//   }
-//
-//   canvas.append("g")
-//     .call(directedButton)
-//     .attr("transform", "translate(550, 50)")
-//     .on("click", function(d){
-//       console.log(arrows)
-//       if (arrows == false){
-//         // Change directed to true
-//         var arrows = true;
-//
-//         // // Add End Markers to Links
-//         // d3.selectAll("marker")
-//         //   .selectAll("path")
-//         //   .style("opacity", "0.6");
-//       }
-//       else if (arrows == true){
-//         // Change directed to false
-//         // var arrows = false;
-//         //
-//         // // Remove End Markers from links
-//         // d3.selectAll("marker")
-//         //   .selectAll("path")
-//         //   .style("opacity", 0);
-//
-//       }
-//     })
-// }
 
 function isolates(canvas){
   var showIsolates = false;
@@ -621,11 +662,4 @@ function sizeOptions(canvas, nodes){
               })
           }
         })
-}
-
-
-
-
-function edgeWidth(){
-  console.log("Edge Width")
 }

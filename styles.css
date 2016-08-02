@@ -28,9 +28,9 @@ td {
    display: none;
  }
  .links line {
-   stroke: rgba(142,142,142,0.4);
+   stroke: #404040;
    /*stroke: #999;*/
-   stroke-opacity: 0.6;
+   opacity: 0.4;
  }
 
  .nodes circle {
