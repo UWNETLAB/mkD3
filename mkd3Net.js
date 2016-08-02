@@ -42,7 +42,8 @@ function CitationGraph(edgeFile, nodeFile){
                        return d.ID;
                      })
                      .distance([10]))
-                     .force("charge", d3.forceManyBody().strength([-8]))
+                      .force("charge", d3.forceManyBody().strength([-8]))
+                      // .force("charge", d3.forceManyBody().strength([-20]))
                      .force("collide", d3.forceCollide().radius([1]))
                      .force("x", d3.forceX(width / 2))
                      .force("y", d3.forceY(height / 2))
@@ -56,7 +57,6 @@ function CitationGraph(edgeFile, nodeFile){
   if (error){
   console.log(error);
   } else {
-    console.log(nodes)
   d3.csv(edgeFile, edgesRow, function(error, edges){
   if (error){
     console.log(error);
@@ -82,7 +82,8 @@ function CitationGraph(edgeFile, nodeFile){
                   .attr("stroke-width", 2)
                   .style("marker-end",  "url(#end)"); //Added
 
-// Code directly below adapted from http://bl.ocks.org/d3noob/5141278
+    // Code directly below adapted from http://bl.ocks.org/d3noob/5141278
+    // Create the end markers
     svg.append("svg:defs").selectAll("marker")
        .data(["end"])      // Different link/path types can be defined here
        .enter().append("svg:marker")    // This section adds in the arrows
@@ -175,7 +176,7 @@ function CitationGraph(edgeFile, nodeFile){
          .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
     }
 
-    makeConsole(nodes, edges)
+    makeConsole(nodes, edges, rScale)
     // makeNetworkIcons(svg);
   }})
   }});
@@ -302,7 +303,7 @@ function initConsole(plotType){
 
 }
 
-function makeConsole(nodes, edges){
+function makeConsole(nodes, edges, rScale){
   // Set up the Console's Canvas
   var canvas = d3.select("#ConsoleContainer")
                  .append("svg")
@@ -321,9 +322,11 @@ function makeConsole(nodes, edges){
   // Isolates Toggle
   isolates(canvas)
 
-  // Add the Size Choice
-  sizeOptions(canvas, nodes);
+  // Add the Size By Choice
+  sizeBy(canvas, nodes, rScale);
 
+  // Add ability to change node sizes
+  sizeChange(canvas, rScale)
 
   // Edge Options
   canvas.append("text")
@@ -646,20 +649,84 @@ function isolates(canvas){
      })
 }
 
-function sizeOptions(canvas, nodes){
+function sizeChange(canvas, rScale){
+  var IncDec;
+
+  function sizeButton(selection){
+    selection
+      .append("text")
+      .attr("id", "sizeText")
+      .text("Size")
+      .attr("x", 10)
+      .on("click", function(d){IncDec = undefined})
+
+
+    selection
+      .append("text")
+      .attr("id", "sizeText")
+      .text("-")
+      .attr("font-size", 20)
+      .attr("x", 50)
+      .on("click", function(d){IncDec = "decrease"})
+
+      selection
+        .append("text")
+        .attr("id", "sizeText")
+        .text("+")
+        .attr("font-size", 20)
+        .attr("x", 70)
+        .on("click", function(d){IncDec = "increase"})
+
+      selection
+        .append("text")
+        .attr("id", "sizeText")
+        .text("(R)")
+        .attr("x", 90)
+        .on("click", function(d){IncDec = "reset"})
+
+  }
+
+  canvas.append("g")
+        .call(sizeButton)
+        .attr("transform", "translate(150,90)")
+        .on("click", function(d){
+          if (IncDec == "increase"){
+            // Adjust the radius scale to create larger nodes
+            newMin = rScale.range()[0] + 1;
+            newMax = rScale.range()[1] + 1;
+            rScale.range([newMin, newMax])
+          }
+          else if (IncDec == "decrease"){
+            // Adjust the radius scale to create larger nodes
+            newMin = rScale.range()[0] - 1;
+            newMax = rScale.range()[1] - 1;
+            rScale.range([newMin<2?2:newMin, newMax<2?2:newMax])
+          }
+          else if (IncDec == "reset"){
+            // Revert radius scale
+            rScale.range([3,20])
+          }
+
+          // Resize the nodes
+          d3.select("#CitationGraphPlot")
+            .selectAll("circle")
+            .attr("r", function(d){return rScale(d.degree)})
+
+        })
+}
+
+function sizeBy(canvas, nodes, rScale){
   var sizeParameter = "degree"
 
   function sizeButton(selection){
     selection
       .append("text")
       .attr("id", "optionText")
-      .text("Size By")
+      .text("Size By (degree)")
       .attr("x", 10)
       .attr("y", 0);
   }
 
-  var radiusScale = d3.scaleLinear()
-                      .range([3,20])
   canvas.append("g")
         .call(sizeButton)
         .attr("transform", "translate(150, 70)")
@@ -669,7 +736,7 @@ function sizeOptions(canvas, nodes){
             sizeParameter = "degreeI"
 
             // Change the radius Scale's domain
-            radiusScale = radiusScale.domain([0,
+            rScale = rScale.domain([0,
                                               d3.max(nodes, function(d){return d.degreeI;})]);
 
             // Change the nodes' radii to be a function of the nodes' in-degree
@@ -677,34 +744,50 @@ function sizeOptions(canvas, nodes){
               .selectAll("circle")
               .attr("r", function(d){
                 // console.log(d.degreeI);
-                return radiusScale(d.degreeI);})
+                return rScale(d.degreeI);})
+
+            // Change the text
+             d3.select(this)
+               .select("text")
+               .text("Size By (in-degree)")
           }
           else if (sizeParameter == "degreeI"){
             // Change sizeParameter to "degreeO"
             sizeParameter = "degreeO"
 
             // Change the radius Scale's domain
-            radiusScale = radiusScale.domain([0,
+            rScale = rScale.domain([0,
                                               d3.max(nodes, function(d){return d.degreeO;})]);
 
             // Change the nodes' radii to be a function of the nodes' out-degree
             d3.select("#CitationGraphPlot")
               .selectAll("circle")
-              .attr("r", function(d){return radiusScale(d.degreeO);})
+              .attr("r", function(d){return rScale(d.degreeO);})
+
+            // Change the text
+             d3.select(this)
+               .select("text")
+               .text("Size By (out-degree)")
           }
           else if (sizeParameter == "degreeO"){
             // Change sizeParameter to "degree"
             sizeParameter = "degree"
 
             // Change the radius Scale's domain
-            radiusScale = radiusScale.domain([0,
+            rScale = rScale.domain([0,
                                               d3.max(nodes, function(d){return d.degree;})]);
 
             // Change the nodes' radii to be a function of the nodes' degree
             d3.select("#CitationGraphPlot")
               .selectAll("circle")
               .attr("r", function(d){
-                return radiusScale(d.degree)})
+                return rScale(d.degree)})
+
+            // Change the text
+             d3.select(this)
+               .select("text")
+               .text("Size By (degree)")
+
           }
         })
 }
