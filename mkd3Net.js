@@ -106,14 +106,8 @@ function CitationGraph(edgeFile, nodeFile){
                   .data(nodes)
                   .enter()
                   .append("circle")
-                  .classed("hidden", function(d){if(d.degree == undefined){return true;}else return false})
-                  // .attr("r", function(d){if(d.degree == undefined){return 3;}else{return d.degree/4 + 3;}})
-                  .attr("r", function(d){
-                    if (d.degree != undefined){
-                      return rScale(d.degree);
-                    } else {
-                        return rScale(0);
-                    }})
+                  .classed("hidden", function(d){return d.degree == 0;})
+                  .attr("r", function(d){return rScale(d.degree);})
                   .attr("fill", darkColour)
                   .on("mouseover", function(d){
                     d3.select(this)
@@ -161,20 +155,13 @@ function CitationGraph(edgeFile, nodeFile){
     simulation
          .force("charge")
          .strength(function(d){
-           if(d.degree != undefined){
-             return -width/1.5/Math.sqrt(nodes.length);
-           } else {
-             return -1;
-           }})
+           if(d.degree == 0){return -1;}
+           else{return -width/1.5/Math.sqrt(nodes.length);}
+           })
 
     simulation
          .force("collide")
-         .radius(function(d){
-           if (d.degree != undefined){
-             return rScale(d.degree);
-           } else {
-               return rScale(0);
-           }})
+         .radius(function(d){return rScale(d.degree)})
 
     function ticked() {
       link
@@ -300,6 +287,7 @@ function nodesRow(d){
     info: d.info
   }
 }
+
 function initConsole(plotType){
     // Initialize the console's container
     var divConsole = document.createElement('div');
@@ -642,7 +630,7 @@ function isolates(canvas){
 
          // Hide the Isolates
          d3.select("#CitationGraphPlot").selectAll("circle")
-            .classed("hidden", function(d){if(d.degree == undefined){return true;}else return false});
+            .classed("hidden", function(d){return d.degree == 0;});
 
          // Change the icon to greyscale
          d3.select(this)
@@ -689,13 +677,7 @@ function sizeOptions(canvas, nodes){
               .selectAll("circle")
               .attr("r", function(d){
                 // console.log(d.degreeI);
-                if (d.degreeI == undefined){
-                  return radiusScale(0);
-                } else {
-                  return radiusScale(d.degreeI);
-                }
-              })
-
+                return radiusScale(d.degreeI);})
           }
           else if (sizeParameter == "degreeI"){
             // Change sizeParameter to "degreeO"
@@ -708,13 +690,7 @@ function sizeOptions(canvas, nodes){
             // Change the nodes' radii to be a function of the nodes' out-degree
             d3.select("#CitationGraphPlot")
               .selectAll("circle")
-              .attr("r", function(d){
-                if (d.degreeO == undefined){
-                  return radiusScale(0);
-                } else {
-                  return radiusScale(d.degreeO);
-                }
-              })
+              .attr("r", function(d){return radiusScale(d.degreeO);})
           }
           else if (sizeParameter == "degreeO"){
             // Change sizeParameter to "degree"
@@ -728,12 +704,7 @@ function sizeOptions(canvas, nodes){
             d3.select("#CitationGraphPlot")
               .selectAll("circle")
               .attr("r", function(d){
-                if (d.degree == undefined){
-                  return radiusScale(0);
-                } else {
-                  return radiusScale(d.degree);
-                }
-              })
+                return radiusScale(d.degree)})
           }
         })
 }
