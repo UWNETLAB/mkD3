@@ -273,7 +273,7 @@ function edgesRow(d){
   return {
      source: d.From,
      target: d.To,
-     weight: d.weight,
+     weight: d.weight==undefined?1:d.weight,
      self_ref: d.From == d.To
    };
 }
