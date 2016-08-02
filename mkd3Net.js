@@ -80,10 +80,11 @@ function CitationGraph(edgeFile, nodeFile){
        .attr("markerWidth", 3)
        .attr("markerHeight", 3)
        .attr("orient", "auto")
+       .append("svg:path")
+       .attr("class", "hidden")
+       .attr("d", "M0,-5L10,0L0,5")
        .attr("fill", "gainsboro")
        .style("opacity", "0.6")
-       .append("svg:path")
-       .attr("d", "M0,-5L10,0L0,5");
 
 
     //---End Insert---
@@ -329,10 +330,13 @@ function makeConsole(nodes){
     .attr("text-anchor", "middle")
 
   // Isolates Toggle
-    isolates(canvas)
+  isolates(canvas)
 
   // Add the Size Choice
   sizeOptions(canvas, nodes);
+
+  // Add the Directed Graph toggle
+  directed(canvas);
 
   // Edge Options
   canvas.append("text")
@@ -343,13 +347,200 @@ function makeConsole(nodes){
     .attr("font-size", 24)
     .attr("text-anchor", "middle")
 
-  // Add the Directed Graph toggle
-  directed();
 
   // Add the edgeWidth Option
   edgeWidth ();
 
 
+}
+
+function directed(canvas){
+  // The graph starts with no arrows
+  var showArrows = false;
+
+  function arrowButton(selection){
+    // Add the text
+    selection
+      .append("text")
+      .attr("id", "showHideText")
+      .text("Arrows")
+      .attr("x", 10)
+      .attr("y", 0);
+
+    //   selection
+    //     .append("path")
+    //     .attr("d", "M-4,-8L8,-12L4,0")
+    //     .attr("fill", "steelblue")
+    //
+    //
+    // selection
+    //   .append("line")
+    //   .attr("x1", 0)
+    //   .attr("x2", -8)
+    //   .attr("y1", -4)
+    //   .attr("y2", 4)
+    //   .attr("stroke", "steelblue")
+    //   .attr("stroke-width", 3)
+
+      selection
+        .append("circle")
+        .attr("r", 6)
+        .attr("cx", 0)
+        .attr("cy", -6)
+        .attr("stroke", "#fff")
+        .attr("stroke-width", "1px")
+        .attr("fill", "gainsboro")
+  }
+
+  canvas.append("g")
+     .call(arrowButton)
+     .attr("transform", "translate(550,50)")
+     .on("click", function(d){
+       if (showArrows == false){
+         // Set showArrows to true
+         showArrows = true;
+
+         // Show arrows
+         d3.selectAll("marker")
+           .select("path")
+           .classed("hidden", false)
+
+         // Change the icon to colour
+         d3.select(this)
+           .select("circle")
+           .attr("fill", "steelblue")
+       }
+       else if (showArrows == true){
+         // Set showArrows to false
+         showArrows = false;
+
+         // Hide arrows
+         d3.selectAll("marker")
+           .select("path")
+           .classed("hidden", true)
+
+         // Change the icon's colour to grey
+         d3.select(this)
+           .select("circle")
+           .attr("fill", "gainsboro")
+
+       }
+     })
+}
+
+// function directed(canvas){
+//   // The graph begins without arrows
+//   var arrows = false;
+//
+//   function directedButton(selection){
+//     // Add the text
+//     selection
+//       .append("text")
+//       .attr("id", "directedText")
+//       .text("Directed")
+//       .attr("x", 10)
+//       .attr("y", 0);
+//
+//   }
+//
+//   canvas.append("g")
+//     .call(directedButton)
+//     .attr("transform", "translate(550, 50)")
+//     .on("click", function(d){
+//       console.log(arrows)
+//       if (arrows == false){
+//         // Change directed to true
+//         var arrows = true;
+//
+//         // // Add End Markers to Links
+//         // d3.selectAll("marker")
+//         //   .selectAll("path")
+//         //   .style("opacity", "0.6");
+//       }
+//       else if (arrows == true){
+//         // Change directed to false
+//         // var arrows = false;
+//         //
+//         // // Remove End Markers from links
+//         // d3.selectAll("marker")
+//         //   .selectAll("path")
+//         //   .style("opacity", 0);
+//
+//       }
+//     })
+// }
+
+function isolates(canvas){
+  var showIsolates = false;
+
+  function isolatesButton(selection){
+    infox = 0;
+    infoy = 0;
+
+    selection
+      .append("text")
+      .attr("id", "showHideText")
+      .text("Isolates")
+      // .text("Show Isolates")
+      .attr("x", infox + 10)
+      .attr("y", infoy);
+
+    selection
+      .append("circle")
+      .attr("r", 6)
+      .attr("cx", 0)
+      .attr("cy", -6)
+      .attr("stroke", "#fff")
+      .attr("stroke-width", "1px")
+      .attr("fill", "gainsboro")
+  }
+
+
+  canvas.append("g")
+     .call(isolatesButton)
+    //  .attr("class", "info icon")
+     .attr("transform", "translate(150,50)")
+     .on("click", function(d){
+       console.log(showIsolates)
+       if (showIsolates == false){
+         // Set showIsolates to true
+         showIsolates = true;
+
+         // Show the Isolates
+         d3.select("#CitationGraphPlot").selectAll("circle")
+            .classed("hidden", false);
+
+         // Change the icon to colour
+         d3.select(this)
+           .select("circle")
+           .attr("fill", "steelblue")
+
+         // Change the text to 'Hide Isolates'
+        //  d3.select(this)
+        //    .select("#showHideText")
+        //    .text("Hide Isolates")
+
+       }
+       else {
+         // Set showIsolates to false
+         showIsolates = false;
+
+         // Hide the Isolates
+         d3.select("#CitationGraphPlot").selectAll("circle")
+            .classed("hidden", function(d){if(d.degree == undefined){return true;}else return false});
+
+         // Change the icon to greyscale
+         d3.select(this)
+           .select("circle")
+           .attr("fill", "gainsboro")
+
+         // Change the text to 'Show Isolates'
+        //  d3.select(this)
+        //    .select("#showHideText")
+        //    .text("Show Isolates")
+
+       }
+     })
 }
 
 function sizeOptions(canvas, nodes){
@@ -433,81 +624,7 @@ function sizeOptions(canvas, nodes){
 }
 
 
-function isolates(canvas){
-  var showIsolates = false;
 
-  function isolatesButton(selection){
-    infox = 0;
-    infoy = 0;
-
-    selection
-      .append("text")
-      .attr("id", "showHideText")
-      .text("Isolates")
-      // .text("Show Isolates")
-      .attr("x", infox + 10)
-      .attr("y", infoy);
-
-    selection
-      .append("circle")
-      .attr("r", 6)
-      .attr("cx", 0)
-      .attr("cy", -6)
-      .attr("stroke", "#fff")
-      .attr("stroke-width", "1px")
-      .attr("fill", "gainsboro")
-  }
-
-
-  canvas.append("g")
-     .call(isolatesButton)
-    //  .attr("class", "info icon")
-     .attr("transform", "translate(150,50)")
-     .on("click", function(d){
-       if (showIsolates == false){
-         // Set showIsolates to true
-         showIsolates = true;
-
-         // Show the Isolates
-         d3.select("#CitationGraphPlot").selectAll("circle")
-            .classed("hidden", false);
-
-         // Change the icon to colour
-         d3.select(this)
-           .select("circle")
-           .attr("fill", "steelblue")
-
-         // Change the text to 'Hide Isolates'
-        //  d3.select(this)
-        //    .select("#showHideText")
-        //    .text("Hide Isolates")
-
-       } else {
-         // Set showIsolates to false
-         showIsolates = false;
-
-         // Hide the Isolates
-         d3.select("#CitationGraphPlot").selectAll("circle")
-            .classed("hidden", function(d){if(d.degree == undefined){return true;}else return false});
-
-         // Change the icon to greyscale
-         d3.select(this)
-           .select("circle")
-           .attr("fill", "gainsboro")
-
-         // Change the text to 'Show Isolates'
-        //  d3.select(this)
-        //    .select("#showHideText")
-        //    .text("Show Isolates")
-
-       }
-     })
-}
-
-
-function directed(){
-  console.log("Directed")
-}
 
 function edgeWidth(){
   console.log("Edge Width")

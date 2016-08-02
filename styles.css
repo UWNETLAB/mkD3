@@ -24,6 +24,9 @@ td {
      border-bottom: 1px solid #ddd;
      font-size: 12px;
  }
+ .hidden{
+   display: none;
+ }
  .links line {
    stroke: rgba(142,142,142,0.4);
    /*stroke: #999;*/
@@ -34,10 +37,6 @@ td {
    stroke: #fff;
    stroke-width: 1px;
  }
-
-.nodes circle.hidden{
-  display: none;
-}
 
 .container {
   display: inline-block;
@@ -99,11 +98,12 @@ overflow-y: hidden;
   column-width: 10px;
 }
 
-#TopCitationsTablestandardBar.hidden,
+/*#TopCitationsTablestandardBar.hidden,
 #TopCitationsTablestandardLine.hidden,
 #TopCitationsTablemultiRPYS.hidden{
   display: none;
-}
+}*/
+
 #tooltip {
   position: absolute;
   width: auto;
@@ -120,9 +120,9 @@ overflow-y: hidden;
   pointer-events: none;
 }
 
-#tooltip.hidden {
+/*#tooltip.hidden {
   display: none;
-}
+}*/
 
 #tooltip p {
   margin: 0;
