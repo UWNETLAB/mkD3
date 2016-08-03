@@ -52,6 +52,8 @@ function CitationGraph(edgeFile, nodeFile){
   // Make the Options Panel (Console)
   initConsole("CitationNetwork");
 
+  // Initialize the Table
+  initNetworkTable("CitationGraph");
 
   d3.csv(nodeFile, nodesRow, function(error, nodes){
   if (error){
@@ -140,7 +142,9 @@ function CitationGraph(edgeFile, nodeFile){
 
                     simulation.force("collide", d3.forceCollide().radius([1]));
                     simulation.alphaTarget(0).restart();
-
+                  })
+                  .on("click", function(d){
+                    makeNetworkTable("CitationGraph", d.ID, edges)
                   })
 
     simulation
@@ -177,13 +181,79 @@ function CitationGraph(edgeFile, nodeFile){
     }
 
     makeConsole(nodes, edges, rScale)
-    // makeNetworkIcons(svg);
   }})
   }});
 }
 
-// This function was garnered from d3js.org/d3.v4.js
-// Citation here
+
+// Table Functions
+// ***************
+function initNetworkTable(plotType){
+  var header = "<thead><tr>" + "<th width=40%><b>Source Node</b></th>" +
+                               "<th width=40%><b>Target Node</b></th>" +
+                               "<th width=20%><b>Edge Weight</b></th>" +
+               "</tr></thead>"
+
+  initTable(plotType, header);
+
+}
+
+function initTable(plotType, header){
+  // Initialize the table
+  var divTable = document.createElement('div');
+  divTable.id = "TableContainer" + plotType;
+  divTable.className = "container hidden";
+
+  var table = document.createElement('table');
+  table.id = "Table" + plotType;
+  table.border = "0";
+  table.cellpadding = "3";
+
+  divTable.appendChild(table);
+  var plotDiv = document.getElementById(plotType);
+  document.body.insertBefore(divTable, plotDiv.nextSibling);
+
+  var tableName = "#Table" + plotType;
+  d3.select(tableName)
+             .html(header);
+
+  header = d3.select(tableName)
+             .html();
+}
+
+function makeNetworkTable(plotType, nodeID, edges){
+  var tableName = "#Table" + plotType;
+  // Copy the header from the html
+  header = d3.select(tableName)
+             .html().split('<tbody>')[0];
+
+  // Create the rows
+  var data = edges.filter(function(d){
+    return d.source.ID == nodeID || d.target.ID == nodeID;
+  })
+
+  // Create the html for the table values
+  rows = "<tbody>"
+  // Iterate through each edge
+  for (i=0; i < data.length; i++){
+    rowvals = [data[i].source.ID, data[i].target.ID, data[i].weight]
+    rows += "<tr>";
+    // Append each piece of information for the rows
+    for (var j=0; j < rowvals.length; j++){
+      rows += "<td>" + rowvals[j] + "</td>";
+    }
+    rows += "</tr>"
+  }
+  rows += "</tbody>"
+
+  // Write everything into the table
+  d3.select("#Table" + plotType)
+    .html(header + rows);
+}
+
+
+
+// Function directly below adapted from d3js.org/d3.v4.js
 function map$1(object, f){
   var map = new Map;
 
@@ -269,11 +339,10 @@ function repelNodes(simulation, d){
 }
 
 function edgesRow(d){
-  // console.log(d);
   return {
      source: d.From,
      target: d.To,
-     weight: d.weight==undefined?1:d.weight,
+     weight: d.weight==undefined?1:d.weight ,
      self_ref: d.From == d.To
    };
 }
