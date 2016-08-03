@@ -344,8 +344,13 @@ function makeNetworkTable(plotType, nodeID, edges){
     // if (a.target.ID > b.target.ID)return 1;
     // return 0;
 
-    // Sort by edge weight
-    return b.weight - a.weight;
+    // Sort by edge weight, then source node, then target node
+    if (b.weight - a.weight != 0) return b.weight - a.weight;
+    if (a.source.ID < b.source.ID)return -1;
+    if (a.source.ID > b.source.ID)return 1;
+    if (a.target.ID < b.target.ID)return -1;
+    if (a.target.ID > b.target.ID)return 1;
+
   })
 
   // Create the html for the table values
