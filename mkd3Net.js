@@ -63,7 +63,7 @@ function CitationGraph(edgeFile, nodeFile){
   if (error){
     console.log(error);
   } else {
-    assignDegree(edges, nodes);
+    nodeCalc(edges, nodes);
     initToolTip();
 
     // Create a scale for the radius
@@ -211,7 +211,28 @@ function map$1(object, f){
   return map;
 }
 
-function assignDegree(edges, nodes){
+function nodeCalc(edges, nodes){
+  // Find the degree, in-degree, and out-degree of each node and assign it
+  degreeCalc(edges, nodes)
+
+  // Find the number of loops for each node and assign it
+  loopCalc(edges, nodes)
+
+}
+
+function loopCalc(edges, nodes){
+  var nodeById = map$1(nodes, function(d){return d.ID;})
+
+  // Assign loop count to nodes
+  for (var e = 0; e < edges.length; e++){
+    weight = + edges[e].weight;
+    if (edges[e].source == edges[e].target){
+      nodeById.get(edges[e].source).loopCount += weight;
+    }
+  }
+}
+
+function degreeCalc(edges, nodes){
   var nodeById = map$1(nodes, function(d){return d.ID;})
 
   // Assign Degree to nodes
@@ -244,6 +265,7 @@ function nodesRow(d){
     degree: 0,
     degreeI: 0,
     degreeO: 0,
+    loopCount: 0,
     index: d.index,
     info: d.info
   }
@@ -369,7 +391,8 @@ function makeNetworkToolTip(xPos, yPos, d){
     .html("<strong>" + d.ID + "</strong><br/>" +
           "Degree: <strong>" + getAttr("degree") + "</strong><br/>" +
           "In Degree: <strong>" + getAttr("degreeI") + "</strong><br/>" +
-          "Out Degree: <strong>" + getAttr('degreeO') + "</strong>")
+          "Out Degree: <strong>" + getAttr('degreeO') + "</strong></br>" +
+          "Loops: <strong>" + getAttr('loopCount') + "</strong></br>")
 
   function getAttr(type){
     if (d[type] == undefined){return 0;}
