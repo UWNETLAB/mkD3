@@ -185,73 +185,8 @@ function CitationGraph(edgeFile, nodeFile){
   }});
 }
 
-
-// Table Functions
-// ***************
-function initNetworkTable(plotType){
-  var header = "<thead><tr>" + "<th width=40%><b>Source Node</b></th>" +
-                               "<th width=40%><b>Target Node</b></th>" +
-                               "<th width=20%><b>Edge Weight</b></th>" +
-               "</tr></thead>"
-
-  initTable(plotType, header);
-
-}
-
-function initTable(plotType, header){
-  // Initialize the table
-  var divTable = document.createElement('div');
-  divTable.id = "TableContainer" + plotType;
-  divTable.className = "container hidden";
-
-  var table = document.createElement('table');
-  table.id = "Table" + plotType;
-  table.border = "0";
-  table.cellpadding = "3";
-
-  divTable.appendChild(table);
-  var plotDiv = document.getElementById(plotType);
-  document.body.insertBefore(divTable, plotDiv.nextSibling);
-
-  var tableName = "#Table" + plotType;
-  d3.select(tableName)
-             .html(header);
-
-  header = d3.select(tableName)
-             .html();
-}
-
-function makeNetworkTable(plotType, nodeID, edges){
-  var tableName = "#Table" + plotType;
-  // Copy the header from the html
-  header = d3.select(tableName)
-             .html().split('<tbody>')[0];
-
-  // Create the rows
-  var data = edges.filter(function(d){
-    return d.source.ID == nodeID || d.target.ID == nodeID;
-  })
-
-  // Create the html for the table values
-  rows = "<tbody>"
-  // Iterate through each edge
-  for (i=0; i < data.length; i++){
-    rowvals = [data[i].source.ID, data[i].target.ID, data[i].weight]
-    rows += "<tr>";
-    // Append each piece of information for the rows
-    for (var j=0; j < rowvals.length; j++){
-      rows += "<td>" + rowvals[j] + "</td>";
-    }
-    rows += "</tr>"
-  }
-  rows += "</tbody>"
-
-  // Write everything into the table
-  d3.select("#Table" + plotType)
-    .html(header + rows);
-}
-
-
+// Data Functions
+// **************
 
 // Function directly below adapted from d3js.org/d3.v4.js
 function map$1(object, f){
@@ -294,6 +229,124 @@ function assignDegree(edges, nodes){
   }
 }
 
+function edgesRow(d){
+  return {
+     source: d.From,
+     target: d.To,
+     weight: d.weight==undefined?1:d.weight ,
+     self_ref: d.From == d.To
+   };
+}
+
+function nodesRow(d){
+  return {
+    ID: d.ID,
+    degree: 0,
+    degreeI: 0,
+    degreeO: 0,
+    index: d.index,
+    info: d.info
+  }
+}
+
+// Table Functions
+// ***************
+function initNetworkTable(plotType){
+  var header = "<thead><tr>" + "<th width=40%><b>Source Node</b></th>" +
+                               "<th width=40%><b>Target Node</b></th>" +
+                               "<th width=20%><b>Edge Weight</b></th>" +
+               "</tr></thead>"
+
+  initTable(plotType, header);
+
+}
+
+function initTable(plotType, header){
+  // Initialize the table
+
+  // Create the table container
+  var divTable = document.createElement('div');
+  divTable.id = "TableContainer" + plotType;
+  divTable.className = "container hidden";
+
+  // Create the title
+  var title = document.createElement('p');
+  title.id = "TableTitle" + plotType;
+  title.className = "title";
+
+  // Create the table
+  var table = document.createElement('table');
+  table.id = "Table" + plotType;
+  table.border = "0";
+  table.cellpadding = "3";
+
+  // Add them to together and then to the document
+  divTable.appendChild(title);
+  divTable.appendChild(table);
+  var plotDiv = document.getElementById(plotType);
+  document.body.insertBefore(divTable, plotDiv.nextSibling);
+
+  var tableName = "#Table" + plotType;
+  d3.select(tableName)
+             .html(header);
+
+  header = d3.select(tableName)
+             .html();
+}
+
+function makeNetworkTable(plotType, nodeID, edges){
+  d3.select("#TableTitle" + plotType)
+    .html(nodeID)
+
+  var tableName = "#Table" + plotType;
+  // Copy the header from the html
+  header = d3.select(tableName)
+             .html().split('<tbody>')[0];
+
+  // Filter the edges
+  var data = edges.filter(function(d){
+    return d.source.ID == nodeID || d.target.ID == nodeID;
+  })
+
+  // Sort edges
+  data = data.sort(function(a, b){
+    // Sort by nodeID match
+    // if (a.source.ID == nodeID && b.source.ID == nodeID) return 0;
+    // if (a.source.ID == nodeID && b.source.ID != nodeID) return -1;
+    // if (a.source.ID != nodeID && b.source.ID == nodeID) return 1;
+
+    // Sort by source, then target
+    // if (a.source.ID < b.source.ID)return -1;
+    // if (a.source.ID > b.source.ID)return 1;
+    // if (a.target.ID < b.target.ID)return -1;
+    // if (a.target.ID > b.target.ID)return 1;
+    // return 0;
+
+    // Sort by edge weight
+    return b.weight - a.weight;
+  })
+
+  // Create the html for the table values
+  rows = "<tbody>"
+  // Iterate through each edge
+  for (i=0; i < data.length; i++){
+    rowvals = [data[i].source.ID, data[i].target.ID, data[i].weight]
+    rows += "<tr>";
+    // Append each piece of information for the rows
+    for (var j=0; j < rowvals.length; j++){
+      rows += "<td>" + rowvals[j] + "</td>";
+    }
+    rows += "</tr>"
+  }
+  rows += "</tbody>"
+
+  // Write data into the table
+  d3.select("#Table" + plotType)
+    .html(header + rows);
+}
+
+// Tooltip Functions
+// *****************
 function initToolTip(){
   var divToolTip = document.createElement('div');
   var paragraph = document.createElement('p');
@@ -338,25 +391,8 @@ function repelNodes(simulation, d){
   }
 }
 
-function edgesRow(d){
-  return {
-     source: d.From,
-     target: d.To,
-     weight: d.weight==undefined?1:d.weight ,
-     self_ref: d.From == d.To
-   };
-}
-
-function nodesRow(d){
-  return {
-    ID: d.ID,
-    degree: 0,
-    degreeI: 0,
-    degreeO: 0,
-    index: d.index,
-    info: d.info
-  }
-}
+// Console Functions
+// *****************
 
 function initConsole(plotType){
     // Initialize the console's container
@@ -417,6 +453,7 @@ function makeConsole(nodes, edges, rScale){
 
 }
 
+// Edge Functions
 function selfReferenced(canvas){
   // The graph defaults to showing loops
   var loops = true;
@@ -522,7 +559,7 @@ function edgeWeight(canvas, edges){
                            .domain([d3.min(edges, function(d){return d.weight;}),
                                     d3.max(edges, function(d){return d.weight;})])
                            .range([0.2, 1])
-                           .exponent([8])
+                           .exponent(8)
 
             // Adjust edges' opacity and colour
             d3.select("#CitationGraphPlot")
@@ -646,6 +683,7 @@ function directed(canvas){
      })
 }
 
+// Node Functions
 function isolates(canvas){
   var showIsolates = false;
 

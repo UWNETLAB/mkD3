@@ -93,6 +93,13 @@ overflow-y: hidden;
   stroke-width: 3px;
   pointer-events: none;
 }
+
+p.title{
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+}
+
 #TableContainer{
   overflow-y: visible;
   column-width: 10px;
