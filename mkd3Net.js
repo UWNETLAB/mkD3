@@ -29,7 +29,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
 
     // This initializes the divs everything will be placed into
     initNetworkDivs(plotType)
-    initTable(plotType)
+    initNetworkTable(plotType)
     initToolTip(plotType)
     initConsole(plotType)
 
@@ -113,23 +113,26 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                         }
                       })
 
-        // Create the end markers
-        // Code adapted from http://bl.ocks.org/d3noob/5141278
-        svg.append("svg:defs").selectAll("marker")
-           .data(["end"])      // Different link/path types can be defined here
-           .enter().append("svg:marker")    // This section adds in the arrows
-           .attr("id", String)
-           .attr("viewBox", "0 -5 10 10")
-           .attr("refX", 15)
-           .attr("refY", 0)
-           .attr("markerWidth", 4)
-           .attr("markerHeight", 3)
-           .attr("orient", "auto")
-           .append("svg:path")
-           .attr("class", "hidden")
-           .attr("d", "M0,-5L10,0L0,5")
-           .attr("fill", "404040")
-           .style("opacity", "0.8")
+        // Add Arrows
+        if (directed){
+          console.log("here")
+          // Create the end markers
+          // Code adapted from http://bl.ocks.org/d3noob/5141278
+          svg.append("svg:defs").selectAll("marker")
+             .data(["end"])      // Different link/path types can be defined here
+             .enter().append("svg:marker")    // This section adds in the arrows
+             .attr("id", String)
+             .attr("viewBox", "0 -5 10 10")
+             .attr("refX", 15)
+             .attr("refY", 0)
+             .attr("markerWidth", 4)
+             .attr("markerHeight", 3)
+             .attr("orient", "auto")
+             .append("svg:path")
+             .attr("d", "M0,-5L10,0L0,5")
+             .attr("fill", "404040")
+             .style("opacity", "0.8")
+        }
 
         // Create the nodes
         var node = svg.append("g")
@@ -187,7 +190,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
              .strength(function(d){
                if (d.degree == 0) {return -3}
                var max = d3.max(nodes, function(d){return d.degree})
-               return -30 * Math.cos((Math.PI * d.degree)/(max/2))-1;
+               return -20 * Math.cos((Math.PI * d.degree)/(max/2))-1;
              })
         // Update the Link Force
         simulation
@@ -201,8 +204,6 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                return Math.min(rScale(sdeg), rScale(tdeg)) +
                   Math.max(rScale(sdeg), rScale(tdeg)) + 5;
               })
-
-        makeConsole(nodes, edges)
       })
     })
 }
@@ -482,10 +483,10 @@ function initConsole(plotType){
     divConsole.className = "console hidden";
 
     // Find the Object I want to insert before
-    var something = document.getElementById("CitationNetwork");
+    var visArea = document.getElementById(plotType+"VisArea");
+    var plot = document.getElementById(plotType+"Plot");
     // Insert before
-    document.body.insertBefore(divConsole, something)
-    // document.body.appendChild(divConsole);
+    visArea.insertBefore(divConsole, plot)
 
 }
 
@@ -508,11 +509,8 @@ function makeConsole(nodes, edges, rScale){
   // Isolates Toggle
   isolates(canvas)
 
-  // Add the Size By Choice
-  // sizeBy(canvas, nodes, rScale);
-
   // Add ability to change node sizes
-  // sizeChange(canvas, rScale)
+  sizeChange(canvas, rScale)
 
   // Edge Options
   canvas.append("text")
@@ -522,173 +520,6 @@ function makeConsole(nodes, edges, rScale){
     .attr("font-size", 24)
     .attr("text-anchor", "middle")
 
-  // Add the Directed Graph toggle
-  directed(canvas);
-
-  // Add the edgeAlpha Option
-  edgeWeight (canvas, edges);
-
-}
-
-// Edge Functions
-function edgeWeight(canvas, edges){
-  // The graph defaults to a standard stroke-width
-  var eWeight = false;
-
-  function eWeightButton(selection){
-    // Add the text
-    selection
-      .append("text")
-      .attr("id", "showHideText")
-      .text("Weighted Edges")
-      .attr("x", 10)
-
-    // Add circle
-    selection
-      .append("circle")
-      .attr("r", 6)
-      .attr("cx", 0)
-      .attr("cy", -6)
-      .attr("stroke", "#fff")
-      .attr("stroke-width", "1px")
-      .attr("fill", "gainsboro")
-  }
-
-  canvas.append("g")
-        .call(eWeightButton)
-        .attr("transform", "translate(550, 70)")
-        .on("click", function(d){
-          if (eWeight == false){
-            // Set eWeight to true
-            eWeight = true;
-
-            // Create an alpha scale
-            var aScale = d3.scalePow()
-                           .domain([d3.min(edges, function(d){return d.weight;}),
-                                    d3.max(edges, function(d){return d.weight;})])
-                           .range([0.2, 1])
-                           .exponent(8)
-
-            // Adjust edges' opacity and colour
-            d3.select("#CitationNetworkPlot")
-              .select("#links")
-              .selectAll("line")
-              // Adjust edges' width
-              // .attr("stroke-width", function(d){
-              //   if (d.weight == undefined){
-              //     return 2;
-              //   }
-              //   else {
-              //     return d.weight*2 + 1;
-              //   }
-              // })
-              // Adjust the opacity
-              .style("opacity", function(d){
-                if (d.weight == undefined){
-                  return 0.6;
-                } else {
-                  return aScale(d.weight);
-                }
-              })
-              // Change the colour
-              // .style("stroke", "black")
-
-            // Turn icon to colour
-            d3.select(this)
-              .select("circle")
-              .attr("fill", darkColour)
-          }
-          else if (eWeight == true){
-            // Set eWeight to false
-            eWeight = false;
-
-            // Adjust edge width
-            d3.select("#CitationNetworkPlot")
-              .select("#links")
-              .selectAll("line")
-              .style("opacity", 0.4)
-              .style("stroke", "#404040")
-
-            // Turn icon to greyscale
-            d3.select(this)
-              .select("circle")
-              .attr("fill", "gainsboro")
-          }
-        })
-}
-
-function directed(canvas){
-  // The graph starts with no arrows
-  var showArrows = false;
-
-  function arrowButton(selection){
-    // Add the text
-    selection
-      .append("text")
-      .attr("id", "showHideText")
-      .text("Arrows")
-      .attr("x", 10)
-      .attr("y", 0);
-
-    //   selection
-    //     .append("path")
-    //     .attr("d", "M-4,-8L8,-12L4,0")
-    //     .attr("fill", darkColour)
-    //
-    //
-    // selection
-    //   .append("line")
-    //   .attr("x1", 0)
-    //   .attr("x2", -8)
-    //   .attr("y1", -4)
-    //   .attr("y2", 4)
-    //   .attr("stroke", darkColour)
-    //   .attr("stroke-width", 3)
-
-      selection
-        .append("circle")
-        .attr("r", 6)
-        .attr("cx", 0)
-        .attr("cy", -6)
-        .attr("stroke", "#fff")
-        .attr("stroke-width", "1px")
-        .attr("fill", "gainsboro")
-  }
-
-  canvas.append("g")
-     .call(arrowButton)
-     .attr("transform", "translate(550,50)")
-     .on("click", function(d){
-       if (showArrows == false){
-         // Set showArrows to true
-         showArrows = true;
-
-         // Show arrows
-         d3.selectAll("marker")
-           .select("path")
-           .classed("hidden", false)
-
-         // Change the icon to colour
-         d3.select(this)
-           .select("circle")
-           .attr("fill", darkColour)
-       }
-       else if (showArrows == true){
-         // Set showArrows to false
-         showArrows = false;
-
-         // Hide arrows
-         d3.selectAll("marker")
-           .select("path")
-           .classed("hidden", true)
-
-         // Change the icon's colour to grey
-         d3.select(this)
-           .select("circle")
-           .attr("fill", "gainsboro")
-
-       }
-     })
 }
 
 // Node Functions
@@ -827,82 +658,5 @@ function sizeChange(canvas, rScale){
             .selectAll("circle")
             .attr("r", function(d){return rScale(d.degree)})
 
-        })
-}
-
-function sizeBy(canvas, nodes, rScale){
-  var sizeParameter = "degree"
-
-  function sizeButton(selection){
-    selection
-      .append("text")
-      .attr("id", "optionText")
-      .text("Size By (degree)")
-      .attr("x", 10)
-      .attr("y", 0);
-  }
-
-  canvas.append("g")
-        .call(sizeButton)
-        .attr("transform", "translate(150, 70)")
-        .on("click", function(d){
-          if (sizeParameter == "degree"){
-            // Change sizeParameter to "degreeI"
-            sizeParameter = "degreeI"
-
-            // Change the radius Scale's domain
-            rScale = rScale.domain([0,
-                                              d3.max(nodes, function(d){return d.degreeI;})]);
-
-            // Change the nodes' radii to be a function of the nodes' in-degree
-            d3.select("#CitationNetworkPlot")
-              .selectAll("circle")
-              .attr("r", function(d){
-                // console.log(d.degreeI);
-                return rScale(d.degreeI);})
-
-            // Change the text
-             d3.select(this)
-               .select("text")
-               .text("Size By (in-degree)")
-          }
-          else if (sizeParameter == "degreeI"){
-            // Change sizeParameter to "degreeO"
-            sizeParameter = "degreeO"
-
-            // Change the radius Scale's domain
-            rScale = rScale.domain([0,
-                                              d3.max(nodes, function(d){return d.degreeO;})]);
-
-            // Change the nodes' radii to be a function of the nodes' out-degree
-            d3.select("#CitationNetworkPlot")
-              .selectAll("circle")
-              .attr("r", function(d){return rScale(d.degreeO);})
-
-            // Change the text
-             d3.select(this)
-               .select("text")
-               .text("Size By (out-degree)")
-          }
-          else if (sizeParameter == "degreeO"){
-            // Change sizeParameter to "degree"
-            sizeParameter = "degree"
-
-            // Change the radius Scale's domain
-            rScale = rScale.domain([0,
-                                              d3.max(nodes, function(d){return d.degree;})]);
-
-            // Change the nodes' radii to be a function of the nodes' degree
-            d3.select("#CitationNetworkPlot")
-              .selectAll("circle")
-              .attr("r", function(d){
-                return rScale(d.degree)})
-
-            // Change the text
-             d3.select(this)
-               .select("text")
-               .text("Size By (degree)")
-
-          }
         })
 }
