@@ -31,6 +31,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
     initNetworkDivs(plotType)
     initTable(plotType)
     initToolTip(plotType)
+    initConsole(plotType)
 
     // Create the svg
     var plotName = "#" + plotType + "Plot"
@@ -102,6 +103,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                       .enter()
                       .append("line")
                       .attr("stroke-width", StrokeWidth(edgeWidth))
+                      // .classed("hidden", function(e){return e.weight <= 1 })
                       .style("marker-end",  "url(#end)")
                       .style("opacity", function(d){
                         if (d.weight == undefined){
@@ -175,29 +177,32 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                       })
 
         // Adjust the simulation
+        // Add Tick (progress simulation)
         simulation
              .nodes(nodes)
-             .on("tick", ticked);   // Add Tick (progress simulation)
-
+             .on("tick", ticked);
+        // Update the Charge Force
         simulation
              .force("charge")
              .strength(function(d){
                if (d.degree == 0) {return -3}
                var max = d3.max(nodes, function(d){return d.degree})
-               return -20 * Math.cos((Math.PI * d.degree)/max)-1;
+               return -30 * Math.cos((Math.PI * d.degree)/(max/2))-1;
              })
-
+        // Update the Link Force
         simulation
              .force("link")
              .links(edges)
-               .distance(function(d){
+             .distance(function(d){
                sdeg = nodeById.get(d.source.ID).degree;
                tdeg = nodeById.get(d.target.ID).degree;
-              //  if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return 1.5 *(sdeg + tdeg-d.weight*2);}
+               //  if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return 1.5 *(sdeg + tdeg-d.weight*2);}
                if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return ((sdeg + tdeg)/d.weight/d.weight);}
                return Math.min(rScale(sdeg), rScale(tdeg)) +
-                      Math.max(rScale(sdeg), rScale(tdeg)) + 5;
-             })   // Adjust the link force
+                  Math.max(rScale(sdeg), rScale(tdeg)) + 5;
+              })
+
+        makeConsole(nodes, edges)
       })
     })
 }
@@ -245,7 +250,6 @@ function initNetworkDivs(plotType){
   document.body.appendChild(container);
 }
 
-
 // Data Functions
 // **************
 
@@ -275,22 +279,6 @@ function map$1(object, f){
 function nodeCalculations(nodes, edges){
   // Find the degree, in-degree, and out-degree of each node and assign it
   degreeCalc(edges, nodes)
-
-  // Find the number of loops for each node and assign it
-  loopCalc(edges, nodes)
-
-}
-
-function loopCalc(edges, nodes){
-  var nodeById = map$1(nodes, function(d){return d.ID;})
-
-  // Assign loop count to nodes
-  for (var e = 0; e < edges.length; e++){
-    weight = + edges[e].weight;
-    if (edges[e].source == edges[e].target){
-      nodeById.get(edges[e].source).loopCount += weight;
-    }
-  }
 }
 
 function degreeCalc(edges, nodes){
@@ -312,24 +300,18 @@ function degreeCalc(edges, nodes){
 }
 
 function edgesRow(d){
-  return {
-     source: d.From,
-     target: d.To,
-     weight: d.weight==undefined?1:d.weight ,
-     self_ref: d.From == d.To
-   };
+  d.source= d.From;
+  d.target= d.To;
+  if(d.weight == undefined) d.weight=1;
+  d.selfRef = (d.From==d.To)
+  return d
 }
 
 function nodesRow(d){
-  return {
-    ID: d.ID,
-    degree: 0,
-    degreeI: 0,
-    degreeO: 0,
-    loopCount: 0,
-    index: d.index,
-    info: d.info
-  }
+  d.degree= 0;
+  d.degreeI= 0;
+  d.degreeO= 0;
+  return d
 }
 
 // Table Functions
@@ -368,7 +350,6 @@ function initTable(plotType, header){
   // document.body.insertBefore(divTable, plotDiv.nextSibling);
 
   var tableName = "#" + plotType + "Table";
-  console.log(tableName);
   d3.select(tableName)
              .html(header);
 
@@ -456,9 +437,7 @@ function makeNetworkToolTip(xPos, yPos, d){
     .html("<strong>" + d.ID + "</strong><br/>" +
           "Degree: <strong>" + getAttr("degree") + "</strong><br/>" +
           "In Degree: <strong>" + getAttr("degreeI") + "</strong><br/>" +
-          "Out Degree: <strong>" + getAttr('degreeO') + "</strong></br>" +
-          "Loops: <strong>" + getAttr('loopCount') + "</strong></br>")
-
+          "Out Degree: <strong>" + getAttr('degreeO') + "</strong></br>")
   function getAttr(type){
     if (d[type] == undefined){return 0;}
     else {return d[type]}
@@ -530,10 +509,10 @@ function makeConsole(nodes, edges, rScale){
   isolates(canvas)
 
   // Add the Size By Choice
-  sizeBy(canvas, nodes, rScale);
+  // sizeBy(canvas, nodes, rScale);
 
   // Add ability to change node sizes
-  sizeChange(canvas, rScale)
+  // sizeChange(canvas, rScale)
 
   // Edge Options
   canvas.append("text")
@@ -549,82 +528,9 @@ function makeConsole(nodes, edges, rScale){
   // Add the edgeAlpha Option
   edgeWeight (canvas, edges);
 
-  // Add the self_referencing Option (loops)
-  selfReferenced (canvas, edges);
-
-
 }
 
 // Edge Functions
-function selfReferenced(canvas){
-  // The graph defaults to showing loops
-  var loops = true;
-
-  function loopButton(selection){
-    // Add the text
-    selection
-      .append("text")
-      .attr("id", "showHideText")
-      .text("Loops")
-      .attr("x", 10)
-
-      // Add circle
-      selection
-        .append("circle")
-        .attr("r", 6)
-        .attr("cx", 0)
-        .attr("cy", -6)
-        .attr("stroke", "#fff")
-        .attr("stroke-width", "1px")
-        .attr("fill", darkColour)
-  }
-
-  canvas.append("g")
-        .call(loopButton)
-        .attr("transform", "translate(550, 90)")
-        .on("click", function(d){
-          if (loops == true){
-            // Set loops to false
-            loops = false;
-
-            // Hide loops (self referencing edges)
-            // Note: Loops only appear in the form of arrow heads
-            d3.select("#CitationNetworkPlot")
-              .select("#links")
-              .selectAll("line")
-              .classed("hidden", function(e){return e.self_ref;});
-
-            // Adjust the degree
-
-            // Change the icon to grey scale
-            d3.select(this)
-              .select("circle")
-              .attr("fill", "gainsboro")
-
-          }
-          else if (loops == false){
-            // Set loops to true
-            loops = true;
-
-            // Show loops (self referencing edges)
-            d3.select("#CitationNetworkPlot")
-              .select("#links")
-              .selectAll("line")
-              .classed("hidden", false)
-
-            // Reset the degree
-
-            // Change the icon to colour
-            d3.select(this)
-              .select("circle")
-              .attr("fill", darkColour)
-          }
-
-
-        })
-
-}
-
 function edgeWeight(canvas, edges){
   // The graph defaults to a standard stroke-width
   var eWeight = false;

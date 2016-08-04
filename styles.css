@@ -65,14 +65,6 @@ overflow-y: hidden;
   left: 0;
 }
 
-.sideBar{
-  width: 16%;
-  height: 50%;
-  position: fixed;
-  margin-left: 0%;
-  background-color: #f1f1f1
-}
-
 /*.svg-content.network{
   width: 64%;
   position: fixed;
