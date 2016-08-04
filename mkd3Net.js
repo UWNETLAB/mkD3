@@ -22,168 +22,229 @@ var lightColour = "#FF8A75"
 // var darkColour = "royalblue";
 // var lightColour = "#E1B941"
 
-function CitationGraph(edgeFile, nodeFile){
+function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWidth=2, colourBy = '#2479C1'){
+    // Define Constants
+    var plotType = 'network';
+    darkColour = colourBy;
 
-  // This will need to include initDiv, etc.
-  // Create SVG element
-  var svg = d3.select("div")
-              .style("padding-bottom", "80%")
-              .append("svg")
-              .attr("id", "CitationGraphPlot")
-              .attr("preserveAspectRatio", "xMinYMin meet")
-              .attr("viewBox", "0 0 800 800")
-              .classed("svg-content", true);
+    // This initializes the divs everything will be placed into
+    initNetworkDivs(plotType)
+    initTable(plotType)
+    initToolTip(plotType)
 
-  var color = d3.scaleOrdinal(d3.schemeCategory20);
+    // Create the svg
+    var plotName = "#" + plotType + "Plot"
+    var svg = d3.select(plotName)
+                .style("padding-bottom", "80%")
+                .append("svg")
+                .attr("id", plotType + "SVG")
+                .attr("preserveAspectRatio", "xMinYMin meet")
+                .attr("viewBox", "0 0 800 800")
+                .classed("svg-content", true)
 
-  var simulation = d3.forceSimulation()
-                     .alphaDecay(0.1)
-                     .force("link", d3.forceLink().id(function(d) {
-                       return d.ID;
-                     })
-                     .distance([10]))
-                      .force("charge", d3.forceManyBody().strength([-8]))
-                      // .force("charge", d3.forceManyBody().strength([-20]))
-                     .force("collide", d3.forceCollide().radius([1]))
-                     .force("x", d3.forceX(width / 2))
-                     .force("y", d3.forceY(height / 2))
-                     .force("center", d3.forceCenter(width/2, height/2));
+    // Initialize the simulation for the network
+    var simulation = d3.forceSimulation()
+                       .force("link", d3.forceLink()
+                                        .id(function(d){return d.ID})
+                                        // .distance(10))
+                                        .distance(function(d){return 30 / d.weight}))
+                       .force("charge", d3.forceManyBody()
+                                          .strength(-8))
+                       .force("collide", d3.forceCollide().radius([1]))
+                       .force("x", d3.forceX(width/2))
+                       .force("y", d3.forceY(height/2))
+                       .force("center", d3.forceCenter(width/2, height/2));
 
-  // Make the Options Panel (Console)
-  initConsole("CitationNetwork");
+    // Read in the edges and nodes and work with them
+    d3.csv(nodeFile, nodesRow, function(error, nodes){
+      // If there is an error, print it to the console
+      if (error){console.log(error)}
+      d3.csv(edgeFile, edgesRow, function(error, edges){
+        // If there is an error, print it to the console
+        if(error){console.log(error)}
 
-  // Initialize the Table
-  initNetworkTable("CitationGraph");
+        // Define Required Functions
+        var nodeById = map$1(nodes, function(d){return d.ID;})
+        function ticked() {
+          link
+             .attr("x1", function(d) { return d.source.x; })
+             .attr("y1", function(d) { return d.source.y; })
+             .attr("x2", function(d) { return d.target.x; })
+             .attr("y2", function(d) { return d.target.y; });
 
-  d3.csv(nodeFile, nodesRow, function(error, nodes){
-  if (error){
-  console.log(error);
-  } else {
-  d3.csv(edgeFile, edgesRow, function(error, edges){
-  if (error){
-    console.log(error);
-  } else {
-    nodeCalc(edges, nodes);
-    initToolTip();
+          node
+             .attr("cx", function(d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
+             .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
+        }
 
-    // Create a scale for the radius
-    var rScale = d3.scaleLinear()
-                   .domain([0,
-                            d3.max(nodes, function(d){return d.degree;})])
-                  //  .range([width/Math.sqrt(nodes.length)/20, width/Math.sqrt(nodes.length)/5]);
-                   .range([3, 20]);
+        // Perform Required Node calculations
+        nodeCalculations(nodes, edges);
 
-    // Create the links (aka edges)
-    var link = svg.append("g")
-                  .attr("class", "links")
-                  .attr("id", "links")
-                  .selectAll("line")
-                  .data(edges)
-                  .enter()
-                  .append("line")
-                  .attr("stroke-width", 2)
-                  .style("marker-end",  "url(#end)"); //Added
+        // Create a scale for the nodes' radii
+        // Note: domain depends on sizeBy parameter
+        var rScale = d3.scaleLinear()
+                       .domain([0, d3.max(nodes, function(d){return d[sizeBy]})])
+                       .range([3,20])
 
-    // Code directly below adapted from http://bl.ocks.org/d3noob/5141278
-    // Create the end markers
-    svg.append("svg:defs").selectAll("marker")
-       .data(["end"])      // Different link/path types can be defined here
-       .enter().append("svg:marker")    // This section adds in the arrows
-       .attr("id", String)
-       .attr("viewBox", "0 -5 10 10")
-       .attr("refX", 15)
-       .attr("refY", 0)
-       .attr("markerWidth", 4)
-       .attr("markerHeight", 3)
-       .attr("orient", "auto")
-       .append("svg:path")
-       .attr("class", "hidden")
-       .attr("d", "M0,-5L10,0L0,5")
-       .attr("fill", "404040")
-       .style("opacity", "0.8")
+        // Create a scale for the edges' opacity (alpha)
+        var aScale = d3.scalePow()
+                       .domain([d3.min(edges, function(d){return d.weight;}),
+                                d3.max(edges, function(d){return d.weight;})])
+                       .range([0.2, 1])
+                       .exponent(8)
 
-    // Create the nodes
-    var node = svg.append("g")
-                  .attr("class", "nodes")
-                  .selectAll("circle")
-                  .data(nodes)
-                  .enter()
-                  .append("circle")
-                  .classed("hidden", function(d){return d.degree == 0;})
-                  .attr("r", function(d){return rScale(d.degree);})
-                  .attr("fill", darkColour)
-                  .on("mouseover", function(d){
-                    d3.select(this)
-                      .attr("fill", lightColour)
+        // Create the edges (links) between nodes
+        var link = svg.append("g")
+                      .attr("class", "links")
+                      .attr("id", "links")
+                      .selectAll("line")
+                      .data(edges)
+                      .enter()
+                      .append("line")
+                      .attr("stroke-width", StrokeWidth(edgeWidth))
+                      .style("marker-end",  "url(#end)")
+                      .style("opacity", function(d){
+                        if (d.weight == undefined){
+                          return 0.6;
+                        } else {
+                          return aScale(d.weight);
+                        }
+                      })
 
-                    // Fix the node's position
-                    d.fx = d.x;
-                    d.fy = d.y;
+        // Create the end markers
+        // Code adapted from http://bl.ocks.org/d3noob/5141278
+        svg.append("svg:defs").selectAll("marker")
+           .data(["end"])      // Different link/path types can be defined here
+           .enter().append("svg:marker")    // This section adds in the arrows
+           .attr("id", String)
+           .attr("viewBox", "0 -5 10 10")
+           .attr("refX", 15)
+           .attr("refY", 0)
+           .attr("markerWidth", 4)
+           .attr("markerHeight", 3)
+           .attr("orient", "auto")
+           .append("svg:path")
+           .attr("class", "hidden")
+           .attr("d", "M0,-5L10,0L0,5")
+           .attr("fill", "404040")
+           .style("opacity", "0.8")
 
-                    // Make tooltip
-                    var xPos = event.clientX + 20;
-                    var yPos = event.clientY - 20;
-                    makeNetworkToolTip(xPos, yPos, d);
+        // Create the nodes
+        var node = svg.append("g")
+                      .attr("class", "nodes")
+                      .selectAll("circle")
+                      .data(nodes)
+                      .enter()
+                      .append("circle")
+                      // .classed("hidden", function(d){return d.degree == 0;})
+                      .attr("r", function(d){return rScale(d[sizeBy]);})
+                      .attr("fill", darkColour) // Need to update
+                      .on("mouseover", function(d){
+                        d3.select(this)
+                          .attr("fill", lightColour)
 
-                    // Repel nodes
-                    repelNodes(simulation, d);
-                  })
-                  .on("mouseout", function(d){
-                    d3.select(this)
-                      .attr("fill", darkColour);
+                        // Fix the node's position
+                        d.fx = d.x;
+                        d.fy = d.y;
 
-                    // Unfix the node's position
-                    d.fx = null;
-                    d.fy = null;
+                        // Make tooltip
+                        var xPos = event.clientX + 20;
+                        var yPos = event.clientY - 20;
+                        makeNetworkToolTip(xPos, yPos, d);
 
-                    // Remove the tooltip
-                    d3.select("#tooltip")
-                      .classed("hidden", true);
+                        // Repel nodes
+                        repelNodes(simulation, d);
+                      })
+                      .on("mouseout", function(d){
+                        d3.select(this)
+                          .attr("fill", darkColour);
 
-                    simulation.force("collide", d3.forceCollide().radius([1]));
-                    simulation.alphaTarget(0).restart();
-                  })
-                  .on("click", function(d){
-                    makeNetworkTable("CitationGraph", d.ID, edges)
-                  })
+                        // Unfix the node's position
+                        d.fx = null;
+                        d.fy = null;
 
-    simulation
-         .nodes(nodes)
-         .on("tick", ticked);
+                        // Remove the tooltip
+                        d3.select("#tooltip")
+                          .classed("hidden", true);
 
-    simulation
-         .force("link")
-         .links(edges)
-        //  .distance(function(d){return 40;})s
-         .distance([width/Math.sqrt(nodes.length)]); // Relative Distance
+                        simulation.force("collide", d3.forceCollide().radius([1]));
+                        simulation.alphaTarget(0).restart();
+                      })
+                      .on("click", function(d){
+                        makeNetworkTable(plotType, d.ID, edges)
+                      })
 
-    simulation
-         .force("charge")
-         .strength(function(d){
-           if(d.degree == 0){return -1;}
-           else{return -width/1.5/Math.sqrt(nodes.length);}
-           })
+        // Adjust the simulation
+        simulation
+             .nodes(nodes)
+             .on("tick", ticked);   // Add Tick (progress simulation)
 
-    simulation
-         .force("collide")
-         .radius(function(d){return rScale(d.degree)})
+        simulation
+             .force("charge")
+             .strength(function(d){
+               if (d.degree == 0) {return -3}
+               var max = d3.max(nodes, function(d){return d.degree})
+               return -20 * Math.cos((Math.PI * d.degree)/max)-1;
+             })
 
-    function ticked() {
-      link
-         .attr("x1", function(d) { return d.source.x; })
-         .attr("y1", function(d) { return d.source.y; })
-         .attr("x2", function(d) { return d.target.x; })
-         .attr("y2", function(d) { return d.target.y; });
-
-      node
-         .attr("cx", function(d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
-         .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
-    }
-
-    makeConsole(nodes, edges, rScale)
-  }})
-  }});
+        simulation
+             .force("link")
+             .links(edges)
+               .distance(function(d){
+               sdeg = nodeById.get(d.source.ID).degree;
+               tdeg = nodeById.get(d.target.ID).degree;
+              //  if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return 1.5 *(sdeg + tdeg-d.weight*2);}
+               if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return ((sdeg + tdeg)/d.weight/d.weight);}
+               return Math.min(rScale(sdeg), rScale(tdeg)) +
+                      Math.max(rScale(sdeg), rScale(tdeg)) + 5;
+             })   // Adjust the link force
+      })
+    })
 }
+
+// Determines how stroke-width is calculated based on the edgeWidth parameter
+function StrokeWidth(edgeWidth){
+  if (typeof(edgeWidth) == 'number'){return edgeWidth}
+  else {return function(d){return d[edgeWidth]}}
+}
+
+// Initialization Functions
+// ************************
+function initNetworkDivs(plotType){
+  // Create the total container
+  var container = document.createElement('div');
+  container.id = plotType + "Container";
+  container.className = "container";
+
+  // Create the Visualization Area
+  var visArea = document.createElement('div');
+  visArea.id = plotType + "VisArea";
+  visArea.className = "visArea";
+
+  // Create the Options Panel
+  var panel = document.createElement('div');
+  panel.id = plotType + "Panel";
+  panel.className = "panel";
+  visArea.appendChild(panel);
+
+  // Create the plot
+  var plot = document.createElement('div')
+  plot.id = plotType + "Plot"
+  plot.className = "plot";
+  visArea.appendChild(plot);
+
+  container.appendChild(visArea);
+
+  // Create the table
+  var table = document.createElement('div')
+  table.id = plotType + "TableContainer";
+  table.className = "container";
+
+  container.appendChild(table);
+
+  document.body.appendChild(container);
+}
+
 
 // Data Functions
 // **************
@@ -211,7 +272,7 @@ function map$1(object, f){
   return map;
 }
 
-function nodeCalc(edges, nodes){
+function nodeCalculations(nodes, edges){
   // Find the degree, in-degree, and out-degree of each node and assign it
   degreeCalc(edges, nodes)
 
@@ -286,29 +347,28 @@ function initNetworkTable(plotType){
 function initTable(plotType, header){
   // Initialize the table
 
-  // Create the table container
-  var divTable = document.createElement('div');
-  divTable.id = "TableContainer" + plotType;
-  divTable.className = "container hidden";
+  // Find the table container
+  var divTable = document.getElementById(plotType + "TableContainer");
 
   // Create the title
   var title = document.createElement('p');
-  title.id = "TableTitle" + plotType;
+  title.id = plotType + "TableTitle";
   title.className = "title";
+  divTable.appendChild(title);
 
   // Create the table
   var table = document.createElement('table');
-  table.id = "Table" + plotType;
+  table.id = plotType + "Table";
   table.border = "0";
   table.cellpadding = "3";
+  divTable.appendChild(table);
 
   // Add them to together and then to the document
-  divTable.appendChild(title);
-  divTable.appendChild(table);
-  var plotDiv = document.getElementById(plotType);
-  document.body.insertBefore(divTable, plotDiv.nextSibling);
+  // var plotDiv = document.getElementById(plotType);
+  // document.body.insertBefore(divTable, plotDiv.nextSibling);
 
-  var tableName = "#Table" + plotType;
+  var tableName = "#" + plotType + "Table";
+  console.log(tableName);
   d3.select(tableName)
              .html(header);
 
@@ -317,10 +377,10 @@ function initTable(plotType, header){
 }
 
 function makeNetworkTable(plotType, nodeID, edges){
-  d3.select("#TableTitle" + plotType)
+  d3.select("#" + plotType + "TableTitle")
     .html(nodeID)
 
-  var tableName = "#Table" + plotType;
+  var tableName = "#" + plotType + "Table";
   // Copy the header from the html
   header = d3.select(tableName)
              .html().split('<tbody>')[0];
@@ -368,7 +428,7 @@ function makeNetworkTable(plotType, nodeID, edges){
   rows += "</tbody>"
 
   // Write data into the table
-  d3.select("#Table" + plotType)
+  d3.select("#" + plotType + "Table")
     .html(header + rows);
 }
 
@@ -419,6 +479,20 @@ function repelNodes(simulation, d){
   }
 }
 
+// SideBar Functions
+// *****************
+function initSideBar(plotType){
+  // Initialize the sideBar
+  var sideBar = document.createElement('div')
+  sideBar.id = "SideBar" + plotType;
+  sideBar.className = 'sideBar'
+
+  // Find the object to insert before
+  var svgGraph = document.getElementById(plotType + "Plot");
+  var plotDiv = document.getElementById(plotType)
+  plotDiv.insertBefore(sideBar, svgGraph)
+}
+
 // Console Functions
 // *****************
 
@@ -429,7 +503,7 @@ function initConsole(plotType){
     divConsole.className = "console hidden";
 
     // Find the Object I want to insert before
-    var something = document.getElementById("CitationGraph");
+    var something = document.getElementById("CitationNetwork");
     // Insert before
     document.body.insertBefore(divConsole, something)
     // document.body.appendChild(divConsole);
@@ -515,7 +589,7 @@ function selfReferenced(canvas){
 
             // Hide loops (self referencing edges)
             // Note: Loops only appear in the form of arrow heads
-            d3.select("#CitationGraphPlot")
+            d3.select("#CitationNetworkPlot")
               .select("#links")
               .selectAll("line")
               .classed("hidden", function(e){return e.self_ref;});
@@ -533,7 +607,7 @@ function selfReferenced(canvas){
             loops = true;
 
             // Show loops (self referencing edges)
-            d3.select("#CitationGraphPlot")
+            d3.select("#CitationNetworkPlot")
               .select("#links")
               .selectAll("line")
               .classed("hidden", false)
@@ -590,7 +664,7 @@ function edgeWeight(canvas, edges){
                            .exponent(8)
 
             // Adjust edges' opacity and colour
-            d3.select("#CitationGraphPlot")
+            d3.select("#CitationNetworkPlot")
               .select("#links")
               .selectAll("line")
               // Adjust edges' width
@@ -623,7 +697,7 @@ function edgeWeight(canvas, edges){
             eWeight = false;
 
             // Adjust edge width
-            d3.select("#CitationGraphPlot")
+            d3.select("#CitationNetworkPlot")
               .select("#links")
               .selectAll("line")
               .style("opacity", 0.4)
@@ -748,7 +822,7 @@ function isolates(canvas){
          showIsolates = true;
 
          // Show the Isolates
-         d3.select("#CitationGraphPlot").selectAll("circle")
+         d3.select("#CitationNetworkPlot").selectAll("circle")
             .classed("hidden", false);
 
          // Change the icon to colour
@@ -767,7 +841,7 @@ function isolates(canvas){
          showIsolates = false;
 
          // Hide the Isolates
-         d3.select("#CitationGraphPlot").selectAll("circle")
+         d3.select("#CitationNetworkPlot").selectAll("circle")
             .classed("hidden", function(d){return d.degree == 0;});
 
          // Change the icon to greyscale
@@ -843,7 +917,7 @@ function sizeChange(canvas, rScale){
           }
 
           // Resize the nodes
-          d3.select("#CitationGraphPlot")
+          d3.select("#CitationNetworkPlot")
             .selectAll("circle")
             .attr("r", function(d){return rScale(d.degree)})
 
@@ -875,7 +949,7 @@ function sizeBy(canvas, nodes, rScale){
                                               d3.max(nodes, function(d){return d.degreeI;})]);
 
             // Change the nodes' radii to be a function of the nodes' in-degree
-            d3.select("#CitationGraphPlot")
+            d3.select("#CitationNetworkPlot")
               .selectAll("circle")
               .attr("r", function(d){
                 // console.log(d.degreeI);
@@ -895,7 +969,7 @@ function sizeBy(canvas, nodes, rScale){
                                               d3.max(nodes, function(d){return d.degreeO;})]);
 
             // Change the nodes' radii to be a function of the nodes' out-degree
-            d3.select("#CitationGraphPlot")
+            d3.select("#CitationNetworkPlot")
               .selectAll("circle")
               .attr("r", function(d){return rScale(d.degreeO);})
 
@@ -913,7 +987,7 @@ function sizeBy(canvas, nodes, rScale){
                                               d3.max(nodes, function(d){return d.degree;})]);
 
             // Change the nodes' radii to be a function of the nodes' degree
-            d3.select("#CitationGraphPlot")
+            d3.select("#CitationNetworkPlot")
               .selectAll("circle")
               .attr("r", function(d){
                 return rScale(d.degree)})

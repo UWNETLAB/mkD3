@@ -21,14 +21,21 @@
     (factory((global.mkd3 = global.mkd3 || {})));
   }} (this, (function(exports){
 
+    // Define Constants
+    // **********************
     var w = 800;
     var h = 400;
     var outerPadding = 70;
     var relWidth = 0.8;
+
+    // Initialize Variables
+    // ********************
     var rpysFile = undefined;
     var citFile = undefined;
     var ShowToolTip = true;
 
+    // Provided Functions
+    // ******************
     function standardLine(RPYSFile, CitationFile){
       rpysFile = RPYSFile;
       citFile = CitationFile;
@@ -113,6 +120,8 @@
       });
     }
 
+    // Main Helper Functions
+    // *********************
     function standardLineHelper(dataset, svg){
       // Set up important values
       var darkcolour = "#AA3543";
@@ -362,6 +371,8 @@
 
     }
 
+    // Initialization Functions
+    // ************************
     function initDiv(plotType){
       // Initialize the multiRPYS div
 
@@ -428,6 +439,8 @@
                  .html();
     }
 
+    // Graph Elements
+    // **********************
     function makeTitle(svg, title){
       svg.append("text")
          .attr("x", w/2)
@@ -472,160 +485,6 @@
          .attr("text-anchor", "middle")
          .attr("x", 0-h/2)
          .text(yname);
-    }
-
-    function makeStandardToolTip(xPos, yPos, d, mode){
-      // Update the tooltip position and values
-      d3.select("#tooltip")
-        .style("left", xPos + "px")
-        .style("top", yPos + "px")
-        .select("#value")
-        .html("<emphasis>"+d.year+"</emphasis><br/>" +
-              "Raw Frequency: " + "<strong>" + d.count + "</strong>"+ "<br/>" +
-              "Difference from Median: " + "<strong>" + d.abs_deviation + "</strong>" + "<br/>" +
-              "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
-
-      // Show the tooltip
-      if (ShowToolTip == true){
-        d3.select("#tooltip").classed("hidden", false);
-      }
-    }
-
-    function makeMultiToolTip(xPos, yPos, d){
-      // Update the tooltip position and values
-      d3.select("#tooltip")
-        .style("left", xPos + "px")
-        .style("top", yPos + "px")
-        .select("#value")
-        .html("CPY: <strong>"+ d.CPY+ "</strong><br/>" +
-              "RPY: <strong>" + d.RPY + "</strong><br/>" +
-              "Raw Frequency: " + "<strong>" + d.num_cites + "</strong>"+ "<br/>" +
-              "Difference from Median: " + "<strong>" + d.abs_deviation + "</strong>" + "<br/>");
-              // "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
-
-      // Show the tooltip
-      if (ShowToolTip == true){
-        d3.select("#tooltip").classed("hidden", false);
-      }
-    }
-
-    function makeMultiTable(CPY, RPY, plotType){
-      // Copy the header
-      var tableName = "#TopCitationsTable" + plotType;
-      header = d3.select(tableName)
-                 .html().split('<tbody>')[0];
-
-      // Create the rows
-      rows = "";
-      d3.csv(citFile, function(error, data){
-        // If there is an error, print it
-        if (error){console.log(error);}
-        // Otherwise, continue
-        else {
-            // Filter the data to include the right CPY & RPY
-            var yearData = data.filter(function(d){
-              return (Math.floor(d.CPY) == CPY && Math.floor(d.RPY) == RPY);
-            })
-
-            // Sort the years data by number of citations
-            yearData =  yearData.sort(function(a, b){
-                          return b.num_cites - a.num_cites;
-                          // return b["num-cites"] - a["num-cites"];
-                        })
-
-            // Find the cutoff value for top 15 citations & filter
-            var topnum = 15;
-            if (yearData.length > topnum){
-              topval = yearData[topnum-1].num_cites;
-              // topval = yearData[topnum-1]["num-cites"];
-
-              yearData =  yearData.filter(function(d){
-                            return +d.num_cites >= topval;
-                            // return + d["num-cites"] >= topval;
-                          })
-            }
-
-            // Create the html for the top values
-            rows = "<tbody>"
-            // Iterate through each citation in a year
-            for (i=0; i < yearData.length; i++){
-              rowvals = [Math.floor(yearData[i].RPY), yearData[i].author, yearData[i].journal, yearData[i].num_cites, Math.floor(yearData[i].CPY)];
-              // rowvals = [yearData[i].RPY, yearData[i].author, yearData[i].journal, yearData[i]["num_cites"], Math.floor(yearData[i].CPY)];
-
-              rows += "<tr>";
-              // Append each piece of information for the citation
-              for (var j=0; j < rowvals.length; j++){
-                rows += "<td>" + rowvals[j] + "</td>";
-              }
-                rows += "</tr>";
-              }
-            rows += "</tbody>"
-
-            d3.select("#TopCitationsTable" + plotType)
-              .html(header + rows);
-
-        }
-      })
-    }
-
-    function makeStandardTable(year, plotType){
-      // Create the header
-      var tableName = "#TopCitationsTable" + plotType;
-      header = d3.select(tableName)
-                 .html().split('<tbody>')[0];
-
-      // Create the rows
-      rows = "";
-      d3.csv(citFile, function(error, data){
-        // If there is an error, print it
-        if (error){
-          console.log(error);
-        // Otherwise, continue
-        } else {
-          // Filter the data to only include one year
-          var yearData = data.filter(function(d){
-              return Math.floor(d.year) == year;
-          });
-          // Sort the year's Articles by the number of citations
-          yearData =  yearData.sort(function(a, b){
-                        return b.num_cites - a.num_cites;
-                        // return b["num-cites"] - a["num-cites"];
-                      })
-
-          // Find the cutoff value for top 15 citations & filter
-          var topnum = 15;
-          if (yearData.length > topnum){
-            topval = yearData[topnum-1].num_cites;
-            // topval = yearData[topnum-1]["num-cites"];
-
-            yearData =  yearData.filter(function(d){
-                          return +d.num_cites >= topval;
-                          // return + d["num-cites"] >= topval;
-                        })
-          }
-
-          // Create the html for the top values
-          // Note:
-          rows = "<tbody>"
-          // Iterate through each citation in a year
-
-          for (i=0; i < yearData.length; i++){
-            rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i].num_cites];
-            // rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i]["num-cites"]];
-            rows += "<tr>";
-            // Append each piece of information for the citation
-            for (var j=0; j < rowvals.length; j++){
-              rows += "<td>" + rowvals[j] + "</td>";
-            }
-              rows += "</tr>";
-            }
-            rows += "</tbody>"
-          }
-
-          d3.select("#TopCitationsTable" + plotType)
-            .html(header + rows);
-        })
-
     }
 
     function makeIcons(svg, colour="grey", plotType){
@@ -829,43 +688,6 @@
 
     }
 
-    function TopCitation(year){
-      // Initially return a progress message
-      var ret = "Finding Citation...";
-      var yearData;
-
-      // Find and display the top citations
-      d3.csv(citFile, function(error, data){
-        // If there is an error, print it
-        if (error){
-          console.log(error);
-        // Otherwise, continue
-        } else {
-          // Filter the dataset according to year
-          var yearData = data.filter(function(d){
-            var ret = Math.floor(d.year) == year;
-            return ret;
-          });
-
-          // Find the maximum number of citations for the year
-          var max = d3.max(yearData, function(d){return + d.num_cites;});
-          var top_cites = ""
-          // Find the Author of the most cited work
-          for (var i = 0; i < yearData.length; i++){
-            if (+ yearData[i].num_cites >= max){
-              top_cites += "<br/>" + yearData[i].author;
-            };
-          }
-
-          // Add the top citations
-          d3.select("#citation")
-            .html(top_cites);
-        }
-      })
-
-      return ret;
-    }
-
     function makeLegend(svg, dataset, colourScale, plotMargin){
       var width = 200;
       var height = 20;
@@ -924,7 +746,203 @@
 
     }
 
+    // Tooltip Functions
+    // *****************
+    function makeStandardToolTip(xPos, yPos, d, mode){
+      // Update the tooltip position and values
+      d3.select("#tooltip")
+        .style("left", xPos + "px")
+        .style("top", yPos + "px")
+        .select("#value")
+        .html("<emphasis>"+d.year+"</emphasis><br/>" +
+              "Raw Frequency: " + "<strong>" + d.count + "</strong>"+ "<br/>" +
+              "Difference from Median: " + "<strong>" + d.abs_deviation + "</strong>" + "<br/>" +
+              "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
 
+      // Show the tooltip
+      if (ShowToolTip == true){
+        d3.select("#tooltip").classed("hidden", false);
+      }
+    }
+
+    function makeMultiToolTip(xPos, yPos, d){
+      // Update the tooltip position and values
+      d3.select("#tooltip")
+        .style("left", xPos + "px")
+        .style("top", yPos + "px")
+        .select("#value")
+        .html("CPY: <strong>"+ d.CPY+ "</strong><br/>" +
+              "RPY: <strong>" + d.RPY + "</strong><br/>" +
+              "Raw Frequency: " + "<strong>" + d.num_cites + "</strong>"+ "<br/>" +
+              "Difference from Median: " + "<strong>" + d.abs_deviation + "</strong>" + "<br/>");
+              // "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
+
+      // Show the tooltip
+      if (ShowToolTip == true){
+        d3.select("#tooltip").classed("hidden", false);
+      }
+    }
+
+    // Table Functions
+    // ***************
+    function makeMultiTable(CPY, RPY, plotType){
+      // Copy the header
+      var tableName = "#TopCitationsTable" + plotType;
+      header = d3.select(tableName)
+                 .html().split('<tbody>')[0];
+
+      // Create the rows
+      rows = "";
+      d3.csv(citFile, function(error, data){
+        // If there is an error, print it
+        if (error){console.log(error);}
+        // Otherwise, continue
+        else {
+            // Filter the data to include the right CPY & RPY
+            var yearData = data.filter(function(d){
+              return (Math.floor(d.CPY) == CPY && Math.floor(d.RPY) == RPY);
+            })
+
+            // Sort the years data by number of citations
+            yearData =  yearData.sort(function(a, b){
+                          return b.num_cites - a.num_cites;
+                          // return b["num-cites"] - a["num-cites"];
+                        })
+
+            // Find the cutoff value for top 15 citations & filter
+            var topnum = 15;
+            if (yearData.length > topnum){
+              topval = yearData[topnum-1].num_cites;
+              // topval = yearData[topnum-1]["num-cites"];
+
+              yearData =  yearData.filter(function(d){
+                            return +d.num_cites >= topval;
+                            // return + d["num-cites"] >= topval;
+                          })
+            }
+
+            // Create the html for the top values
+            rows = "<tbody>"
+            // Iterate through each citation in a year
+            for (i=0; i < yearData.length; i++){
+              rowvals = [Math.floor(yearData[i].RPY), yearData[i].author, yearData[i].journal, yearData[i].num_cites, Math.floor(yearData[i].CPY)];
+              // rowvals = [yearData[i].RPY, yearData[i].author, yearData[i].journal, yearData[i]["num_cites"], Math.floor(yearData[i].CPY)];
+
+              rows += "<tr>";
+              // Append each piece of information for the citation
+              for (var j=0; j < rowvals.length; j++){
+                rows += "<td>" + rowvals[j] + "</td>";
+              }
+                rows += "</tr>";
+              }
+            rows += "</tbody>"
+
+            d3.select("#TopCitationsTable" + plotType)
+              .html(header + rows);
+
+        }
+      })
+    }
+
+    function makeStandardTable(year, plotType){
+      // Create the header
+      var tableName = "#TopCitationsTable" + plotType;
+      header = d3.select(tableName)
+                 .html().split('<tbody>')[0];
+
+      // Create the rows
+      rows = "";
+      d3.csv(citFile, function(error, data){
+        // If there is an error, print it
+        if (error){
+          console.log(error);
+        // Otherwise, continue
+        } else {
+          // Filter the data to only include one year
+          var yearData = data.filter(function(d){
+              return Math.floor(d.year) == year;
+          });
+          // Sort the year's Articles by the number of citations
+          yearData =  yearData.sort(function(a, b){
+                        return b.num_cites - a.num_cites;
+                        // return b["num-cites"] - a["num-cites"];
+                      })
+
+          // Find the cutoff value for top 15 citations & filter
+          var topnum = 15;
+          if (yearData.length > topnum){
+            topval = yearData[topnum-1].num_cites;
+            // topval = yearData[topnum-1]["num-cites"];
+
+            yearData =  yearData.filter(function(d){
+                          return +d.num_cites >= topval;
+                          // return + d["num-cites"] >= topval;
+                        })
+          }
+
+          // Create the html for the top values
+          // Note:
+          rows = "<tbody>"
+          // Iterate through each citation in a year
+
+          for (i=0; i < yearData.length; i++){
+            rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i].num_cites];
+            // rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i]["num-cites"]];
+            rows += "<tr>";
+            // Append each piece of information for the citation
+            for (var j=0; j < rowvals.length; j++){
+              rows += "<td>" + rowvals[j] + "</td>";
+            }
+              rows += "</tr>";
+            }
+            rows += "</tbody>"
+          }
+
+          d3.select("#TopCitationsTable" + plotType)
+            .html(header + rows);
+        })
+
+    }
+
+    function TopCitation(year){
+      // Initially return a progress message
+      var ret = "Finding Citation...";
+      var yearData;
+
+      // Find and display the top citations
+      d3.csv(citFile, function(error, data){
+        // If there is an error, print it
+        if (error){
+          console.log(error);
+        // Otherwise, continue
+        } else {
+          // Filter the dataset according to year
+          var yearData = data.filter(function(d){
+            var ret = Math.floor(d.year) == year;
+            return ret;
+          });
+
+          // Find the maximum number of citations for the year
+          var max = d3.max(yearData, function(d){return + d.num_cites;});
+          var top_cites = ""
+          // Find the Author of the most cited work
+          for (var i = 0; i < yearData.length; i++){
+            if (+ yearData[i].num_cites >= max){
+              top_cites += "<br/>" + yearData[i].author;
+            };
+          }
+
+          // Add the top citations
+          d3.select("#citation")
+            .html(top_cites);
+        }
+      })
+
+      return ret;
+    }
+
+    // Provide Functions to Users
+    // **************************
     exports.standardBar = standardBar;
     exports.standardLine = standardLine;
     exports.multiRPYS = multiRPYS;

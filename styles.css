@@ -11,33 +11,29 @@ table {
   margin-left: 10%;
   table-layout: fixed;
 }
- th{
+th{
    padding: 8px;
    text-align: left;
    border-bottom: 4px solid #aaa;
    font-size: 16px;
- }
-
+}
 td {
      padding: 8px;
      text-align: left;
      border-bottom: 1px solid #ddd;
      font-size: 12px;
- }
- .hidden{
+}
+.hidden{
    display: none;
- }
- .links line {
+}
+.links line {
    stroke: #404040;
-   /*stroke: #999;*/
    opacity: 0.4;
- }
-
- .nodes circle {
+}
+.nodes circle {
    stroke: #fff;
    stroke-width: 1px;
- }
-
+}
 .container {
   display: inline-block;
   position: relative;
@@ -69,6 +65,19 @@ overflow-y: hidden;
   left: 0;
 }
 
+.sideBar{
+  width: 16%;
+  height: 50%;
+  position: fixed;
+  margin-left: 0%;
+  background-color: #f1f1f1
+}
+
+/*.svg-content.network{
+  width: 64%;
+  position: fixed;
+  margin-left: 30%;
+}*/
 .axis path,
 .axis line {
   fill: none;
