@@ -46,6 +46,14 @@ td {
   overflow-y: scroll;
 }
 
+.visArea {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  vertical-align: top;
+  overflow-x: hidden;
+  overflow-y: scroll;
+}
 .console {
 display: inline-block;
 position: relative;
@@ -65,11 +73,6 @@ overflow-y: hidden;
   left: 0;
 }
 
-/*.svg-content.network{
-  width: 64%;
-  position: fixed;
-  margin-left: 30%;
-}*/
 .axis path,
 .axis line {
   fill: none;
@@ -99,18 +102,13 @@ p.title{
   text-align: center;
   font-size: 30px;
   font-weight: bold;
+  -webkit-margin-before: 0;
 }
 
 #TableContainer{
   overflow-y: visible;
   column-width: 10px;
 }
-
-/*#TopCitationsTablestandardBar.hidden,
-#TopCitationsTablestandardLine.hidden,
-#TopCitationsTablemultiRPYS.hidden{
-  display: none;
-}*/
 
 #tooltip {
   position: absolute;
@@ -127,10 +125,6 @@ p.title{
   box-shadow: 4px 4px 5px rgba(0, 0, 0, 0.4);
   pointer-events: none;
 }
-
-/*#tooltip.hidden {
-  display: none;
-}*/
 
 #tooltip p {
   margin: 0;

@@ -36,7 +36,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
     // Create the svg
     var plotName = "#" + plotType + "Plot"
     var svg = d3.select(plotName)
-                .style("padding-bottom", "80%")
+                .style("padding-bottom", "100%")
                 .append("svg")
                 .attr("id", plotType + "SVG")
                 .attr("preserveAspectRatio", "xMinYMin meet")
@@ -254,7 +254,7 @@ function initNetworkDivs(plotType){
 // Data Functions
 // **************
 
-// Function directly below adapted from d3js.org/d3.v4.js
+// Function adapted from d3js.org/d3.v4.js
 function map$1(object, f){
   var map = new Map;
 
@@ -475,7 +475,6 @@ function initSideBar(plotType){
 
 // Console Functions
 // *****************
-
 function initConsole(plotType){
     // Initialize the console's container
     var divConsole = document.createElement('div');
