@@ -81,7 +81,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
               offsetY = (diffY * d.target.radius) / pathLength;
             } else {
               offsetX = (diffX * d.target.radius);
-              offsetX = (diffY * d.target.radius);
+              offsetY = (diffY * d.target.radius);
             }
             // console.log("diffX: ", diffX)
             // console.log("targetr: ", d.target.radius)
@@ -96,10 +96,10 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
           //    .attr("y1", function(d) { return d.source.y; })
           //    .attr("x2", function(d) { return d.target.x; })
           //    .attr("y2", function(d) { return d.target.y; });
-          //
+
           node
-             .attr("cx", function(d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
-             .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
+             .attr("cx", function(d) {return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
+             .attr("cy", function(d) {return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
         }
 
         // Perform Required Node calculations
@@ -175,7 +175,6 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                         d.radius =  rScale(d[sizeBy]);
                         return d.radius;
                       })
-                      // .attr("fill", darkColour) // Need to update
                       .on("mouseover", function(d){
                         d3.select(this)
                           .attr("fill", lightColour)
@@ -193,9 +192,6 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                         repelNodes(simulation, d);
                       })
                       .on("mouseout", function(d){
-
-                        console.log(d[colourBy])
-
                         d3.select(this)
                           .attr("fill", nodeColour(d, colourBy, cScale));
 
@@ -329,12 +325,12 @@ function degreeCalc(edges, nodes){
     // Add to the source's degree and out-degree
     source = edges[e].source;
     nodeById.get(source).degree += weight;
-    nodeById.get(source).degreeO += weight;
+    // nodeById.get(source).degreeO += weight;
 
     // Add to the target's degree and in-degree
     target = edges[e].target;
     nodeById.get(target).degree += weight;
-    nodeById.get(target).degreeI += weight;
+    // nodeById.get(target).degreeI += weight;
   }
 }
 
@@ -348,8 +344,10 @@ function edgesRow(d){
 
 function nodesRow(d){
   d.degree= 0;
-  d.degreeI= 0;
-  d.degreeO= 0;
+  if (directed){
+    d.degreeI= 0;
+    d.degreeO= 0;
+  }
   return d
 }
 
@@ -468,19 +466,39 @@ function initToolTip(){
 }
 
 function makeNetworkToolTip(xPos, yPos, d){
+  // Automatically generate the tooltip information
+  var html = "<strong>" + d.ID + "</strong></br>"
+  for (var key in d){
+    var exclude = {'ID': undefined,
+                   'info': undefined,
+                   'x': undefined,
+                   'y': undefined,
+                   'fx': undefined,
+                   'fy': undefined,
+                   'index': undefined,
+                   'vy': undefined,
+                   'vx': undefined,
+                   'radius': undefined}
+    if (!(key in exclude)){
+      html += key + ": <strong>" + d[key] + "</strong><br/>"
+    }
+  }
+
   // Update the tooltip position and values
   d3.select("#tooltip")
     .style("left", xPos + "px")
     .style("top", yPos + "px")
     .select("#value")
-    .html("<strong>" + d.ID + "</strong><br/>" +
-          "Degree: <strong>" + getAttr("degree") + "</strong><br/>" +
-          "In Degree: <strong>" + getAttr("degreeI") + "</strong><br/>" +
-          "Out Degree: <strong>" + getAttr('degreeO') + "</strong></br>")
-  function getAttr(type){
-    if (d[type] == undefined){return 0;}
-    else {return d[type]}
-  }
+    .html(html)
+    // .html("<strong>" + d.ID + "</strong><br/>" +
+    //       "Degree: <strong>" + getAttr("degree") + "</strong><br/>" +
+    //       "In Degree: <strong>" + getAttr("degreeI") + "</strong><br/>" +
+    //       "Out Degree: <strong>" + getAttr('degreeO') + "</strong></br>")
+
+  // function getAttr(type){
+  //   if (d[type] == undefined){return 0;}
+  //   else {return d[type]}
+  // }
 
   // Show the tooltip
     d3.select("#tooltip").classed("hidden", false);
