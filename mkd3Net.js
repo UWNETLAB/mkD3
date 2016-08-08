@@ -67,12 +67,36 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
         // Define Required Functions
         var nodeById = map$1(nodes, function(d){return d.ID;})
         function ticked() {
-          link
-             .attr("x1", function(d) { return d.source.x; })
-             .attr("y1", function(d) { return d.source.y; })
-             .attr("x2", function(d) { return d.target.x; })
-             .attr("y2", function(d) { return d.target.y; });
+          link.attr("d", function(d){
+            // Total difference in x and y from source to target
+            diffX = d.target.x - d.source.x;
+            diffY = d.target.y - d.source.y;
 
+            // Length of path from center of source node to center of target node
+            pathLength = Math.sqrt((diffX*diffX)+(diffY*diffY));
+
+            // x and y distances from center to outside edge of target node
+            if (pathLength != 0){
+              offsetX = (diffX * d.target.radius) / pathLength;
+              offsetY = (diffY * d.target.radius) / pathLength;
+            } else {
+              offsetX = (diffX * d.target.radius);
+              offsetX = (diffY * d.target.radius);
+            }
+            // console.log("diffX: ", diffX)
+            // console.log("targetr: ", d.target.radius)
+            // console.log("pathLength: ", pathLength)
+            ret = "M" + d.source.x + "," + d.source.y + "L" + (d.target.x - offsetX) + "," + (d.target.y - offsetY);
+            // console.log(ret)
+            return ret
+          })
+
+          // link
+          //    .attr("x1", function(d) { return d.source.x; })
+          //    .attr("y1", function(d) { return d.source.y; })
+          //    .attr("x2", function(d) { return d.target.x; })
+          //    .attr("y2", function(d) { return d.target.y; });
+          //
           node
              .attr("cx", function(d) { return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
              .attr("cy", function(d) { return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
@@ -86,6 +110,8 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
         var rScale = d3.scaleLinear()
                        .domain([0, d3.max(nodes, function(d){return d[sizeBy]})])
                        .range([3,20])
+        // Create a scale for the node's colour
+        var cScale = d3.scaleOrdinal(d3.schemeCategory20);
 
         // Create a scale for the edges' opacity (alpha)
         var aScale = d3.scalePow()
@@ -98,10 +124,10 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
         var link = svg.append("g")
                       .attr("class", "links")
                       .attr("id", "links")
-                      .selectAll("line")
+                      .selectAll("path")
                       .data(edges)
                       .enter()
-                      .append("line")
+                      .append("path")
                       .attr("stroke-width", StrokeWidth(edgeWidth))
                       // .classed("hidden", function(e){return e.weight <= 1 })
                       .style("marker-end",  "url(#end)")
@@ -115,7 +141,6 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
 
         // Add Arrows
         if (directed){
-          console.log("here")
           // Create the end markers
           // Code adapted from http://bl.ocks.org/d3noob/5141278
           svg.append("svg:defs").selectAll("marker")
@@ -123,7 +148,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
              .enter().append("svg:marker")    // This section adds in the arrows
              .attr("id", String)
              .attr("viewBox", "0 -5 10 10")
-             .attr("refX", 15)
+             .attr("refX", 10)
              .attr("refY", 0)
              .attr("markerWidth", 4)
              .attr("markerHeight", 3)
@@ -141,9 +166,16 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                       .data(nodes)
                       .enter()
                       .append("circle")
+                      .attr("fill", "steelblue")
+                      .attr("fill", function(d){
+                        return nodeColour(d, colourBy, cScale)
+                      })
                       // .classed("hidden", function(d){return d.degree == 0;})
-                      .attr("r", function(d){return rScale(d[sizeBy]);})
-                      .attr("fill", darkColour) // Need to update
+                      .attr("r", function(d){
+                        d.radius =  rScale(d[sizeBy]);
+                        return d.radius;
+                      })
+                      // .attr("fill", darkColour) // Need to update
                       .on("mouseover", function(d){
                         d3.select(this)
                           .attr("fill", lightColour)
@@ -161,8 +193,11 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                         repelNodes(simulation, d);
                       })
                       .on("mouseout", function(d){
+
+                        console.log(d[colourBy])
+
                         d3.select(this)
-                          .attr("fill", darkColour);
+                          .attr("fill", nodeColour(d, colourBy, cScale));
 
                         // Unfix the node's position
                         d.fx = null;
@@ -180,10 +215,12 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                       })
 
         // Adjust the simulation
+
         // Add Tick (progress simulation)
         simulation
              .nodes(nodes)
              .on("tick", ticked);
+
         // Update the Charge Force
         simulation
              .force("charge")
@@ -192,6 +229,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                var max = d3.max(nodes, function(d){return d.degree})
                return -20 * Math.cos((Math.PI * d.degree)/(max/2))-1;
              })
+
         // Update the Link Force
         simulation
              .force("link")
@@ -658,4 +696,9 @@ function sizeChange(canvas, rScale){
             .attr("r", function(d){return rScale(d.degree)})
 
         })
+}
+
+function nodeColour(d, colourBy, cScale){
+    if (d[colourBy] == undefined){return colourBy;}
+    else {return cScale(d[colourBy])}
 }
