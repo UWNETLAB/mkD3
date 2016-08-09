@@ -65,7 +65,8 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
       d3.csv(edgeFile, edgesRow, function(error, edges){
         // If there is an error, print it to the console
         if(error){console.log(error)}
-
+        console.log("nodes", nodes.length)
+        console.log("edges", edges.length)
         // Define Required Functions
         var nodeById = map$1(nodes, function(d){return d.ID;})
 
@@ -201,20 +202,53 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
              .strength(function(d){
                if (d.degree == 0) {return -3}
                var max = d3.max(nodes, function(d){return d.degree})
-               return -20 * Math.cos((Math.PI * d.degree)/(max/2))-1;
+               var factor = Math.pow(0.999, (6*nodes.length-7500)) + 1;
+               console.log(factor);
+               return -factor * Math.cos((Math.PI * d.degree)/(max/2))-4;
+               return -2500 * Math.cos((Math.PI * d.degree)/(max/2))-4;
              })
 
         // Update the Link Force
         simulation
-             .force("link")
-             .links(edges)
-             .distance(function(d){
-               sdeg = nodeById.get(d.source.ID).degree;
-               tdeg = nodeById.get(d.target.ID).degree;
-               //  if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return 1.5 *(sdeg + tdeg-d.weight*2);}
-               if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return ((sdeg + tdeg)/d.weight/d.weight);}
-               return Math.min(rScale(sdeg), rScale(tdeg)) +
-                  Math.max(rScale(sdeg), rScale(tdeg)) + 5;
+              .force("link")
+              .links(edges)
+              .distance(function(d){
+                // Create a link scale
+                var lScale = d3.scaleLinear()
+                               .domain(d3.extent(edges, function(d){
+                                 return (d.source.degree + d.target.degree)/d.weight/d.weight;
+                               }))
+                               .range([5, width/2])
+
+                // Use filter to copy the edges array
+                var sortedEdges = edges.filter(function(d){return true});
+                // Sort the edges by the sum of node degrees
+                sortedEdges.sort(function(a,b){
+                  var asum = a.source.degree + a.target.degree;
+                  var bsum = b.source.degree + b.target.degree;
+                  return asum - bsum;
+                })
+                // Find the 25th quartile value
+                var edgeQuantile25 = d3.quantile(sortedEdges, 0.25, function(d){return d.source.degree + d.target.degree})
+
+                // Use filter to copy the nodes array
+                var sortedNodes = nodes.filter(function(d){return true})
+                // Sort the nodes by their degree
+                sortedNodes.sort(function(a, b){
+                  return a.degree - b.degree;
+                })
+                //Find the 75th quartile value
+                var nodeQuantile75 = d3.quantile(sortedNodes, 0.75, function(d){return d.degree})
+
+                // Find the degrees of the connected nodes
+                sdeg = d.source.degree;
+                tdeg = d.target.degree;
+                if (sdeg > nodeQuantile75  && tdeg > nodeQuantile75  && sdeg + tdeg > edgeQuantile25){
+                  return lScale((sdeg+tdeg)/d.weight/d.weight);
+                }
+                //  if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return ((sdeg + tdeg)/d.weight/d.weight);}
+                return Math.min(rScale(sdeg), rScale(tdeg)) +
+                       Math.max(rScale(sdeg), rScale(tdeg)) + 5;
               })
 
         // Simulation Functions
