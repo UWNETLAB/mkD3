@@ -24,11 +24,23 @@ var lightColour = "#FF8A75"
 
 function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", directed: true, edgeWidth: 2, colourBy: '#2479C1'}){
     // Define Constants
+
     var plotType = 'network';
-    sizeBy = optionalAttrs['sizeBy'] != 'undefined' ? optionalAttrs['sizeBy'] : "degree";
-    directed = optionalAttrs['directed'] != 'undefined' ? optionalAttrs['directed'] : true;
-    edgeWidth = optionalAttrs['edgeWidth'] != 'undefined' ? optionalAttrs['edgeWidth']: 2;
-    colourBy = optionalAttrs['colourBy'] != 'undefined' ? optionalAttrs['colourBy']: '#2479C1';
+
+    var sizeBy,
+        directed,
+        edgeWidth,
+        colourBy;
+
+    // optionalAttrs['sizeBy'] == undefined? sizeBy = 'degree' : sizeBy = optionalAttrs['sizeBy'];
+    // optionalAttrs['directed'] == undefined? directed = false : directed = optionalAttrs['directed'];
+    // optionalAttrs['edgeWidth'] == undefined? edgeWidth = 2 : edgeWidth = optionalAttrs['edgeWidth'];
+    // optionalAttrs['colourBy'] == undefined? colourBy = '#2479C1' : colourBy = optionalAttrs['colourBy']
+
+    sizeBy = optionalAttrs['sizeBy'] != undefined ? optionalAttrs['sizeBy'] : "degree";
+    directed = optionalAttrs['directed'] != undefined ? optionalAttrs['directed'] : false;
+    edgeWidth = optionalAttrs['edgeWidth'] != undefined ? optionalAttrs['edgeWidth']: 2;
+    colourBy = optionalAttrs['colourBy'] != undefined ? optionalAttrs['colourBy']: '#2479C1';
     darkColour = colourBy;
 
     // This initializes the divs everything will be placed into
@@ -67,8 +79,6 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", dir
       d3.csv(edgeFile, edgesRow, function(error, edges){
         // If there is an error, print it to the console
         if(error){console.log(error)}
-        console.log("nodes", nodes.length)
-        console.log("edges", edges.length)
         // Define Required Functions
         var nodeById = map$1(nodes, function(d){return d.ID;})
 
@@ -88,7 +98,9 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", dir
         }
 
         // Create a scale for the node's colour
-        var cScale = d3.scaleOrdinal(d3.schemeCategory20);
+        // This colour palette is from Stephen Few's Book 'Show Me the Numbers'
+        var cScale = d3.scaleOrdinal(['#5da5da','#faa43a','#60bd68','#f17cb0','#4d4d4d','#b2912f','#decf3f','#f15854']);
+        // var cScale = d3.scaleOrdinal(d3.schemeCategory20)
 
         // Create a scale for the edges' opacity (alpha)
         var aScale = d3.scalePow()
@@ -205,7 +217,6 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", dir
                if (d.degree == 0) {return -3}
                var max = d3.max(nodes, function(d){return d.degree})
                var factor = Math.pow(0.999, (6*nodes.length-7500)) + 1;
-               console.log(factor);
                return -factor * Math.cos((Math.PI * d.degree)/(max/2))-4;
                return -2500 * Math.cos((Math.PI * d.degree)/(max/2))-4;
              })
@@ -392,15 +403,19 @@ function degreeCalc(edges, nodes){
   // Assign Degree to nodes
   for (var e = 0; e < edges.length; e++){
     weight = + edges[e].weight;
-    // Add to the source's degree and out-degree
+    // Add to the source's degree
     source = edges[e].source;
     nodeById.get(source).degree += weight;
-    // nodeById.get(source).degreeO += weight;
 
-    // Add to the target's degree and in-degree
+    // Add to the target's degree
     target = edges[e].target;
     nodeById.get(target).degree += weight;
-    // nodeById.get(target).degreeI += weight;
+
+    // If the graph is directed, add to the in- and out-degrees
+    if(directed){
+      nodeById.get(target).degreeIn += weight;
+      nodeById.get(source).degreeOut += weight;
+    }
   }
 }
 
@@ -415,8 +430,8 @@ function edgesRow(d){
 function nodesRow(d){
   d.degree= 0;
   if (directed){
-    d.degreeI= 0;
-    d.degreeO= 0;
+    d.degreeIn= 0;
+    d.degreeOut= 0;
   }
   return d
 }
@@ -562,7 +577,7 @@ function makeNetworkToolTip(xPos, yPos, d){
     .html(html)
     // .html("<strong>" + d.ID + "</strong><br/>" +
     //       "Degree: <strong>" + getAttr("degree") + "</strong><br/>" +
-    //       "In Degree: <strong>" + getAttr("degreeI") + "</strong><br/>" +
+    //       "In Degree: <strong>" + getAttr("degreeIn") + "</strong><br/>" +
     //       "Out Degree: <strong>" + getAttr('degreeO') + "</strong></br>")
 
   // function getAttr(type){
@@ -574,16 +589,6 @@ function makeNetworkToolTip(xPos, yPos, d){
     d3.select("#tooltip").classed("hidden", false);
 }
 
-function repelNodes(simulation, d){
-  simulation.force("collide", d3.forceCollide().radius(function(d2){
-              if (d2.ID == d.ID){return 30;}
-              else {return 1;}
-            }))
-
-  if (!d3.event.active){
-    simulation.alphaTarget(0.3).restart();
-  }
-}
 
 // SideBar Functions
 // *****************
@@ -790,4 +795,17 @@ function nodeAttr(d, key, scale){
   // console.log(d[key], key, scale)
   if (d[key] == undefined){return key}
   else {return scale(d[key])}
+}
+
+// Interactive Functions
+// *********************
+function repelNodes(simulation, d){
+  simulation.force("collide", d3.forceCollide().radius(function(d2){
+              if (d2.ID == d.ID){return 30;}
+              else {return 1;}
+            }))
+
+  if (!d3.event.active){
+    simulation.alphaTarget(0.3).restart();
+  }
 }
