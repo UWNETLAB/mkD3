@@ -133,14 +133,16 @@
 
       // Create the scale for the x axis
       var xScale = d3.scaleLinear()
-                     .domain([d3.min(dataset, function(d){return d.year;}),
-                              d3.max(dataset, function(d){return d.year;})])
+                     .domain(d3.extent(dataset, function(d){return d.year}))
+                    //  .domain([d3.min(dataset, function(d){return d.year;}),
+                    //           d3.max(dataset, function(d){return d.year;})])
                     .range([outerPadding+plotMargin, w-plotMargin]);
 
       // Create the scale for the y axis
       var yScale = d3.scaleLinear()
-                     .domain([d3.min(dataset, function(d){return +d.abs_deviation;}),
-                              d3.max(dataset, function(d){return +d.abs_deviation;})])
+                     .domain(d3.extent(dataset, function(d){return +d.abs_deviation}))
+                    //  .domain([d3.min(dataset, function(d){return +d.abs_deviation;}),
+                    //           d3.max(dataset, function(d){return +d.abs_deviation;})])
                      .range([h-outerPadding-plotMargin, outerPadding+plotMargin]);
 
       // Make title
@@ -217,8 +219,9 @@
 
       // Create the scale for the x axis
       var xScale = d3.scaleLinear()
-                     .domain([d3.min(dataset, function(d){return d.year}),
-                              d3.max(dataset, function(d){return d.year})])
+                     .domain(d3.extent(dataset, function(d){return d.year}))
+                    //  .domain([d3.min(dataset, function(d){return d.year}),
+                    //           d3.max(dataset, function(d){return d.year})])
                      .range([outerPadding+plotMargin, w-plotMargin]);
 
       // Create the scale for the y axis
@@ -941,8 +944,8 @@
       return ret;
     }
 
-    // Provide Functions to Users
-    // **************************
+    //
+
     exports.standardBar = standardBar;
     exports.standardLine = standardLine;
     exports.multiRPYS = multiRPYS;

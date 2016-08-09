@@ -98,14 +98,16 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", dir
         }
 
         // Create a scale for the node's colour
-        // This colour palette is from Stephen Few's Book 'Show Me the Numbers'
-        var cScale = d3.scaleOrdinal(['#5da5da','#faa43a','#60bd68','#f17cb0','#4d4d4d','#b2912f','#decf3f','#f15854']);
+        // This colour palette has been adapted from Stephen Few's Book 'Show Me the Numbers'
+        var cScale = d3.scaleOrdinal(['#5da5da','#faa43a','#60bd68','#f17cb0',
+                                      '#4d4d4d','#b2912f','#decf3f','#f15854', '#ABABAB']);
         // var cScale = d3.scaleOrdinal(d3.schemeCategory20)
 
         // Create a scale for the edges' opacity (alpha)
         var aScale = d3.scalePow()
-                       .domain([d3.min(edges, function(d){return d.weight;}),
-                                d3.max(edges, function(d){return d.weight;})])
+                      //  .domain([d3.min(edges, function(d){return d.weight;}),
+                      //           d3.max(edges, function(d){return d.weight;})])
+                       .domain(d3.extent(edges, function(d){return d.weight;}))
                        .range([0.2, 1])
                        .exponent(8)
 
@@ -231,7 +233,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", dir
                                .domain(d3.extent(edges, function(d){
                                  return (d.source.degree + d.target.degree)/d.weight/d.weight;
                                }))
-                               .range([5, width/2])
+                               .range([7, width/2])
 
                 // Use filter to copy the edges array
                 var sortedEdges = edges.filter(function(d){return true});
@@ -257,6 +259,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", dir
                 sdeg = d.source.degree;
                 tdeg = d.target.degree;
                 if (sdeg > nodeQuantile75  && tdeg > nodeQuantile75  && sdeg + tdeg > edgeQuantile25){
+                  // return 1000
                   return lScale((sdeg+tdeg)/d.weight/d.weight);
                 }
                 //  if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return ((sdeg + tdeg)/d.weight/d.weight);}
