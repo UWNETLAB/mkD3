@@ -8,7 +8,7 @@ var ShowToolTip = true;
 var radius = 20;
 var height = w;
 var width = w;
-
+var directed;
 var darkColour = "#2479C1"
 // var lightColour = "#FF9A20";
 var lightColour = "#FF8A75"
@@ -23,6 +23,8 @@ var lightColour = "#FF8A75"
 // var lightColour = "#E1B941"
 
 function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWidth=2, colourBy = '#2479C1'){
+    directed = directed;
+    console.log(directed)
     // Define Constants
     var plotType = 'network';
     darkColour = colourBy;
@@ -66,50 +68,22 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
 
         // Define Required Functions
         var nodeById = map$1(nodes, function(d){return d.ID;})
-        function ticked() {
-          link.attr("d", function(d){
-            // Total difference in x and y from source to target
-            diffX = d.target.x - d.source.x;
-            diffY = d.target.y - d.source.y;
-
-            // Length of path from center of source node to center of target node
-            pathLength = Math.sqrt((diffX*diffX)+(diffY*diffY));
-
-            // x and y distances from center to outside edge of target node
-            if (pathLength != 0){
-              offsetX = (diffX * d.target.radius) / pathLength;
-              offsetY = (diffY * d.target.radius) / pathLength;
-            } else {
-              offsetX = (diffX * d.target.radius);
-              offsetY = (diffY * d.target.radius);
-            }
-            // console.log("diffX: ", diffX)
-            // console.log("targetr: ", d.target.radius)
-            // console.log("pathLength: ", pathLength)
-            ret = "M" + d.source.x + "," + d.source.y + "L" + (d.target.x - offsetX) + "," + (d.target.y - offsetY);
-            // console.log(ret)
-            return ret
-          })
-
-          // link
-          //    .attr("x1", function(d) { return d.source.x; })
-          //    .attr("y1", function(d) { return d.source.y; })
-          //    .attr("x2", function(d) { return d.target.x; })
-          //    .attr("y2", function(d) { return d.target.y; });
-
-          node
-             .attr("cx", function(d) {return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
-             .attr("cy", function(d) {return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
-        }
 
         // Perform Required Node calculations
         nodeCalculations(nodes, edges);
 
         // Create a scale for the nodes' radii
         // Note: domain depends on sizeBy parameter
-        var rScale = d3.scaleLinear()
-                       .domain([0, d3.max(nodes, function(d){return d[sizeBy]})])
-                       .range([3,20])
+        if (typeof(sizeBy) != 'number'){
+          var rScale = d3.scaleLinear()
+                         .domain([0, d3.max(nodes, function(d){return d[sizeBy]})])
+                         .range([3,20])
+        } else {
+          var rScale = d3.scaleLinear()
+                         .domain([sizeBy, sizeBy])
+                         .range([sizeBy, sizeBy])
+        }
+
         // Create a scale for the node's colour
         var cScale = d3.scaleOrdinal(d3.schemeCategory20);
 
@@ -168,11 +142,11 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                       .append("circle")
                       .attr("fill", "steelblue")
                       .attr("fill", function(d){
-                        return nodeColour(d, colourBy, cScale)
+                        return nodeAttr(d, colourBy, cScale)
                       })
                       // .classed("hidden", function(d){return d.degree == 0;})
                       .attr("r", function(d){
-                        d.radius =  rScale(d[sizeBy]);
+                        d.radius = nodeAttr(d, sizeBy, rScale);
                         return d.radius;
                       })
                       .on("mouseover", function(d){
@@ -193,7 +167,7 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                       })
                       .on("mouseout", function(d){
                         d3.select(this)
-                          .attr("fill", nodeColour(d, colourBy, cScale));
+                          .attr("fill", nodeAttr(d, colourBy, cScale));
 
                         // Unfix the node's position
                         d.fx = null;
@@ -209,6 +183,10 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                       .on("click", function(d){
                         makeNetworkTable(plotType, d.ID, edges)
                       })
+                      .call(d3.drag()
+                        .on("start", dragStarted)
+                        .on("drag", dragged)
+                        .on("end", dragEnded));
 
         // Adjust the simulation
 
@@ -238,8 +216,64 @@ function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWi
                return Math.min(rScale(sdeg), rScale(tdeg)) +
                   Math.max(rScale(sdeg), rScale(tdeg)) + 5;
               })
+
+        // Simulation Functions
+        // ********************
+        function ticked() {
+          link.attr("d", function(d){
+            // Total difference in x and y from source to target
+            diffX = d.target.x - d.source.x;
+            diffY = d.target.y - d.source.y;
+
+            // Length of path from center of source node to center of target node
+            pathLength = Math.sqrt((diffX*diffX)+(diffY*diffY));
+
+            // x and y distances from center to outside edge of target node
+            if (pathLength != 0){
+              offsetX = (diffX * d.target.radius) / pathLength;
+              offsetY = (diffY * d.target.radius) / pathLength;
+            } else {
+              offsetX = (diffX * d.target.radius);
+              offsetY = (diffY * d.target.radius);
+            }
+
+            ret = "M" + d.source.x + "," + d.source.y + "L" + (d.target.x - offsetX) + "," + (d.target.y - offsetY);
+            return ret
+          })
+
+          // link
+          //    .attr("x1", function(d) { return d.source.x; })
+          //    .attr("y1", function(d) { return d.source.y; })
+          //    .attr("x2", function(d) { return d.target.x; })
+          //    .attr("y2", function(d) { return d.target.y; });
+
+          node
+             .attr("cx", function(d) {return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
+             .attr("cy", function(d) {return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
+        }
+
       })
     })
+
+    // Drag Functions
+    // **************
+    function dragStarted(d) {
+      if (!d3.event.active) simulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(d) {
+      d.fx = d3.event.x;
+      d.fy = d3.event.y;
+    }
+
+    function dragEnded(d) {
+      if (!d3.event.active) simulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
 }
 
 // Determines how stroke-width is calculated based on the edgeWidth parameter
@@ -480,7 +514,7 @@ function makeNetworkToolTip(xPos, yPos, d){
                    'vx': undefined,
                    'radius': undefined}
     if (!(key in exclude)){
-      html += key + ": <strong>" + d[key] + "</strong><br/>"
+      html += key.charAt(0).toUpperCase() + key.slice(1) + ": <strong>" + d[key] + "</strong><br/>"
     }
   }
 
@@ -716,7 +750,8 @@ function sizeChange(canvas, rScale){
         })
 }
 
-function nodeColour(d, colourBy, cScale){
-    if (d[colourBy] == undefined){return colourBy;}
-    else {return cScale(d[colourBy])}
+function nodeAttr(d, key, scale){
+  // console.log(d[key], key, scale)
+  if (d[key] == undefined){return key}
+  else {return scale(d[key])}
 }
