@@ -22,11 +22,13 @@ var lightColour = "#FF8A75"
 // var darkColour = "royalblue";
 // var lightColour = "#E1B941"
 
-function networkGraph(edgeFile, nodeFile, sizeBy="degree", directed=true, edgeWidth=2, colourBy = '#2479C1'){
-    directed = directed;
-    console.log(directed)
+function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", directed: true, edgeWidth: 2, colourBy: '#2479C1'}){
     // Define Constants
     var plotType = 'network';
+    sizeBy = optionalAttrs['sizeBy'] != 'undefined' ? optionalAttrs['sizeBy'] : "degree";
+    directed = optionalAttrs['directed'] != 'undefined' ? optionalAttrs['directed'] : true;
+    edgeWidth = optionalAttrs['edgeWidth'] != 'undefined' ? optionalAttrs['edgeWidth']: 2;
+    colourBy = optionalAttrs['colourBy'] != 'undefined' ? optionalAttrs['colourBy']: '#2479C1';
     darkColour = colourBy;
 
     // This initializes the divs everything will be placed into
