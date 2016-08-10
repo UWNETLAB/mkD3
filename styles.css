@@ -24,6 +24,7 @@ td {
      font-size: 12px;
 }
 .container.hidden,
+.panel.hidden,
 .hidden{
    display: none;
 }
@@ -50,10 +51,47 @@ td {
 .visArea {
   display: inline-block;
   position: relative;
-  width: 100%;
+  width: 99%;
   vertical-align: top;
   overflow-x: hidden;
   overflow-y: scroll;
+  border: solid gainsboro;
+}
+div.panel {
+  display: inline-block;
+  position: relative;
+  width: 24%;
+  height: inherit;
+  vertical-align: top;
+  padding-top: 20px;
+  border-right: solid 2px gainsboro;
+}
+panel.hidden{
+  width: 0%;
+}
+.icon{
+  margin: 3px;
+  /*color: steelblue;*/
+  margin-left: 10%;
+}
+.iconText {
+  margin: 3px;
+}
+.panelTitle {
+  margin-left: 10px;
+  font-weight: bold;
+}
+.panelOption{
+  margin-left: 30px;
+}
+.plot {
+  display: inline-block;
+  position: relative;
+  width: 100%;
+  padding-bottom: 5%;
+}
+.plot.narrow {
+  width: 75%;
 }
 .console {
 display: inline-block;
@@ -74,6 +112,16 @@ overflow-y: hidden;
   left: 0;
 }
 
+.button {
+    background-color: #4CAF50; /* Green */
+    border: none;
+    color: white;
+    padding: 15px 32px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+}
 .axis path,
 .axis line {
   fill: none;

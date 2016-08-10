@@ -20,7 +20,9 @@ var outerPadding = 70;
 var relWidth = 0.8;
 var rpysFile = undefined;
 var citFile = undefined;
-var ShowToolTip = true;
+var showToolTip = true,
+    showTable = true,
+    showOptionPanel = false;
 var radius = 20;
 var height = w;
 var width = w;
@@ -40,6 +42,7 @@ var lightColour = "#FF8A75"
 // var lightColour = "#E1B941"
 
 function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
+
     // Define Constants
     var plotType = 'network';
 
@@ -51,16 +54,18 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
     var hideNodeAttrs = optionalAttrs['hideNodeAttrs'] != undefined ? optionalAttrs['hideNodeAttrs']: [];
     darkColour = colourBy;
 
-    // This initializes the divs everything will be placed into
+    // This initializes the divs everything will be placed in
+    initLinks()
     initNetworkDivs(plotType)
     initNetworkTable(plotType)
     initToolTip(plotType)
-    initConsole(plotType)
+    // initConsole(plotType)
 
     // Create the svg
     var plotName = "#" + plotType + "Plot"
     var svg = d3.select(plotName)
-                .style("padding-bottom", "100%")
+                // .style("padding-bottom", "100%") // For use without sidebar
+                .style("padding-bottom", "75%") // For use with sidebar
                 .append("svg")
                 .attr("id", plotType + "SVG")
                 .attr("preserveAspectRatio", "xMinYMin meet")
@@ -211,7 +216,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
                         makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs);
 
                         // Show the tooltip
-                        if (ShowToolTip == false){
+                        if (showToolTip == false){
                           d3.select("#tooltip").classed("hidden", true);
                         }
 
@@ -339,6 +344,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
              .attr("cy", function(d) {return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
         }
 
+        makePanel(nodes, edges, plotType)
       })
     })
 
@@ -385,7 +391,7 @@ function initNetworkDivs(plotType){
   // Create the Options Panel
   var panel = document.createElement('div');
   panel.id = plotType + "Panel";
-  panel.className = "panel";
+  panel.className = "panel hidden";
   visArea.appendChild(panel);
 
   // Create the plot
@@ -406,6 +412,79 @@ function initNetworkDivs(plotType){
   document.body.appendChild(container);
 }
 
+function initLinks(){
+  var faLink = document.createElement('link');
+  faLink.rel = "stylesheet";
+  faLink.href = "http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css";
+  document.head.appendChild(faLink);
+
+  var icons =
+  // Cog Icon
+  makeIcon("cog", "Options Panel", showOptionPanel, "network")
+
+  // Table Icon
+  makeIcon("table", "Table", showTable, "network")
+
+  // ToolTip Icon
+  makeIcon("info-circle", "Pop-up Info", showToolTip, "network")
+}
+
+function makeIcon(type, labelText, bool, plotType){
+  var icon = document.createElement('span');
+  icon.id = type + "Icon";
+  icon.className = "fa fa-" + type + " fa-lg icon";
+  icon.style.color = bool?"steelblue":"darkgrey"
+  icon.onclick = function(d){iconClick(type, bool, plotType)};
+  // document.body.appendChild(icon)
+
+  var label = document.createElement('label');
+  label.className = "iconText";
+  label.onclick = function(d){iconClick(type, bool, plotType)};
+  label.for = type;
+  var text = document.createTextNode(labelText);
+  label.appendChild(text);
+  // document.body.appendChild(label)
+
+  var div = document.createElement('div')
+  div.appendChild(icon)
+  div.appendChild(label)
+  document.body.appendChild(div)
+}
+
+function iconClick(type, bool, plotType){
+  if (type == "info-circle"){
+    // Update the value of showToolTip
+    // This will also automatically hide the tooltips
+    showToolTip = !showToolTip;
+    // Update the icon colour
+    d3.selectAll("#info-circleIcon")
+      .style("color", function(d){return showToolTip?"steelblue":"darkgrey"})
+  }
+  else if (type == "cog"){
+    // Update the value of showOptionPanel
+    showOptionPanel = !showOptionPanel;
+    // Update the icon colour
+    d3.selectAll("#cogIcon")
+      .style("color", function(d){return showOptionPanel?"steelblue":"darkgrey"})
+    // Hide the console
+    d3.select("#" + plotType + "Panel")
+      .classed("hidden", !showOptionPanel)
+    d3.select("#" + plotType + "Plot")
+      .classed("narrow", showOptionPanel)
+    d3.select("#" + plotType + "Plot")
+      .style("padding-bottom", function(d){return showOptionPanel?"75%":"100%"})
+  }
+  else if (type == "table"){
+    // Update the value of showTable
+    showTable = !showTable;
+    // Update the icon colour
+    d3.selectAll("#tableIcon")
+      .style("color", function(d){return showTable?"steelblue":"darkgrey"})
+    // Show/Hide the table
+    d3.selectAll("#" + plotType + "TableContainer")
+      .classed("hidden", !showTable)
+  }
+}
 // Data Functions
 // **************
 
@@ -680,6 +759,36 @@ function makeConsole(nodes, edges, rScale){
 
 }
 
+function makePanel(nodes, edges, plotType){
+  var panel = document.getElementById(plotType + "Panel")
+
+  var p = document.createElement('p')
+  p.className = "panelTitle"
+  var nodeTitle = document.createTextNode('Node Options')
+  p.appendChild(nodeTitle)
+  panel.appendChild(p)
+
+  var label = document.createElement('label')
+  label.className = "panelOption";
+  label.for = "isolates";
+  var text = document.createTextNode('Isolates')
+  label.appendChild(text)
+  panel.appendChild(label)
+
+  var cbIsolates = document.createElement('INPUT');
+  cbIsolates.setAttribute("type", "checkbox");
+  cbIsolates.className = "checkBox";
+  cbIsolates.id = "cbIsolates";
+  panel.appendChild(cbIsolates);
+
+  var p = document.createElement('p')
+  p.className = "panelTitle"
+  var edgeTitle = document.createTextNode('Edge Options')
+  p.appendChild(edgeTitle)
+  panel.appendChild(p)
+
+}
+
 // Node Functions
 function isolates(canvas){
   var showIsolates = false;
@@ -838,10 +947,6 @@ function repelNodes(simulation, d){
   }
 }
 
-function saturateNodes(colour){
-
-}
-
 // Icon Functions
 // **************
 function makeIcons(svg, colour="grey", plotType){
@@ -886,6 +991,47 @@ function makeIcons(svg, colour="grey", plotType){
       .attr("font-size", "30px");
 
   }
+  svg.append("g")
+     .call(infoButton)
+     .attr("class", "info icon")
+     .attr("transform", "translate(686,375), scale(0.4)")
+     .attr("transform", "translate(686,20), scale(0.4)")
+     .on("click", function(d){
+       if (showToolTip == true){
+         // Set tooltipShow to false
+         showToolTip = false;
+
+         // Change the icon to greyscale
+         d3.select(this)
+           .select("circle")
+           .attr("fill", "grey");
+
+         d3.select(this)
+           .select("text")
+           .attr("fill", "grey");
+         // Change the text to 'Show Pop-up Info'
+         d3.select(this)
+           .select("#showHideText")
+           .text("Show Pop-up Info");
+       } else {
+         // Set tooltipShow to true
+         showToolTip = true;
+
+         // Change the icon to colour
+         d3.select(this)
+           .select("circle")
+           .attr("fill", colour);
+
+         d3.select(this)
+           .select("text")
+           .attr("fill", colour);
+
+         d3.select(this)
+           .select("#showHideText")
+           .text("Hide Pop-up Info");
+       }
+
+     });
 
   function tableButton(selection){
     // Make the table button
@@ -963,49 +1109,6 @@ function makeIcons(svg, colour="grey", plotType){
       .attr("font-size", "30px");
 
   }
-
-  svg.append("g")
-     .call(infoButton)
-     .attr("class", "info icon")
-     .attr("transform", "translate(686,375), scale(0.4)")
-     .attr("transform", "translate(686,20), scale(0.4)")
-     .on("click", function(d){
-       if (ShowToolTip == true){
-         // Set tooltipShow to false
-         ShowToolTip = false;
-
-         // Change the icon to greyscale
-         d3.select(this)
-           .select("circle")
-           .attr("fill", "grey");
-
-         d3.select(this)
-           .select("text")
-           .attr("fill", "grey");
-         // Change the text to 'Show Pop-up Info'
-         d3.select(this)
-           .select("#showHideText")
-           .text("Show Pop-up Info");
-       } else {
-         // Set tooltipShow to true
-         ShowToolTip = true;
-
-         // Change the icon to colour
-         d3.select(this)
-           .select("circle")
-           .attr("fill", colour);
-
-         d3.select(this)
-           .select("text")
-           .attr("fill", colour);
-
-         d3.select(this)
-           .select("#showHideText")
-           .text("Hide Pop-up Info");
-       }
-
-     });
-
   var tableShow = true;
   svg.append("g")
      .call(tableButton)
@@ -1042,5 +1145,4 @@ function makeIcons(svg, colour="grey", plotType){
            .text("Hide Table")
        }
      });
-
 }
