@@ -48,6 +48,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
     var sizeBy = optionalAttrs['sizeBy'] != undefined ? optionalAttrs['sizeBy'] : "degree";
     var edgeWidth = optionalAttrs['edgeWidth'] != undefined ? optionalAttrs['edgeWidth']: 2;
     var colourBy = optionalAttrs['colourBy'] != undefined ? optionalAttrs['colourBy']: '#2479C1';
+    var hideNodeAttrs = optionalAttrs['hideNodeAttrs'] != undefined ? optionalAttrs['hideNodeAttrs']: [];
     darkColour = colourBy;
 
     // This initializes the divs everything will be placed into
@@ -113,7 +114,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
         var nodeById = map$1(nodes, function(d){return d.ID;})
 
         // Perform Required Node calculations
-        nodeCalculations(nodes, edges);
+        nodeCalculations(nodes, edges, directed);
 
         // Create a scale for the nodes' radii
         // Note: domain depends on sizeBy parameter
@@ -207,10 +208,9 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
                         // Make tooltip
                         var xPos = event.clientX + 20;
                         var yPos = event.clientY - 20;
-                        makeNetworkToolTip(xPos, yPos, d);
+                        makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs);
 
                         // Show the tooltip
-                        console.log(ShowToolTip)
                         if (ShowToolTip == false){
                           d3.select("#tooltip").classed("hidden", true);
                         }
@@ -432,12 +432,12 @@ function map$1(object, f){
   return map;
 }
 
-function nodeCalculations(nodes, edges){
+function nodeCalculations(nodes, edges, directed){
   // Find the degree, in-degree, and out-degree of each node and assign it
-  degreeCalc(edges, nodes)
+  degreeCalc(edges, nodes, directed)
 }
 
-function degreeCalc(edges, nodes){
+function degreeCalc(edges, nodes, directed){
   var nodeById = map$1(nodes, function(d){return d.ID;})
 
   // Assign Degree to nodes
@@ -573,20 +573,25 @@ function initToolTip(){
   divToolTip.className = "hidden";
 }
 
-function makeNetworkToolTip(xPos, yPos, d){
+function makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs){
   // Automatically generate the tooltip information
   var html = "<strong>" + d.ID + "</strong></br>"
+  // Create a list of attributes to exclude from the tooltip
+  var exclude = {'ID': undefined,
+                 'info': undefined,
+                 'x': undefined,
+                 'y': undefined,
+                 'fx': undefined,
+                 'fy': undefined,
+                 'index': undefined,
+                 'vy': undefined,
+                 'vx': undefined,
+                 'radius': undefined}
+  // Add hideNodeAttrs to the exclusion list
+  for (var attr in hideNodeAttrs){exclude[hideNodeAttrs[attr]]=undefined}
+
+  // Add every non-excluded item to the tooltip
   for (var key in d){
-    var exclude = {'ID': undefined,
-                   'info': undefined,
-                   'x': undefined,
-                   'y': undefined,
-                   'fx': undefined,
-                   'fy': undefined,
-                   'index': undefined,
-                   'vy': undefined,
-                   'vx': undefined,
-                   'radius': undefined}
     if (!(key in exclude)){
       html += key.charAt(0).toUpperCase() + key.slice(1) + ": <strong>" + d[key] + "</strong><br/>"
     }
@@ -833,6 +838,10 @@ function repelNodes(simulation, d){
   }
 }
 
+function saturateNodes(colour){
+
+}
+
 // Icon Functions
 // **************
 function makeIcons(svg, colour="grey", plotType){
@@ -961,7 +970,6 @@ function makeIcons(svg, colour="grey", plotType){
      .attr("transform", "translate(686,375), scale(0.4)")
      .attr("transform", "translate(686,20), scale(0.4)")
      .on("click", function(d){
-       console.log("here")
        if (ShowToolTip == true){
          // Set tooltipShow to false
          ShowToolTip = false;
