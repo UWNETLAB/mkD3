@@ -1,10 +1,10 @@
 // *********************************************************************************************
 // Copyright (C) 2016 Jillian Anderson
 //
-// This file is part of the metaknowledged3 framework developed for Dr John McLevey's Networks
+// This file is part of the mkD3 (metaknowledged3) framework developed for Dr John McLevey's Networks
 // Lab at the University of Waterloo. For more information, see http://networkslab.org/.
 //
-// metaknowledged3 is free software: you can redistribute it and/or modify it under the terms
+// mkD3 is free software: you can redistribute it and/or modify it under the terms
 // of a GNU General Public License as published by the Free Software Foundation. metaknowledged3
 // is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even
 // the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
