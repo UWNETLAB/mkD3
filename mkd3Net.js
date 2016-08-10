@@ -25,21 +25,13 @@ var lightColour = "#FF8A75"
 
 function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
     // Define Constants
-
     var plotType = 'network';
 
-    var directed,
-        weighted,
-        sizeBy,
-        edgeWidth,
-        colourBy;
-
-    directed = optionalAttrs['directed'] != undefined ? optionalAttrs['directed'] : false;
-    weighted = optionalAttrs['weighted'] != undefined ? optionalAttrs['weighted'] : true;
-    console.log('weighted?', weighted)
-    sizeBy = optionalAttrs['sizeBy'] != undefined ? optionalAttrs['sizeBy'] : "degree";
-    edgeWidth = optionalAttrs['edgeWidth'] != undefined ? optionalAttrs['edgeWidth']: 2;
-    colourBy = optionalAttrs['colourBy'] != undefined ? optionalAttrs['colourBy']: '#2479C1';
+    var directed = optionalAttrs['directed'] != undefined ? optionalAttrs['directed'] : false;
+    var weighted = optionalAttrs['weighted'] != undefined ? optionalAttrs['weighted'] : true;
+    var sizeBy = optionalAttrs['sizeBy'] != undefined ? optionalAttrs['sizeBy'] : "degree";
+    var edgeWidth = optionalAttrs['edgeWidth'] != undefined ? optionalAttrs['edgeWidth']: 2;
+    var colourBy = optionalAttrs['colourBy'] != undefined ? optionalAttrs['colourBy']: '#2479C1';
     darkColour = colourBy;
 
     // This initializes the divs everything will be placed into
@@ -70,7 +62,12 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
                        .force("x", d3.forceX(width/2))
                        .force("y", d3.forceY(height/2))
                        .force("center", d3.forceCenter(width/2, height/2));
-    // Define the functions for reading in data
+
+    // Add icons
+    makeIcons(svg, "steelblue", plotType)
+
+    // Data Functions
+    // **************
     function edgesRow(d){
       d.source= d.From;
       d.target= d.To;
@@ -83,13 +80,11 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
     function nodesRow(d){
       d.degree= 0;
       if (directed){
-        console.log("here")
         d.degreeIn= 0;
         d.degreeOut= 0;
       }
       return d
     }
-
 
     // Read in the edges and nodes and work with them
     d3.csv(nodeFile, nodesRow, function(error, nodes){
@@ -256,6 +251,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
 
                 // Use filter to copy the edges array
                 var sortedEdges = edges.filter(function(d){return true});
+                // var sortedEdges = edges;
                 // Sort the edges by the sum of node degrees
                 sortedEdges.sort(function(a,b){
                   var asum = a.source.degree + a.target.degree;
@@ -267,6 +263,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
 
                 // Use filter to copy the nodes array
                 var sortedNodes = nodes.filter(function(d){return true})
+                // var sortedNodes = nodes;
                 // Sort the nodes by their degree
                 sortedNodes.sort(function(a, b){
                   return a.degree - b.degree;
@@ -439,26 +436,6 @@ function degreeCalc(edges, nodes){
     }
   }
 }
-
-// function edgesRow(d){
-//   d.source= d.From;
-//   d.target= d.To;
-//   // if(d.weight == undefined ) d.weight=1;
-//   console.log("weighted?", weighted)
-//   if(weighted == false || d.weight == undefined ) d.weight=1;
-//   d.selfRef = (d.From==d.To)
-//   return d
-// }
-//
-// function nodesRow(d){
-//   d.degree= 0;
-//   if (directed){
-//     console.log("here")
-//     d.degreeIn= 0;
-//     d.degreeOut= 0;
-//   }
-//   return d
-// }
 
 // Table Functions
 // ***************
@@ -832,4 +809,207 @@ function repelNodes(simulation, d){
   if (!d3.event.active){
     simulation.alphaTarget(0.3).restart();
   }
+}
+
+// Icon Functions
+// **************
+function makeIcons(svg, colour="grey", plotType){
+  // Make the info button
+  var colour = colour;
+
+  function infoButton(selection){
+    infox = 0;
+    infoy = 0;
+    selection
+      .append("circle")
+      .attr("r", 14)
+      .attr("fill", colour)
+      .attr("x", infox)
+      .attr("y", infoy);
+
+    selection
+      .append("circle")
+      .attr("class", "info")
+      .attr("r", 11)
+      .attr("cx", infox)
+      .attr("cy", infoy)
+      .attr("fill", "white");
+
+    selection
+      .append("text")
+      .attr("class", "info")
+      .text("i")
+      .attr("x", infox)
+      .attr("y", infoy+8)
+      .attr("text-anchor", "middle")
+      .attr("font-family", "Lucida Sans Unicode")
+      .attr("font-size", "24px")
+      .attr("fill", colour);
+
+    selection
+      .append("text")
+      .text("Hide Pop-up Info")
+      .attr("id", "showHideText")
+      .attr("x", infox + 20)
+      .attr("y", infoy + 10)
+      .attr("font-size", "30px");
+
+  }
+
+  function tableButton(selection){
+    // Make the table button
+    var tabx = 0;
+    var taby = 0;
+    var tabw = 29;
+    var tabh = 26;
+    var tabb = 2;
+
+    selection
+      .append("rect")
+      .attr("class", "colour")
+      .attr("fill", colour)
+      .attr("x", tabx)
+      .attr("y", taby)
+      .attr("rx", 2)
+      .attr("ry", 2)
+      .attr("width", tabw)
+      .attr("height", tabh);
+
+    selection
+      .append("rect")
+      .attr("class", "white")
+      .attr("fill", "white")
+      .attr("x", tabx+2)
+      .attr("y", taby+6)
+      .attr("width", tabw-4)
+      .attr("height", tabh-8);
+
+    selection
+      .append("rect")
+      .attr("fill", colour)
+      .attr("x", tabx+9)
+      .attr("y", taby+6)
+      .attr("width", tabb)
+      .attr("height", tabh-8);
+    // //
+    // selection
+    //   .append("rect")
+    //   .attr("fill", colour)
+    //   .attr("x", tabx + 18)
+    //   .attr("y", taby+6)
+    //   .attr("width", tabb)
+    //   .attr("height", tabh-8);
+    //
+    selection
+      .append("rect")
+      .attr("fill", colour)
+      .attr("x", tabx + 2)
+      .attr("y", taby+11)
+      .attr("width", tabw-4)
+      .attr("height", 2);
+    //
+    // selection
+    //   .append("rect")
+    //   .attr("fill", colour)
+    //   .attr("x", tabx + 2)
+    //   .attr("y", taby+14)
+    //   .attr("width", tabw-4)
+    //   .attr("height", 2);
+    // //
+    // selection
+    //   .append("rect")
+    //   .attr("fill", colour)
+    //   .attr("x", tabx + 2)
+    //   .attr("y", taby+19)
+    //   .attr("width", tabw-4)
+    //   .attr("height", 2);
+
+    selection
+      .append("text")
+      .text("Hide Table")
+      .attr("x", tabx + 35)
+      .attr("y", taby + 24)
+      .attr("font-size", "30px");
+
+  }
+
+  svg.append("g")
+     .call(infoButton)
+     .attr("class", "info icon")
+     .attr("transform", "translate(686,375), scale(0.4)")
+     .attr("transform", "translate(686,20), scale(0.4)")
+     .on("click", function(d){
+       if (ShowToolTip == true){
+         // Set tooltipShow to false
+         ShowToolTip = false;
+
+         // Change the icon to greyscale
+         d3.select(this)
+           .select("circle")
+           .attr("fill", "grey");
+
+         d3.select(this)
+           .select("text")
+           .attr("fill", "grey");
+         // Change the text to 'Show Pop-up Info'
+         d3.select(this)
+           .select("#showHideText")
+           .text("Show Pop-up Info");
+       } else {
+         // Set tooltipShow to true
+         ShowToolTip = true;
+
+         // Change the icon to colour
+         d3.select(this)
+           .select("circle")
+           .attr("fill", colour);
+
+         d3.select(this)
+           .select("text")
+           .attr("fill", colour);
+
+         d3.select(this)
+           .select("#showHideText")
+           .text("Hide Pop-up Info");
+       }
+
+     });
+
+  var tableShow = true;
+  svg.append("g")
+     .call(tableButton)
+     .attr("class", "table button")
+     .attr("transform", "translate(680,30) scale(0.4)")
+     .on("click", function(d){
+       if (tableShow == true){
+         // Set tableShow to false
+         tableShow = false;
+         // Hide the table
+         d3.select("#" + plotType + "TableContainer").classed("hidden", true);
+         // Change the icon to greyscale
+         d3.select(this)
+           .select("rect")
+           .attr("fill", "grey");
+        // Change the text to 'Show Table'
+        d3.select(this)
+          .select("text")
+          .text("Show Table")
+
+       }
+       else{
+         // Change tableShow to true
+         tableShow = true;
+         // Show the table
+         d3.select("#" + plotType + "TableContainer").classed("hidden", false);
+         // Change the icon to colour
+         d3.select(this)
+           .select("rect")
+           .attr("fill", colour);
+         // Change the text to 'Show Table'
+         d3.select(this)
+           .select("text")
+           .text("Hide Table")
+       }
+     });
+
 }

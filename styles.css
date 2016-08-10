@@ -23,6 +23,7 @@ td {
      border-bottom: 1px solid #ddd;
      font-size: 12px;
 }
+.container.hidden,
 .hidden{
    display: none;
 }
