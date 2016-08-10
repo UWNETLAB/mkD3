@@ -9,6 +9,7 @@ var radius = 20;
 var height = w;
 var width = w;
 var directed;
+var weighted;
 var darkColour = "#2479C1"
 // var lightColour = "#FF9A20";
 var lightColour = "#FF8A75"
@@ -22,23 +23,21 @@ var lightColour = "#FF8A75"
 // var darkColour = "royalblue";
 // var lightColour = "#E1B941"
 
-function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", directed: true, edgeWidth: 2, colourBy: '#2479C1'}){
+function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
     // Define Constants
 
     var plotType = 'network';
 
-    var sizeBy,
-        directed,
+    var directed,
+        weighted,
+        sizeBy,
         edgeWidth,
         colourBy;
 
-    // optionalAttrs['sizeBy'] == undefined? sizeBy = 'degree' : sizeBy = optionalAttrs['sizeBy'];
-    // optionalAttrs['directed'] == undefined? directed = false : directed = optionalAttrs['directed'];
-    // optionalAttrs['edgeWidth'] == undefined? edgeWidth = 2 : edgeWidth = optionalAttrs['edgeWidth'];
-    // optionalAttrs['colourBy'] == undefined? colourBy = '#2479C1' : colourBy = optionalAttrs['colourBy']
-
-    sizeBy = optionalAttrs['sizeBy'] != undefined ? optionalAttrs['sizeBy'] : "degree";
     directed = optionalAttrs['directed'] != undefined ? optionalAttrs['directed'] : false;
+    weighted = optionalAttrs['weighted'] != undefined ? optionalAttrs['weighted'] : true;
+    console.log('weighted?', weighted)
+    sizeBy = optionalAttrs['sizeBy'] != undefined ? optionalAttrs['sizeBy'] : "degree";
     edgeWidth = optionalAttrs['edgeWidth'] != undefined ? optionalAttrs['edgeWidth']: 2;
     colourBy = optionalAttrs['colourBy'] != undefined ? optionalAttrs['colourBy']: '#2479C1';
     darkColour = colourBy;
@@ -71,6 +70,26 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", dir
                        .force("x", d3.forceX(width/2))
                        .force("y", d3.forceY(height/2))
                        .force("center", d3.forceCenter(width/2, height/2));
+    // Define the functions for reading in data
+    function edgesRow(d){
+      d.source= d.From;
+      d.target= d.To;
+      // if(d.weight == undefined ) d.weight=1;
+      if(weighted == false || d.weight == undefined ) d.weight=1;
+      d.selfRef = (d.From==d.To)
+      return d
+    }
+
+    function nodesRow(d){
+      d.degree= 0;
+      if (directed){
+        console.log("here")
+        d.degreeIn= 0;
+        d.degreeOut= 0;
+      }
+      return d
+    }
+
 
     // Read in the edges and nodes and work with them
     d3.csv(nodeFile, nodesRow, function(error, nodes){
@@ -259,7 +278,6 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {sizeBy: "degree", dir
                 sdeg = d.source.degree;
                 tdeg = d.target.degree;
                 if (sdeg > nodeQuantile75  && tdeg > nodeQuantile75  && sdeg + tdeg > edgeQuantile25){
-                  // return 1000
                   return lScale((sdeg+tdeg)/d.weight/d.weight);
                 }
                 //  if (sdeg > 10 && tdeg > 10 && sdeg+tdeg > 30){return ((sdeg + tdeg)/d.weight/d.weight);}
@@ -422,22 +440,25 @@ function degreeCalc(edges, nodes){
   }
 }
 
-function edgesRow(d){
-  d.source= d.From;
-  d.target= d.To;
-  if(d.weight == undefined) d.weight=1;
-  d.selfRef = (d.From==d.To)
-  return d
-}
-
-function nodesRow(d){
-  d.degree= 0;
-  if (directed){
-    d.degreeIn= 0;
-    d.degreeOut= 0;
-  }
-  return d
-}
+// function edgesRow(d){
+//   d.source= d.From;
+//   d.target= d.To;
+//   // if(d.weight == undefined ) d.weight=1;
+//   console.log("weighted?", weighted)
+//   if(weighted == false || d.weight == undefined ) d.weight=1;
+//   d.selfRef = (d.From==d.To)
+//   return d
+// }
+//
+// function nodesRow(d){
+//   d.degree= 0;
+//   if (directed){
+//     console.log("here")
+//     d.degreeIn= 0;
+//     d.degreeOut= 0;
+//   }
+//   return d
+// }
 
 // Table Functions
 // ***************
