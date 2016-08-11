@@ -60,15 +60,16 @@ td {
 div.panel {
   display: inline-block;
   position: relative;
-  width: 24%;
-  height: inherit;
+  width: 0%;
   vertical-align: top;
-  padding-top: 20px;
+  margin: 1%;
+  padding-top: 50%;
+  padding-bottom: 25%;
   border-right: solid 2px gainsboro;
 }
-panel.hidden{
+/*panel.hidden{
   width: 0%;
-}
+}*/
 .icon{
   margin: 3px;
   /*color: steelblue;*/
@@ -87,7 +88,7 @@ panel.hidden{
 .plot {
   display: inline-block;
   position: relative;
-  width: 100%;
+  width: 97%;
   padding-bottom: 5%;
 }
 .plot.narrow {
