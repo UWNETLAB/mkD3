@@ -85,21 +85,35 @@ div.panel {
 .panelTitle {
   margin-left: 10px;
   font-weight: bold;
+  margin-top: 18px;
+  margin-bottom: 5px;
+  font-size: 18px;
 }
 .panelOption{
   margin-left: 20px;
   margin-right: 10px;
   font-weight: lighter;
+  white-space: nowrap;
+}
+.checkBox{
+  margin-right: 10px;
+  position: absolute;
+  right: 0px;
 }
 .select{
   background: transparent;
-  width: 65px;
+  min-width: 50px;
+  width: 35%;
   padding: 3px;
   font-size: 12px;
   line-height: 1;
   border-radius: 0;
   height: 18px;
-  /*-webkit-appearance: none;*/
+  margin-right: 5px;
+  margin-left: 5px;
+  vertical-align: middle;
+  position: absolute;
+  right: 0px;
 }
 .plot {
   display: inline-block;

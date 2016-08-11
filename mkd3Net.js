@@ -164,7 +164,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
                       .append("path")
                       .attr("stroke-width", StrokeWidth(edgeWidth))
                       // .classed("hidden", function(e){return e.weight <= 1 })
-                      .style("marker-end",  "url(#end)")
+                      .style("marker-end",  directed?"url(#end)":"none")
                       .style("opacity", function(d){
                         if (d.weight == undefined){
                           return 0.6;
@@ -174,24 +174,23 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
                       })
 
         // Add Arrows
-        if (directed){
-          // Create the end markers
-          // Code adapted from http://bl.ocks.org/d3noob/5141278
-          svg.append("svg:defs").selectAll("marker")
-             .data(["end"])      // Different link/path types can be defined here
-             .enter().append("svg:marker")    // This section adds in the arrows
-             .attr("id", String)
-             .attr("viewBox", "0 -5 10 10")
-             .attr("refX", 10)
-             .attr("refY", 0)
-             .attr("markerWidth", 4)
-             .attr("markerHeight", 3)
-             .attr("orient", "auto")
-             .append("svg:path")
-             .attr("d", "M0,-5L10,0L0,5")
-             .attr("fill", "404040")
-             .style("opacity", "0.8")
-        }
+        // Create the end markers
+        // Code adapted from http://bl.ocks.org/d3noob/5141278
+        svg.append("svg:defs").selectAll("marker")
+           .data(["end"])      // Different link/path types can be defined here
+           .enter().append("svg:marker")    // This section adds in the arrows
+           .attr("id", String)
+           .attr("viewBox", "0 -5 10 10")
+           .attr("refX", 10)
+           .attr("refY", 0)
+           .attr("markerWidth", 4)
+           .attr("markerHeight", 3)
+           .attr("orient", "auto")
+           .append("svg:path")
+           .attr("d", "M0,-5L10,0L0,5")
+           .attr("fill", "404040")
+           .style("opacity", "0.8")
+          //  .style("opacity", directed?"0.8":"0")
 
         // Create the nodes
         var node = svg.append("g")
@@ -811,7 +810,7 @@ function makePanel(nodes, edges, plotType){
   p.appendChild(edgeTitle)
   panel.appendChild(p)
 
-  makeCheckBox(plotType, panel, "cbDirected", "Directed", edges.directed)
+  makeCheckBox(plotType, panel, "cbDirected", "Directed", edges.directed, showHideArrows)
   makeCheckBox(plotType, panel, "cbWeighted", "Weighted", edges.weighted)
   makeSelect('edgeWidth', "Edge Width", panel, edgeKeys, edges.edgeWidth)
 }
@@ -865,6 +864,13 @@ function makeCheckBox(plotType, panel, type, labelText, cbDefault, clickFunction
 function showHideIsolates(showIsolates, plotType){
   d3.select("#" + plotType + "Plot").selectAll("circle")
      .classed("hidden", !showIsolates && function(d){return d.degree == 0});
+}
+
+function showHideArrows(directed, plotType){
+  d3.select("#" + plotType + "Plot")
+    .selectAll("path")
+    .style("marker-end", directed?'url("#end")':'none')
+
 }
 
 function edgeWeights (){
