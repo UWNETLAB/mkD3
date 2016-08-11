@@ -65,7 +65,7 @@ div.panel {
   vertical-align: top;
   /*margin: 1%;*/
   padding-top: 10%;
-  padding-bottom: 45%;
+  padding-bottom: 25%;
   /*border-right: solid 2px gainsboro;*/
   overflow: hidden;
   z-index: 1;
@@ -87,14 +87,26 @@ div.panel {
   font-weight: bold;
 }
 .panelOption{
-  margin-left: 30px;
+  margin-left: 20px;
+  margin-right: 10px;
+  font-weight: lighter;
+}
+.select{
+  background: transparent;
+  width: 65px;
+  padding: 3px;
+  font-size: 12px;
+  line-height: 1;
+  border-radius: 0;
+  height: 18px;
+  /*-webkit-appearance: none;*/
 }
 .plot {
   display: inline-block;
   position: relative;
   width: 75%;
   margin-left: 12.5%;
-  /*padding-bottom: 5%;*/
+  padding-bottom: 5%;
 }
 .plot.narrow {
   width: 75%;
@@ -157,7 +169,6 @@ p.title{
   text-align: center;
   font-size: 30px;
   font-weight: bold;
-  -webkit-margin-before: 0;
 }
 
 #TableContainer{

@@ -26,23 +26,21 @@ var showToolTip = true,
 var radius = 20;
 var height = w;
 var width = w;
-var directed;
-var weighted;
+var ignore = {'ID': undefined,
+               'info': undefined,
+               'x': undefined,
+               'y': undefined,
+               'fx': undefined,
+               'fy': undefined,
+               'index': undefined,
+               'vy': undefined,
+               'vx': undefined,
+               'radius': undefined}
 var darkColour = "#2479C1"
-// var lightColour = "#FF9A20";
 var lightColour = "#FF8A75"
-
-// var darkColour = "cornflowerblue";
-// var lightColour = "#EDBC64"
-
-// var darkColour = "dodgerblue";
-// var lightColour = "darkorange";
-
-// var darkColour = "royalblue";
-// var lightColour = "#E1B941"
+var lightColour = 'cornflowerblue'
 
 function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
-
     // Define Constants
     var plotType = 'network';
 
@@ -114,6 +112,16 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
       d3.csv(edgeFile, edgesRow, function(error, edges){
         // If there is an error, print it to the console
         if(error){console.log(error)}
+        // Augment nodes
+        nodes['sizeBy'] = sizeBy;
+        nodes['colourBy'] = colourBy;
+        nodes['hiddenAttrs'] = ignore;
+
+        // Augment edges
+        edges['directed'] = directed;
+        edges['weighted'] = weighted;
+        edges['edgeWidth'] = edgeWidth;
+
         // Define Required Functions
         var nodeById = map$1(nodes, function(d){return d.ID;})
 
@@ -210,8 +218,10 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
                         d.fy = d.y;
 
                         // Make tooltip
-                        var xPos = event.clientX + 20;
-                        var yPos = event.clientY - 20;
+                        // var xPos = event.clientX + 20;
+                        // var yPos = event.clientY - 20;
+                        var xPos = event.pageX + 20;
+                        var yPos = event.pageY - 20;
                         makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs);
 
                         // Show the tooltip
@@ -496,6 +506,7 @@ function iconClick(type, bool, plotType){
       .classed("hidden", !showTable)
   }
 }
+
 // Data Functions
 // **************
 
@@ -771,6 +782,16 @@ function makeConsole(nodes, edges, rScale){
 }
 
 function makePanel(nodes, edges, plotType){
+  var nodeKeys = []
+  for (var key in nodes[0]){
+    nodeKeys = nodeKeys.concat(key);
+  }
+
+  var edgeKeys = []
+  for (var key in edges[0]){
+    edgeKeys = edgeKeys.concat(key);
+  }
+
   var panel = document.getElementById(plotType + "Panel")
 
   var p = document.createElement('p')
@@ -779,20 +800,10 @@ function makePanel(nodes, edges, plotType){
   p.appendChild(nodeTitle)
   panel.appendChild(p)
 
-  var label = document.createElement('label')
-  label.className = "panelOption";
-  label.for = "isolates";
-  var text = document.createTextNode('Isolates')
-  label.appendChild(text)
-  panel.appendChild(label)
-
-  var cbIsolates = document.createElement('INPUT');
-  cbIsolates.setAttribute("type", "checkbox");
-  cbIsolates.className = "checkBox";
-  cbIsolates.id = "cbIsolates";
-  cbIsolates.defaultChecked = true;
-  cbIsolates.onclick = function(d){showHideIsolates(cbIsolates.checked, plotType)};
-  panel.appendChild(cbIsolates);
+  console.log(nodes.sizeBy)
+  makeCheckBox(plotType, panel, "cbIsolates", "Isolates", true, showHideIsolates)
+  makeSelect('sizeBy', "Node Size", panel, nodeKeys, nodes.sizeBy);
+  makeSelect('colourBy', "Colour By", panel, nodeKeys, nodes.colourBy);
 
   var p = document.createElement('p')
   p.className = "panelTitle"
@@ -800,12 +811,66 @@ function makePanel(nodes, edges, plotType){
   p.appendChild(edgeTitle)
   panel.appendChild(p)
 
+  makeCheckBox(plotType, panel, "cbDirected", "Directed", edges.directed)
+  makeCheckBox(plotType, panel, "cbWeighted", "Weighted", edges.weighted)
+  makeSelect('edgeWidth', "Edge Width", panel, edgeKeys, edges.edgeWidth)
 }
 
-function showHideIsolates(showIsolates, plotType, nodes){
+function makeSelect(type, labelText, panel, lst, selected){
+  console.log(selected)
+  var label = document.createElement('label')
+  label.className = "panelOption";
+  label.for = type;
+  var text = document.createTextNode(labelText);
+  label.appendChild(text);
+  panel.appendChild(label)
+
+  var select = document.createElement('SELECT');
+  select.className = 'select';
+  select.id = type;
+  for (var i in lst){
+    var option = document.createElement("option")
+    option.text = lst[i];
+    console.log(selected, lst[i])
+    if (selected == lst[i]){option.selected = true}
+    select.add(option);
+  }
+  panel.appendChild(select)
+  panel.appendChild(document.createElement('br'))
+
+}
+
+function makeCheckBox(plotType, panel, type, labelText, cbDefault, clickFunction=function(d){}){
+  var label = document.createElement('label');
+  label.className = "panelOption";
+  label.onclick = function(d){
+    checkbox.checked = !checkbox.checked
+    clickFunction(checkbox.checked, plotType)};
+  label.for = type;
+  var text = document.createTextNode(labelText);
+  label.appendChild(text);
+  panel.appendChild(label);
+
+  var checkbox = document.createElement('INPUT');
+  checkbox.setAttribute("type", "checkbox");
+  checkbox.className = "checkBox";
+  checkbox.id = type;
+  checkbox.defaultChecked = cbDefault;
+  checkbox.onclick = function(d){clickFunction(checkbox.checked, plotType)}
+  panel.appendChild(checkbox)
+  panel.appendChild(document.createElement('br'))
+
+}
+
+function showHideIsolates(showIsolates, plotType){
   d3.select("#" + plotType + "Plot").selectAll("circle")
      .classed("hidden", !showIsolates && function(d){return d.degree == 0});
 }
+
+function edgeWeights (){
+
+}
+
 // Node Functions
 function isolates(canvas){
   var showIsolates = false;
