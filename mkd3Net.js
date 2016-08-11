@@ -64,8 +64,7 @@ function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
     // Create the svg
     var plotName = "#" + plotType + "Plot"
     var svg = d3.select(plotName)
-                .style("padding-bottom", "100%") // For use without sidebar
-                // .style("padding-bottom", "75%") // For use with sidebar
+                .style("padding-bottom", "75%")
                 .append("svg")
                 .attr("id", plotType + "SVG")
                 .attr("preserveAspectRatio", "xMinYMin meet")
@@ -473,17 +472,18 @@ function iconClick(type, bool, plotType){
       .style("width", function(d){return showOptionPanel?"0%":"22%"})
       .style("border-right", "solid 2px gainsboro")
       .transition()
-      .duration(300)
+      .duration(500)
       .styleTween("width", function(d){return showOptionPanel?d3.interpolate("0%", "22%"):d3.interpolate("22%", "0%")})
-      .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("48%", "25%"):d3.interpolate("25%", "48%")})
+      // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("48%", "25%"):d3.interpolate("25%", "48%")})
       .transition()
       .delay(100)
       .style("border-right", function(d){return showOptionPanel?"solid 2px gainsboro":"none"})
-    d3.select("#" + plotType + "Plot")
-      .transition()
-      .duration(300)
-      .styleTween("width", function(d){return showOptionPanel?d3.interpolate("97%","75%"):d3.interpolate("75%","97%")})
-      .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("100%","77%"):d3.interpolate("77%","100%")})
+    // d3.select("#" + plotType + "Plot")
+    //   .transition()
+    //   .duration(300)
+      // .styleTween("margin-left", function(d){return showOptionPanel?d3.interpolate("12.5%", "25%"):d3.interpolate("25%", "12.5%")})
+      // .styleTween("width", function(d){return showOptionPanel?d3.interpolate("97%","75%"):d3.interpolate("75%","97%")})
+      // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("100%","77%"):d3.interpolate("77%","100%")})
   }
   else if (type == "table"){
     // Update the value of showTable
@@ -773,30 +773,30 @@ function makeConsole(nodes, edges, rScale){
 function makePanel(nodes, edges, plotType){
   var panel = document.getElementById(plotType + "Panel")
 
-  // var p = document.createElement('p')
-  // p.className = "panelTitle"
-  // var nodeTitle = document.createTextNode('Node Options')
-  // p.appendChild(nodeTitle)
-  // panel.appendChild(p)
-  //
-  // var label = document.createElement('label')
-  // label.className = "panelOption";
-  // label.for = "isolates";
-  // var text = document.createTextNode('Isolates')
-  // label.appendChild(text)
-  // panel.appendChild(label)
-  //
-  // var cbIsolates = document.createElement('INPUT');
-  // cbIsolates.setAttribute("type", "checkbox");
-  // cbIsolates.className = "checkBox";
-  // cbIsolates.id = "cbIsolates";
-  // panel.appendChild(cbIsolates);
-  //
-  // var p = document.createElement('p')
-  // p.className = "panelTitle"
-  // var edgeTitle = document.createTextNode('Edge Options')
-  // p.appendChild(edgeTitle)
-  // panel.appendChild(p)
+  var p = document.createElement('p')
+  p.className = "panelTitle"
+  var nodeTitle = document.createTextNode('Node Options')
+  p.appendChild(nodeTitle)
+  panel.appendChild(p)
+
+  var label = document.createElement('label')
+  label.className = "panelOption";
+  label.for = "isolates";
+  var text = document.createTextNode('Isolates')
+  label.appendChild(text)
+  panel.appendChild(label)
+
+  var cbIsolates = document.createElement('INPUT');
+  cbIsolates.setAttribute("type", "checkbox");
+  cbIsolates.className = "checkBox";
+  cbIsolates.id = "cbIsolates";
+  panel.appendChild(cbIsolates);
+
+  var p = document.createElement('p')
+  p.className = "panelTitle"
+  var edgeTitle = document.createTextNode('Edge Options')
+  p.appendChild(edgeTitle)
+  panel.appendChild(p)
 
 }
 

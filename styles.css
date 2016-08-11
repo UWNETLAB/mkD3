@@ -51,6 +51,7 @@ td {
 .visArea {
   display: inline-block;
   position: relative;
+  /*width: 99%;*/
   width: 99%;
   vertical-align: top;
   overflow-x: hidden;
@@ -63,9 +64,12 @@ div.panel {
   width: 0%;
   vertical-align: top;
   margin: 1%;
-  padding-top: 50%;
-  padding-bottom: 25%;
+  padding-top: 10%;
+  padding-bottom: 45%;
   border-right: solid 2px gainsboro;
+  overflow: hidden;
+  z-index: 1;
+  white-space: nowrap;
 }
 /*panel.hidden{
   width: 0%;
@@ -88,8 +92,8 @@ div.panel {
 .plot {
   display: inline-block;
   position: relative;
-  width: 97%;
-  padding-bottom: 5%;
+  width: 75%;
+  /*padding-bottom: 5%;*/
 }
 .plot.narrow {
   width: 75%;
