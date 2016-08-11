@@ -790,6 +790,8 @@ function makePanel(nodes, edges, plotType){
   cbIsolates.setAttribute("type", "checkbox");
   cbIsolates.className = "checkBox";
   cbIsolates.id = "cbIsolates";
+  cbIsolates.defaultChecked = true;
+  cbIsolates.onclick = function(d){showHideIsolates(cbIsolates.checked, plotType)};
   panel.appendChild(cbIsolates);
 
   var p = document.createElement('p')
@@ -800,6 +802,10 @@ function makePanel(nodes, edges, plotType){
 
 }
 
+function showHideIsolates(showIsolates, plotType, nodes){
+  d3.select("#" + plotType + "Plot").selectAll("circle")
+     .classed("hidden", !showIsolates && function(d){return d.degree == 0});
+}
 // Node Functions
 function isolates(canvas){
   var showIsolates = false;
