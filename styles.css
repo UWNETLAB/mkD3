@@ -63,10 +63,10 @@ div.panel {
   position: relative;
   width: 0%;
   vertical-align: top;
-  margin: 1%;
+  /*margin: 1%;*/
   padding-top: 10%;
   padding-bottom: 45%;
-  border-right: solid 2px gainsboro;
+  /*border-right: solid 2px gainsboro;*/
   overflow: hidden;
   z-index: 1;
   white-space: nowrap;
@@ -93,6 +93,7 @@ div.panel {
   display: inline-block;
   position: relative;
   width: 75%;
+  margin-left: 12.5%;
   /*padding-bottom: 5%;*/
 }
 .plot.narrow {
