@@ -1216,7 +1216,6 @@ function makeIcons(svg, colour="grey", plotType){
         d3.select(this)
           .select("text")
           .text("Show Table")
-
        }
        else{
          // Change tableShow to true

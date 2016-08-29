@@ -140,9 +140,9 @@
 
       // Create the scale for the y axis
       var yScale = d3.scaleLinear()
-                     .domain(d3.extent(dataset, function(d){return +d.abs_deviation}))
-                    //  .domain([d3.min(dataset, function(d){return +d.abs_deviation;}),
-                    //           d3.max(dataset, function(d){return +d.abs_deviation;})])
+                     .domain(d3.extent(dataset, function(d){return +d["abs-deviation"]}))
+                    //  .domain([d3.min(dataset, function(d){return +d["abs-deviation"];}),
+                    //           d3.max(dataset, function(d){return +d["abs-deviation"];})])
                      .range([h-outerPadding-plotMargin, outerPadding+plotMargin]);
 
       // Make title
@@ -165,7 +165,7 @@
       var line = d3.line()
                    .curve(d3.curveMonotoneX)
                    .x(function(d) { return xScale(d.year); })
-                   .y(function(d) { return yScale(d.abs_deviation); });
+                   .y(function(d) { return yScale(d["abs-deviation"]); });
 
       svg.append("path")
           .data([dataset])
@@ -180,7 +180,7 @@
          .append("circle")
          .attr("class", "point")
          .attr("cx", function(d) {return xScale(d.year);})
-         .attr("cy", function(d) {return yScale(d.abs_deviation);})
+         .attr("cy", function(d) {return yScale(d["abs-deviation"]);})
          .attr("fill", darkcolour)
          .on("mouseover", function(d){
            // Highlight the point
@@ -759,7 +759,7 @@
         .select("#value")
         .html("<emphasis>"+d.year+"</emphasis><br/>" +
               "Raw Frequency: " + "<strong>" + d.count + "</strong>"+ "<br/>" +
-              "Difference from Median: " + "<strong>" + d.abs_deviation + "</strong>" + "<br/>" +
+              "Difference from Median: " + "<strong>" + d["abs-deviation"] + "</strong>" + "<br/>" +
               "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
 
       // Show the tooltip
@@ -776,8 +776,8 @@
         .select("#value")
         .html("CPY: <strong>"+ d.CPY+ "</strong><br/>" +
               "RPY: <strong>" + d.RPY + "</strong><br/>" +
-              "Raw Frequency: " + "<strong>" + d.num_cites + "</strong>"+ "<br/>" +
-              "Difference from Median: " + "<strong>" + d.abs_deviation + "</strong>" + "<br/>");
+              "Raw Frequency: " + "<strong>" + d["num-cites"] + "</strong>"+ "<br/>" +
+              "Difference from Median: " + "<strong>" + d["abs-deviation"] + "</strong>" + "<br/>");
               // "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
 
       // Show the tooltip
@@ -808,18 +808,18 @@
 
             // Sort the years data by number of citations
             yearData =  yearData.sort(function(a, b){
-                          return b.num_cites - a.num_cites;
+                          return b["num-cites"] - a["num-cites"];
                           // return b["num-cites"] - a["num-cites"];
                         })
 
             // Find the cutoff value for top 15 citations & filter
             var topnum = 15;
             if (yearData.length > topnum){
-              topval = yearData[topnum-1].num_cites;
+              topval = yearData[topnum-1]["num-cites"];
               // topval = yearData[topnum-1]["num-cites"];
 
               yearData =  yearData.filter(function(d){
-                            return +d.num_cites >= topval;
+                            return +d["num-cites"] >= topval;
                             // return + d["num-cites"] >= topval;
                           })
             }
@@ -828,7 +828,7 @@
             rows = "<tbody>"
             // Iterate through each citation in a year
             for (i=0; i < yearData.length; i++){
-              rowvals = [Math.floor(yearData[i].RPY), yearData[i].author, yearData[i].journal, yearData[i].num_cites, Math.floor(yearData[i].CPY)];
+              rowvals = [Math.floor(yearData[i].RPY), yearData[i].author, yearData[i].journal, yearData[i]["num-cites"], Math.floor(yearData[i].CPY)];
               // rowvals = [yearData[i].RPY, yearData[i].author, yearData[i].journal, yearData[i]["num_cites"], Math.floor(yearData[i].CPY)];
 
               rows += "<tr>";
@@ -867,18 +867,18 @@
           });
           // Sort the year's Articles by the number of citations
           yearData =  yearData.sort(function(a, b){
-                        return b.num_cites - a.num_cites;
+                        return b["num-cites"] - a["num-cites"];
                         // return b["num-cites"] - a["num-cites"];
                       })
 
           // Find the cutoff value for top 15 citations & filter
           var topnum = 15;
           if (yearData.length > topnum){
-            topval = yearData[topnum-1].num_cites;
+            topval = yearData[topnum-1]["num-cites"];
             // topval = yearData[topnum-1]["num-cites"];
 
             yearData =  yearData.filter(function(d){
-                          return +d.num_cites >= topval;
+                          return +d["num-cites"] >= topval;
                           // return + d["num-cites"] >= topval;
                         })
           }
@@ -889,7 +889,7 @@
           // Iterate through each citation in a year
 
           for (i=0; i < yearData.length; i++){
-            rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i].num_cites];
+            rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i]["num-cites"]];
             // rowvals = [i+1, yearData[i].author, yearData[i].journal, Math.floor(yearData[i].year), yearData[i]["num-cites"]];
             rows += "<tr>";
             // Append each piece of information for the citation
@@ -926,11 +926,11 @@
           });
 
           // Find the maximum number of citations for the year
-          var max = d3.max(yearData, function(d){return + d.num_cites;});
+          var max = d3.max(yearData, function(d){return + d["num-cites"];});
           var top_cites = ""
           // Find the Author of the most cited work
           for (var i = 0; i < yearData.length; i++){
-            if (+ yearData[i].num_cites >= max){
+            if (+ yearData[i]["num-cites"] >= max){
               top_cites += "<br/>" + yearData[i].author;
             };
           }
