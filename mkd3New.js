@@ -23,9 +23,10 @@
 
     // Define Constants
     // ****************
-    var w, width = 800;
-    var h, height = 400;
-
+    var w = 800;
+    var h = 400;
+    var height = w,
+        width = w;
     // Define RPYS Constants
     var outerPadding = 70;
     var relWidth = 0.8;
@@ -277,7 +278,9 @@
                          .append("path")
                          .attr("stroke-width", StrokeWidth(edgeWidth))
                          .style("marker-end",  directed?"url(#end)":"none")
-                         .style("opacity", function(d){d.weight?aScale(d.weight):0.6})
+                         .style("opacity", function(d){
+                            if (d.weight){return aScale(d.weight)}
+                            else {return 0.6}})
 
            // Create the end markers
            // Code adapted from http://bl.ocks.org/d3noob/5141278
@@ -305,7 +308,9 @@
                          .append("circle")
                          .attr("fill", "steelblue")
                          .attr("fill", function(d){return nodeAttr(d, colourBy, cScale)})
-                         .attr("r", function(d){return nodeAttr(d, sizeBy, rScale);
+                         .attr("r", function(d){
+                           d.radius = nodeAttr(d, sizeBy, rScale);
+                           return d.radius;})
                          .on("mouseover", function(d){
                            d3.select(this)
                              .attr("fill", lightColour)
@@ -809,7 +814,7 @@
                    "<th width=35%><b>Source Title</b></th><th width=17%><b>Year Published</b></th>" +
                   "<th width=15%><b>Times Cited</b></th></tr></thead>"
 
-      initTable(plotType, header);
+      initRPYSTable(plotType, header);
 
     }
 
@@ -818,7 +823,7 @@
                    "<th width=35%><b>Source Title</b></th>" +
                   "<th width=20%><b>Times Cited</b></th><th width=12%><b>CPY</b></th></tr></thead>"
 
-      initTable(plotType, header);
+      initRPYSTable(plotType, header);
 
     }
 
@@ -828,12 +833,12 @@
                                    "<th width=20%><b>Edge Weight</b></th>" +
                    "</tr></thead>"
 
-      initTable(plotType, header);
+      initNetTable(plotType, header);
 
     }
 
     // RPYS
-    function initTable(plotType, header){
+    function initRPYSTable(plotType, header){
       // Initialize the table
       var divTable = document.createElement('div');
       divTable.id = "TableContainer" + plotType;
@@ -856,7 +861,7 @@
                  .html();
     }
     //Network
-    function initTable(plotType, header){
+    function initNetTable(plotType, header){
       // Initialize the table
 
       // Find the table container
@@ -1237,9 +1242,9 @@
          .attr("transform", "translate(686,375), scale(0.4)")
          .attr("transform", "translate(686,20), scale(0.4)")
          .on("click", function(d){
-           if (ShowToolTip == true){
+           if (showToolTip == true){
              // Set tooltipShow to false
-             ShowToolTip = false;
+             showToolTip = false;
 
              // Change the icon to greyscale
              d3.select(this)
@@ -1255,7 +1260,7 @@
                .text("Show Pop-up Info");
            } else {
              // Set tooltipShow to true
-             ShowToolTip = true;
+             showToolTip = true;
 
              // Change the icon to colour
              d3.select(this)
@@ -1607,7 +1612,7 @@
               "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
 
       // Show the tooltip
-      if (ShowToolTip == true){
+      if (showToolTip == true){
         d3.select("#tooltip").classed("hidden", false);
       }
     }
@@ -1625,7 +1630,7 @@
               // "Top Citation(s): " + "<strong id='citation'>" + TopCitation(d.year) + "</strong>") ;
 
       // Show the tooltip
-      if (ShowToolTip == true){
+      if (showToolTip == true){
         d3.select("#tooltip").classed("hidden", false);
       }
     }
