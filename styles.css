@@ -121,10 +121,12 @@ div.panel {
   position: relative;
   width: 75%;
   margin-left: 12.5%;
-  padding-bottom: 5%;
 }
-.plot.narrow {
-  width: 75%;
+.plot.network {
+  padding-bottom: 75%;
+}
+.plot.RPYS{
+  padding-bottom: 37.5%;
 }
 .console {
 display: inline-block;

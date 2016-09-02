@@ -70,12 +70,15 @@
       // Initialize Everything
       initHead()
       initIcons()
-      initRPYSDivs(plotType)
+      initNetworkDivs(plotType)
+      // initRPYSDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
 
+
       // Create the canvas (svg)
-      var svg = d3.select("div#standardLine")
+      var plotName = "#" + plotType + "Plot"
+      var svg = d3.select(plotName)
                   .append("svg")
                   .attr("id", "plot")
                   .attr("preserveAspectRatio", "xMinYMin meet")
@@ -102,12 +105,14 @@
       // Initialize Everything
       initHead()
       initIcons()
-      initRPYSDivs(plotType)
+      initNetworkDivs(plotType)
+      // initRPYSDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
 
       // Create the canvas(svg)
-      var svg = d3.select("div#standardBar")
+      var plotName = "#" + plotType + "Plot"
+      var svg = d3.select(plotName)
                   .append("svg")
                   .attr("id", "plot")
                   .attr("preserveAspectRatio", "xMinYMin meet")
@@ -135,12 +140,15 @@
       // Initialize Everything
       initHead()
       initIcons()
-      initRPYSDivs(plotType)
+      initNetworkDivs(plotType)
+      // initRPYSDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
 
+
       // Make canvas
-      var svg = d3.select("div#multiRPYS")
+      var plotName = "#" + plotType + "Plot"
+      var svg = d3.select(plotName)
                   .append("svg")
                   .attr("id", "plot")
                   .attr("preserveAspectRatio", "xMinYMin meet")
@@ -477,8 +485,6 @@
 
     // Main Helper Functions
     // *********************
-    // Main Helper Functions
-    // *********************
     function standardLineHelper(dataset, svg){
       // Set up important values
       var darkcolour = "#AA3543";
@@ -724,19 +730,39 @@
     }
 
 
-
     // Initialization Functions
     // ************************
-    function initNetworkDivs(plotType){
-     // Create the total container
-     var container = document.createElement('div');
-     container.id = plotType + "Container";
-     container.className = "container";
+    function initRPYSDivs(plotType){
+      // Create the total container
+      var container = document.createElement('div');
+      container.id = plotType + "Container";
+      container.className = "container";
 
-     // Create the Visualization Area
-     var visArea = document.createElement('div');
-     visArea.id = plotType + "VisArea";
-     visArea.className = "visArea";
+      // Create the plot
+      var plot = document.createElement('div')
+      plot.id = plotType + "Plot"
+      plot.className = "plot";
+      container.appendChild(plot);
+
+      // Create the table container
+      var table = document.createElement('div')
+      table.id = plotType + "TableContainer";
+      table.className = "container";
+      container.appendChild(table);
+
+      document.body.appendChild(container);
+    }
+
+    function initNetworkDivs(plotType){
+      // Create the total container
+      var container = document.createElement('div');
+      container.id = plotType + "Container";
+      container.className = "container";
+
+      // Create the Visualization Area
+      var visArea = document.createElement('div');
+      visArea.id = plotType + "VisArea";
+      visArea.className = "visArea";
 
      // Create the Options Panel
      var panel = document.createElement('div');
@@ -747,7 +773,7 @@
      // Create the plot
      var plot = document.createElement('div')
      plot.id = plotType + "Plot"
-     plot.className = "plot";
+     plot.className = "plot RPYS";
      visArea.appendChild(plot);
 
      container.appendChild(visArea);
@@ -760,18 +786,6 @@
      container.appendChild(table);
 
      document.body.appendChild(container);
-    }
-
-    function initRPYSDivs(plotType){
-      // Initialize the multiRPYS div
-
-      // Create the Div
-      var div = document.createElement('div');
-      div.id = plotType;
-      div.className = "container";
-
-      // Add the Div
-      document.body.appendChild(div);
     }
 
     function initHead(){
@@ -814,7 +828,7 @@
                    "<th width=35%><b>Source Title</b></th><th width=17%><b>Year Published</b></th>" +
                   "<th width=15%><b>Times Cited</b></th></tr></thead>"
 
-      initRPYSTable(plotType, header);
+      initTable(plotType, header);
 
     }
 
@@ -823,7 +837,7 @@
                    "<th width=35%><b>Source Title</b></th>" +
                   "<th width=20%><b>Times Cited</b></th><th width=12%><b>CPY</b></th></tr></thead>"
 
-      initRPYSTable(plotType, header);
+      initTable(plotType, header);
 
     }
 
@@ -833,27 +847,33 @@
                                    "<th width=20%><b>Edge Weight</b></th>" +
                    "</tr></thead>"
 
-      initNetTable(plotType, header);
+      initTable(plotType, header);
 
     }
 
     // RPYS
     function initRPYSTable(plotType, header){
-      // Initialize the table
-      var divTable = document.createElement('div');
-      divTable.id = "TableContainer" + plotType;
-      divTable.className = "container hidden";
+      // Find the table container
+      var divTable = document.getElementById(plotType + "TableContainer");
 
+      // Create the title
+      var title = document.createElement('p');
+      title.id = plotType + "TableTitle";
+      title.className = "title"
+      divTable.appendChild(title);
+
+      // Create table
       var table = document.createElement('table');
-      table.id = "TopCitationsTable" + plotType;
+      table.id = plotType + "Table";
       table.border = "0";
       table.cellpadding = "3";
-
       divTable.appendChild(table);
+
+
       var plotDiv = document.getElementById(plotType);
       document.body.insertBefore(divTable, plotDiv.nextSibling);
 
-      var tableName = "#TopCitationsTable" + plotType;
+      var tableName = "#" + plotType + "Table";
       d3.select(tableName)
                  .html(header);
 
@@ -861,7 +881,7 @@
                  .html();
     }
     //Network
-    function initNetTable(plotType, header){
+    function initTable(plotType, header){
       // Initialize the table
 
       // Find the table container
@@ -1288,7 +1308,7 @@
              // Set tableShow to false
              tableShow = false;
              // Hide the table
-             d3.select("#TopCitationsTable" + plotType).classed("hidden", true);
+             d3.select("#" + plotType + "Table").classed("hidden", true);
              // Change the icon to greyscale
              d3.select(this)
                .select("rect")
@@ -1303,7 +1323,7 @@
              // Change tableShow to true
              tableShow = true;
              // Show the table
-             d3.select("#TopCitationsTable" + plotType).classed("hidden", false);
+             d3.select("#" + plotType + "Table").classed("hidden", false);
              // Change the icon to colour
              d3.select(this)
                .select("rect")
@@ -1437,7 +1457,7 @@
 
     function makeMultiTable(CPY, RPY, plotType){
       // Copy the header
-      var tableName = "#TopCitationsTable" + plotType;
+      var tableName = "#" + plotType + "Table";
       header = d3.select(tableName)
                  .html().split('<tbody>')[0];
 
@@ -1487,7 +1507,7 @@
               }
             rows += "</tbody>"
 
-            d3.select("#TopCitationsTable" + plotType)
+            d3.select("#" + plotType + "Table")
               .html(header + rows);
 
         }
@@ -1495,8 +1515,12 @@
     }
 
     function makeStandardTable(year, plotType){
-      // Create the header
-      var tableName = "#TopCitationsTable" + plotType;
+      // Change the Table Title
+      // d3.select("#" + plotType + "TableTitle")
+      //   .html("HI")
+
+      var tableName = "#" + plotType + "Table";
+      // Copy the header from the html
       header = d3.select(tableName)
                  .html().split('<tbody>')[0];
 
@@ -1548,7 +1572,7 @@
             rows += "</tbody>"
           }
 
-          d3.select("#TopCitationsTable" + plotType)
+          d3.select("#" + plotType + "Table")
             .html(header + rows);
         })
 
