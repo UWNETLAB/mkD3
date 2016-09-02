@@ -70,8 +70,7 @@
       // Initialize Everything
       initHead()
       initIcons()
-      initNetworkDivs(plotType)
-      // initRPYSDivs(plotType)
+      initDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
 
@@ -105,8 +104,7 @@
       // Initialize Everything
       initHead()
       initIcons()
-      initNetworkDivs(plotType)
-      // initRPYSDivs(plotType)
+      initDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
 
@@ -140,8 +138,7 @@
       // Initialize Everything
       initHead()
       initIcons()
-      initNetworkDivs(plotType)
-      // initRPYSDivs(plotType)
+      initDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
 
@@ -182,7 +179,7 @@
        // This initializes the divs everything will be placed in
        initHead()
        initIcons()
-       initNetworkDivs(plotType)
+       initDivs(plotType)
        initNetworkTable(plotType)
        initToolTip(plotType)
 
@@ -732,28 +729,7 @@
 
     // Initialization Functions
     // ************************
-    function initRPYSDivs(plotType){
-      // Create the total container
-      var container = document.createElement('div');
-      container.id = plotType + "Container";
-      container.className = "container";
-
-      // Create the plot
-      var plot = document.createElement('div')
-      plot.id = plotType + "Plot"
-      plot.className = "plot";
-      container.appendChild(plot);
-
-      // Create the table container
-      var table = document.createElement('div')
-      table.id = plotType + "TableContainer";
-      table.className = "container";
-      container.appendChild(table);
-
-      document.body.appendChild(container);
-    }
-
-    function initNetworkDivs(plotType){
+    function initDivs(plotType){
       // Create the total container
       var container = document.createElement('div');
       container.id = plotType + "Container";

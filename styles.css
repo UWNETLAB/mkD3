@@ -127,6 +127,7 @@ div.panel {
 }
 .plot.RPYS{
   padding-bottom: 37.5%;
+  overflow-x: visible;
 }
 .console {
 display: inline-block;
