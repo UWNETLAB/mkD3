@@ -42,9 +42,6 @@
     var showToolTip = true,
         showTable   = true,
         showOptionPanel = false
-    var threshold = 1,
-        showIsolatesGlobal = true
-
     // Initialize RPYS Variables
     var rpysFile = undefined;
     var citFile = undefined;
@@ -61,6 +58,9 @@
                   'vy': undefined,
                   'vx': undefined,
                   'radius': undefined}
+    var threshold = 1,
+        showIsolatesGlobal = true
+    var nodesGlobal = undefined;
 
     // Provided Functions
     // ******************
@@ -234,6 +234,7 @@
        d3.csv(nodeFile, nodesRow, function(error, nodes){
          // If there is an error, print it to the console
          if (error){console.log(error)}
+         nodesGlobal = nodes;
          d3.csv(edgeFile, edgesRow, function(error, edges){
            // If there is an error, print it to the console
            if(error){console.log(error)}
@@ -287,8 +288,10 @@
                          .attr("stroke-width", StrokeWidth(edgeWidth))
                          .style("marker-end",  directed?"url(#end)":"none")
                          .style("opacity", function(d){
-                            if (d.weight){return aScale(d.weight)}
-                            else {return 0.6}})
+                            if (d.weight){
+                              d.opacity = aScale(d.weight)
+                              return d.opacity}
+                            else {return 0.3}})
 
            // Create the end markers
            // Code adapted from http://bl.ocks.org/d3noob/5141278
@@ -1438,20 +1441,6 @@
 
     // Console Functions
     // *****************
-    function initConsole(plotType){
-        // Initialize the console's container
-        var divConsole = document.createElement('div');
-        divConsole.id = "ConsoleContainer";
-        divConsole.className = "console hidden";
-
-        // Find the Object I want to insert before
-        var visArea = document.getElementById(plotType+"VisArea");
-        var plot = document.getElementById(plotType+"Plot");
-        // Insert before
-        visArea.insertBefore(divConsole, plot)
-
-    }
-
     function makePanel(nodes, edges, plotType){
       var nodeKeys = []
       for (var key in nodes[0]){
@@ -1472,8 +1461,8 @@
       panel.appendChild(p)
 
       makeCheckBox(plotType, panel, "cbIsolates", "Isolates", true, showHideIsolates)
-      makeSelect('sizeBy', "Node Size", panel, nodeKeys, nodes.sizeBy);
-      makeSelect('colourBy', "Colour By", panel, nodeKeys, nodes.colourBy);
+      makeSelect(plotType, 'sizeBy', "Node Size", panel, nodeKeys, nodes.sizeBy, changeSize);
+      makeSelect(plotType, 'colourBy', "Colour By", panel, nodeKeys, nodes.colourBy, changeColour);
 
       var p = document.createElement('p')
       p.className = "panelTitle"
@@ -1482,8 +1471,8 @@
       panel.appendChild(p)
 
       makeCheckBox(plotType, panel, "cbDirected", "Directed", edges.directed, showHideArrows)
-      makeCheckBox(plotType, panel, "cbWeighted", "Weighted", edges.weighted)
-      makeSelect('edgeWidth', "Edge Width", panel, edgeKeys, edges.edgeWidth)
+      makeCheckBox(plotType, panel, "cbWeighted", "Weighted", edges.weighted, showHideWeights)
+      makeSelect(plotType, 'edgeWidth', "Edge Width", panel, edgeKeys, edges.edgeWidth, changeEdgeWidth)
       makeRange(plotType, panel, 'threshold', "Edge Threshold", d3.max(edges, function(d){return +d.weight} ))
     }
 
@@ -1505,7 +1494,7 @@
       range.min = 1
       range.max = max
       range.oninput = function(d){
-        adjustThresh(this.value, plotType)
+        changeThreshold(this.value, plotType)
         var val = document.getElementById(id + "Value");
         val.innerHTML = this.value
       }
@@ -1519,7 +1508,7 @@
       panel.appendChild(value)
     }
 
-    function makeSelect(id, labelText, panel, lst, selected){
+    function makeSelect(plotType, id, labelText, panel, lst, selected, changeFunction = function(d){}){
       var label = document.createElement('label')
       label.className = "panelOption";
       label.for = id;
@@ -1531,6 +1520,7 @@
       var select = document.createElement('SELECT');
       select.className = 'select';
       select.id = id;
+      select.onchange = function(d){changeFunction(select.value, plotType)}
       for (var i in lst){
         var option = document.createElement("option")
         option.text = lst[i];
@@ -1580,6 +1570,27 @@
       showIsolatesGlobal = showIsolates
     }
 
+    function changeColour(colourBy, plotType){
+      var cScale = d3.scaleOrdinal(['#5da5da','#faa43a','#60bd68','#f17cb0',
+                                    '#4d4d4d','#b2912f','#decf3f','#f15854', '#ABABAB']);
+
+      d3.select("#" + plotType + "Plot")
+        .selectAll("circle")
+        .attr("fill", function(d){return nodeAttr(d, colourBy, cScale)})
+
+    }
+
+    function changeSize(sizeBy, plotType){
+      var rScale = d3.scaleLinear()
+                     .domain([0, d3.max(nodesGlobal, function(d){return d[sizeBy]})])
+                     .range([3,20])
+
+      d3.select("#" + plotType + "Plot")
+          .selectAll("circle")
+          .attr("r", function(d){
+            d.radius = nodeAttr(d, sizeBy, rScale);
+            return d.radius;})
+    }
 
     // Edge Functions
     // **************
@@ -1590,8 +1601,29 @@
 
     }
 
-    function adjustThresh(num, plotType){
-      console.log(num)
+    function showHideWeights(weighted, plotType){
+      d3.select("#" + plotType + "Plot")
+        .selectAll("path")
+        .style("opacity", weighted?function(d){return d.opacity}:0.3)
+    }
+
+    function changeEdgeWidth(edgeWidth, plotType){
+      var ewScale = d3.scaleLinear()
+                      .domain(0, d3.max(nodesGlobal, function(d){return +d.maxWeight}))
+                      .range([5,10])
+
+      d3.select("#" + plotType + "Plot")
+        .selectAll("path")
+        .style("stroke-width", function(d){
+          // console.log("******")
+          // console.log(d)
+          // console.log(d.weight)
+          var ret = nodeAttr(d, edgeWidth, ewScale)
+          console.log(ret)
+          return nodeAttr(d, edgeWidth, ewScale)})
+    }
+
+    function changeThreshold(num, plotType){
       threshold = num
       d3.select("#" + plotType + "Plot")
         .selectAll('path')
