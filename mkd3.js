@@ -69,7 +69,7 @@
 
       // Initialize Everything
       initHead()
-      initIcons()
+      initIcons(plotType)
       initDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
@@ -103,7 +103,7 @@
 
       // Initialize Everything
       initHead()
-      initIcons()
+      initIcons(plotType)
       initDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
@@ -137,7 +137,7 @@
       // Create the div container
       // Initialize Everything
       initHead()
-      initIcons()
+      initIcons(plotType)
       initDivs(plotType)
       initToolTip(plotType)
       initStandardTable(plotType);
@@ -178,7 +178,7 @@
 
        // This initializes the divs everything will be placed in
        initHead()
-       initIcons()
+       initIcons(plotType)
        initDivs(plotType)
        initNetworkTable(plotType)
        initToolTip(plotType)
@@ -888,86 +888,85 @@
                  .html();
     }
 
-    function initIcons(){
+    function initIcons(plotType){
       // Cog Icon
-      makeIcon("cog", "Options Panel", showOptionPanel, "network")
+      makeIcon("cog", "Options Panel", showOptionPanel, plotType)
 
       // Table Icon
-      makeIcon("table", "Table", showTable, "network")
+      makeIcon("table", "Table", showTable, plotType)
 
       // ToolTip Icon
-      makeIcon("info-circle", "Pop-up Info", showToolTip, "network")
+      makeIcon("info-circle", "Pop-up Info", showToolTip, plotType)
     }
 
     // Icon Functions
     // **************s
     function makeIcon(type, labelText, bool, plotType){
-     var icon = document.createElement('span');
-     icon.id = type + "Icon";
-     icon.className = "fa fa-" + type + " fa-lg icon";
-     icon.style.color = bool?"steelblue":"darkgrey"
-     icon.onclick = function(d){iconClick(type, bool, plotType)};
-     // document.body.appendChild(icon)
+      var icon = document.createElement('span');
+      icon.id = type + "Icon";
+      icon.className = "fa fa-" + type + " fa-lg icon";
+      icon.style.color = bool?"steelblue":"darkgrey"
+      icon.onclick = function(d){
+        iconClick(type, bool, plotType)};
 
-     var label = document.createElement('label');
-     label.className = "iconText";
-     label.onclick = function(d){iconClick(type, bool, plotType)};
-     label.for = type;
-     var text = document.createTextNode(labelText);
-     label.appendChild(text);
-     // document.body.appendChild(label)
+      var label = document.createElement('label');
+      label.className = "iconText";
+      label.onclick = function(d){iconClick(type, bool, plotType)};
+      label.for = type;
+      var text = document.createTextNode(labelText);
+      label.appendChild(text);
 
-     var div = document.createElement('div')
-     div.appendChild(icon)
-     div.appendChild(label)
-     document.body.appendChild(div)
+      var div = document.createElement('div')
+      div.appendChild(icon)
+      div.appendChild(label)
+      document.body.appendChild(div)
     }
 
     function iconClick(type, bool, plotType){
-     if (type == "info-circle"){
-       // Update the value of showToolTip
-       // This will also automatically hide the tooltips
-       showToolTip = !showToolTip;
-       // Update the icon colour
-       d3.selectAll("#info-circleIcon")
-         .style("color", function(d){return showToolTip?"steelblue":"darkgrey"})
+      if (type == "info-circle"){
+        // Update the value of showToolTip
+        // This will also automatically hide the tooltips
+        showToolTip = !showToolTip;
+        // Update the icon colour
+        d3.selectAll("#info-circleIcon")
+          .style("color", function(d){return showToolTip?"steelblue":"darkgrey"})
      }
-     else if (type == "cog"){
-       // Update the value of showOptionPanel
-       showOptionPanel = !showOptionPanel;
+      else if (type == "cog"){
+        // Update the value of showOptionPanel
+        showOptionPanel = !showOptionPanel;
 
        // Update the icon colour
-       d3.selectAll("#cogIcon")
-         .style("color", function(d){return showOptionPanel?"steelblue":"darkgrey"})
+        d3.selectAll("#cogIcon")
+          .style("color", function(d){return showOptionPanel?"steelblue":"darkgrey"})
 
-       // Hide the console & adjust the plot
-       d3.select("#" + plotType + "Panel")
-         .style("width", function(d){return showOptionPanel?"0%":"22%"})
-         .style("border-right", "solid 2px gainsboro")
-         .transition()
-         .duration(500)
-         .styleTween("width", function(d){return showOptionPanel?d3.interpolate("0%", "22%"):d3.interpolate("22%", "0%")})
-         // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("48%", "25%"):d3.interpolate("25%", "48%")})
-         .transition()
-         .delay(100)
-         .style("border-right", function(d){return showOptionPanel?"solid 2px gainsboro":"none"})
-       d3.select("#" + plotType + "Plot")
-         .transition()
-         .duration(500)
-         .styleTween("margin-left", function(d){return showOptionPanel?d3.interpolate("12.5%", "0%"):d3.interpolate("0%", "12.5%")})
-         // .styleTween("width", function(d){return showOptionPanel?d3.interpolate("97%","75%"):d3.interpolate("75%","97%")})
-         // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("100%","77%"):d3.interpolate("77%","100%")})
-     }
-     else if (type == "table"){
-       // Update the value of showTable
-       showTable = !showTable;
-       // Update the icon colour
-       d3.selectAll("#tableIcon")
-         .style("color", function(d){return showTable?"steelblue":"darkgrey"})
-       // Show/Hide the table
-       d3.selectAll("#" + plotType + "TableContainer")
-         .classed("hidden", !showTable)
-     }
+        // Hide the console & adjust the plot
+        d3.select("#" + plotType + "Panel")
+          .style("width", function(d){return showOptionPanel?"0%":"22%"})
+          .style("border-right", "solid 2px gainsboro")
+          .transition()
+          .duration(500)
+          .styleTween("width", function(d){return showOptionPanel?d3.interpolate("0%", "22%"):d3.interpolate("22%", "0%")})
+          // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("48%", "25%"):d3.interpolate("25%", "48%")})
+          .transition()
+          .delay(100)
+          .style("border-right", function(d){return showOptionPanel?"solid 2px gainsboro":"none"})
+        d3.select("#" + plotType + "Plot")
+          .transition()
+          .duration(500)
+          .styleTween("margin-left", function(d){return showOptionPanel?d3.interpolate("12.5%", "0%"):d3.interpolate("0%", "12.5%")})
+          // .styleTween("width", function(d){return showOptionPanel?d3.interpolate("97%","75%"):d3.interpolate("75%","97%")})
+          // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("100%","77%"):d3.interpolate("77%","100%")})
+      }
+      else if (type == "table"){
+        // Update the value of showTable
+        showTable = !showTable;
+        // Update the icon colour
+        d3.selectAll("#tableIcon")
+          .style("color", function(d){return showTable?"steelblue":"darkgrey"})
+        // Show/Hide the table
+        d3.selectAll("#" + plotType + "TableContainer")
+          .classed("hidden", !showTable)
+      }
     }
 
     // Data Functions
@@ -1765,7 +1764,6 @@
     // Node Functions
     // **************
     function nodeAttr(d, key, scale){
-      // console.log(d[key], key, scale)
       if (d[key] == undefined){return key}
       else {return scale(d[key])}
     }
