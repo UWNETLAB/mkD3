@@ -98,6 +98,18 @@ div.panel       { display: inline-block;
                   position: absolute;
                   right: 0px;
                 }
+input#threshold.range
+                { margin-right: 10px;
+                  margin-left: 20px;
+                  position: absolute;
+                  width: 60%;
+                  left: 0px;
+                  font-size: 0.8em;
+                }
+span.range      { position: absolute;
+                  right: 0px;
+                  margin-right: 10px;
+                }
 .plot           { display: inline-block;
                   position: relative;
                   width: 75%;

@@ -42,6 +42,8 @@
     var showToolTip = true,
         showTable   = true,
         showOptionPanel = false
+    var threshold = 1,
+        showIsolatesGlobal = true
 
     // Initialize RPYS Variables
     var rpysFile = undefined;
@@ -220,6 +222,7 @@
 
        function nodesRow(d){
          d.degree= 0;
+         d.maxWeight = 0;
          if (directed){
            d.degreeIn= 0;
            d.degreeOut= 0;
@@ -479,6 +482,7 @@
        }
 
     }
+
 
     // Main Helper Functions
     // *********************
@@ -890,6 +894,7 @@
       makeIcon("info-circle", "Pop-up Info", showToolTip, plotType)
     }
 
+
     // Icon Functions
     // **************s
     function makeIcon(type, labelText, bool, plotType){
@@ -960,6 +965,7 @@
       }
     }
 
+
     // Data Functions
     // **************
     // Function adapted from d3js.org/d3.v4.js
@@ -1003,6 +1009,10 @@
         // Add to the target's degree
         target = edges[e].target;
         nodeById.get(target).degree += weight;
+
+        // Check nodes' max weight
+        if (weight > nodeById.get(source).maxWeight){nodeById.get(source).maxWeight = weight};
+        if (weight > nodeById.get(target).maxWeight){nodeById.get(target).maxWeight = weight}
 
         // If the graph is directed, add to the in- and out-degrees
         if(directed){
@@ -1053,6 +1063,7 @@
 
       return ret;
     }
+
 
     // Graph Elements
     // **********************
@@ -1161,7 +1172,6 @@
     }
 
 
-
     // Table Functions
     // ***************
     function makeNetworkTable(plotType, nodeID, edges){
@@ -1175,7 +1185,7 @@
 
       // Filter the edges
       var data = edges.filter(function(d){
-        return d.source.ID == nodeID || d.target.ID == nodeID;
+        return d.weight > threshold && d.source.ID == nodeID || d.target.ID == nodeID;
       })
 
       // Sort edges
@@ -1343,6 +1353,7 @@
 
     }
 
+
     // Tooltip Functions
     // *****************
     function makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs){
@@ -1441,38 +1452,6 @@
 
     }
 
-    function makeConsole(nodes, edges, rScale){
-      // Set up the Console's Canvas
-      var canvas = d3.select("#ConsoleContainer")
-                     .append("svg")
-                     .attr("id", "ConsoleCanvas")
-                     .attr("preserveAspectRatio", "xMinYMin meet")
-                     .attr("viewBox", "0 0 800 100")
-
-      // Node Options
-      canvas.append("text")
-        .text("Node Options")
-        .attr("x", 200)
-        .attr("y", 24)
-        .attr("font-size", 24)
-        .attr("text-anchor", "middle")
-
-      // Isolates Toggle
-      isolates(canvas)
-
-      // Add ability to change node sizes
-      sizeChange(canvas, rScale)
-
-      // Edge Options
-      canvas.append("text")
-        .text("Edge Options")
-        .attr("x", 600)
-        .attr("y", 24)
-        .attr("font-size", 24)
-        .attr("text-anchor", "middle")
-
-    }
-
     function makePanel(nodes, edges, plotType){
       var nodeKeys = []
       for (var key in nodes[0]){
@@ -1505,19 +1484,53 @@
       makeCheckBox(plotType, panel, "cbDirected", "Directed", edges.directed, showHideArrows)
       makeCheckBox(plotType, panel, "cbWeighted", "Weighted", edges.weighted)
       makeSelect('edgeWidth', "Edge Width", panel, edgeKeys, edges.edgeWidth)
+      makeRange(plotType, panel, 'threshold', "Edge Threshold", d3.max(edges, function(d){return +d.weight} ))
     }
 
-    function makeSelect(type, labelText, panel, lst, selected){
+    function makeRange(plotType, panel, id, labelText, max){
+      console.log(max)
       var label = document.createElement('label')
       label.className = "panelOption";
-      label.for = type;
+      label.for = id;
+      var text = document.createTextNode(labelText)
+      label.appendChild(text)
+      label.appendChild(document.createElement('br'))
+      panel.appendChild(label)
+
+      var range = document.createElement('INPUT')
+      range.setAttribute('type', 'range')
+      range.className = "range"
+      range.id = id
+      range.defaultValue = 1
+      range.min = 1
+      range.max = max
+      range.oninput = function(d){
+        adjustThresh(this.value, plotType)
+        var val = document.getElementById(id + "Value");
+        val.innerHTML = this.value
+      }
+      panel.appendChild(range)
+      // panel.appendChild(document.createElement('br'))
+      var value = document.createElement('span')
+      value.id = id + "Value"
+      value.className = "range"
+      var text = document.createTextNode(range.value)
+      value.appendChild(text)
+      panel.appendChild(value)
+    }
+
+    function makeSelect(id, labelText, panel, lst, selected){
+      var label = document.createElement('label')
+      label.className = "panelOption";
+      label.for = id;
       var text = document.createTextNode(labelText);
       label.appendChild(text);
+
       panel.appendChild(label)
 
       var select = document.createElement('SELECT');
       select.className = 'select';
-      select.id = type;
+      select.id = id;
       for (var i in lst){
         var option = document.createElement("option")
         option.text = lst[i];
@@ -1529,13 +1542,13 @@
 
     }
 
-    function makeCheckBox(plotType, panel, type, labelText, cbDefault, clickFunction=function(d){}){
+    function makeCheckBox(plotType, panel, id, labelText, cbDefault, clickFunction=function(d){}){
       var label = document.createElement('label');
       label.className = "panelOption";
       label.onclick = function(d){
         checkbox.checked = !checkbox.checked
         clickFunction(checkbox.checked, plotType)};
-      label.for = type;
+      label.for = id;
       var text = document.createTextNode(labelText);
       label.appendChild(text);
       panel.appendChild(label);
@@ -1543,13 +1556,14 @@
       var checkbox = document.createElement('INPUT');
       checkbox.setAttribute("type", "checkbox");
       checkbox.className = "checkBox";
-      checkbox.id = type;
+      checkbox.id = id;
       checkbox.defaultChecked = cbDefault;
       checkbox.onclick = function(d){clickFunction(checkbox.checked, plotType)}
       panel.appendChild(checkbox)
       panel.appendChild(document.createElement('br'))
 
     }
+
 
     // Node Functions
     // **************
@@ -1560,14 +1574,31 @@
 
     function showHideIsolates(showIsolates, plotType){
       d3.select("#" + plotType + "Plot").selectAll("circle")
-         .classed("hidden", !showIsolates && function(d){return d.degree == 0});
+        //  .classed("hidden", !showIsolates && function(d){console.log(d)
+        //    return +d.degree <= threshold});
+         .classed("hidden", !showIsolates && function(d){return +d.maxWeight < threshold});
+      showIsolatesGlobal = showIsolates
     }
 
+
+    // Edge Functions
+    // **************
     function showHideArrows(directed, plotType){
       d3.select("#" + plotType + "Plot")
         .selectAll("path")
         .style("marker-end", directed?'url("#end")':'none')
 
+    }
+
+    function adjustThresh(num, plotType){
+      console.log(num)
+      threshold = num
+      d3.select("#" + plotType + "Plot")
+        .selectAll('path')
+        .classed("hidden", function(d){
+          return (+d.weight < +num)
+        })
+      showHideIsolates(showIsolatesGlobal, plotType)
     }
 
     // Interactive Functions
