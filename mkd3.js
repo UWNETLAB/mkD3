@@ -1258,16 +1258,16 @@
                         })
 
             // Find the cutoff value for top 15 citations & filter
-            var topnum = 15;
-            if (yearData.length > topnum){
-              topval = yearData[topnum-1]["num-cites"];
-              // topval = yearData[topnum-1]["num-cites"];
-
-              yearData =  yearData.filter(function(d){
-                            return +d["num-cites"] >= topval;
-                            // return + d["num-cites"] >= topval;
-                          })
-            }
+            // var topnum = 15;
+            // if (yearData.length > topnum){
+            //   topval = yearData[topnum-1]["num-cites"];
+            //   // topval = yearData[topnum-1]["num-cites"];
+            //
+            //   yearData =  yearData.filter(function(d){
+            //                 return +d["num-cites"] >= topval;
+            //                 // return + d["num-cites"] >= topval;
+            //               })
+            // }
 
             // Create the html for the top values
             rows = "<tbody>"
