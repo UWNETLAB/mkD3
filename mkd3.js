@@ -48,7 +48,7 @@
 
     // Initialize Network Variables
     var radius = 20;
-    var ignore = {'ID': undefined,
+    var nodeIgnore = {'ID': undefined,
                   'info': undefined,
                   'x': undefined,
                   'y': undefined,
@@ -58,6 +58,7 @@
                   'vy': undefined,
                   'vx': undefined,
                   'radius': undefined}
+    var edgeIgnore = {}
     var threshold = 1,
         showIsolatesGlobal = true
     var nodesGlobal = undefined;
@@ -241,13 +242,13 @@
            // Augment nodes
            nodes['sizeBy'] = sizeBy;
            nodes['colourBy'] = colourBy;
-           nodes['hiddenAttrs'] = ignore;
+           nodes['hiddenAttrs'] = nodeIgnore;
 
            // Augment edges
            edges['directed'] = directed;
            edges['weighted'] = weighted;
            edges['edgeWidth'] = edgeWidth;
-
+           edges['hiddenAttrs'] = edgeIgnore;
            // Define Required Functions
            var nodeById = map$1(nodes, function(d){return d.ID;})
 
@@ -324,7 +325,11 @@
                            return d.radius;})
                          .on("mouseover", function(d){
                            d3.select(this)
-                             .attr("fill", lightColour)
+                             .attr("r", function(d){
+                               return d.radius + d.radius/4
+                             })
+                             .style("stroke", d3.rgb(255,255,255,0.5))
+                             .style("stroke-width", function(d){return d.radius/2});
 
                            // Fix the node's position
                            d.fx = d.x;
@@ -345,7 +350,8 @@
                          })
                          .on("mouseout", function(d){
                            d3.select(this)
-                             .attr("fill", nodeAttr(d, colourBy, cScale));
+                             .attr("r", function(d){return d.radius})
+                             .style("stroke-width", 1);
 
                            // Unfix the node's position
                            d.fx = null;
@@ -1444,12 +1450,16 @@
     function makePanel(nodes, edges, plotType){
       var nodeKeys = []
       for (var key in nodes[0]){
-        nodeKeys = nodeKeys.concat(key);
+        if (!(key in nodes["hiddenAttrs"])){
+          nodeKeys = nodeKeys.concat(key);
+        }
       }
 
       var edgeKeys = []
       for (var key in edges[0]){
-        edgeKeys = edgeKeys.concat(key);
+        if(!(key in edges["hiddenAttrs"])){
+          edgeKeys = edgeKeys.concat(key);            
+        }
       }
 
       var panel = document.getElementById(plotType + "Panel")

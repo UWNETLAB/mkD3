@@ -73,12 +73,13 @@ div.panel       { display: inline-block;
                   font-weight: bold;
                   margin-top: 18px;
                   margin-bottom: 5px;
-                  font-size: 18px;
+                  font-size: 1.1em;
                 }
-.panelOption    { margin-left: 20px;
+.panelOption    { margin-left: 15px;
                   margin-right: 10px;
                   font-weight: lighter;
                   white-space: nowrap;
+                  font-size: 0.9em;
                 }
 .checkBox       { margin-right: 10px;
                   position: absolute;
