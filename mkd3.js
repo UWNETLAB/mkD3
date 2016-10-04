@@ -58,10 +58,12 @@
                   'vy': undefined,
                   'vx': undefined,
                   'radius': undefined}
-    var edgeIgnore = {}
+    var edgesIgnore = {'opacity': undefined,
+                       'index': undefined}
     var threshold = 1,
         showIsolatesGlobal = true
     var nodesGlobal = undefined;
+    var edgesGlobal = undefined;
 
     // Provided Functions
     // ******************
@@ -217,9 +219,11 @@
          d.target= d.To;
          // if(d.weight == undefined ) d.weight=1;
          if(weighted == false || d.weight == undefined ) d.weight=1;
+         else d.weight = +d.weight
          d.selfRef = (d.From==d.To)
          return d
        }
+
 
        function nodesRow(d){
          d.degree= 0;
@@ -239,6 +243,7 @@
          d3.csv(edgeFile, edgesRow, function(error, edges){
            // If there is an error, print it to the console
            if(error){console.log(error)}
+           edgesGlobal = edges;
            // Augment nodes
            nodes['sizeBy'] = sizeBy;
            nodes['colourBy'] = colourBy;
@@ -248,7 +253,7 @@
            edges['directed'] = directed;
            edges['weighted'] = weighted;
            edges['edgeWidth'] = edgeWidth;
-           edges['hiddenAttrs'] = edgeIgnore;
+           edges['hiddenAttrs'] = edgesIgnore;
            // Define Required Functions
            var nodeById = map$1(nodes, function(d){return d.ID;})
 
@@ -1448,17 +1453,18 @@
     // Console Functions
     // *****************
     function makePanel(nodes, edges, plotType){
-      var nodeKeys = []
+      var nodeKeys = ['None']
       for (var key in nodes[0]){
         if (!(key in nodes["hiddenAttrs"])){
           nodeKeys = nodeKeys.concat(key);
         }
       }
 
-      var edgeKeys = []
+      var edgeKeys = ['None']
       for (var key in edges[0]){
-        if(!(key in edges["hiddenAttrs"])){
-          edgeKeys = edgeKeys.concat(key);            
+        var bool = (!(key in edges["hiddenAttrs"]) && typeof(edges[0][key]) == 'number')
+        if (bool) {
+          edgeKeys = edgeKeys.concat(key);
         }
       }
 
@@ -1586,7 +1592,10 @@
 
       d3.select("#" + plotType + "Plot")
         .selectAll("circle")
-        .attr("fill", function(d){return nodeAttr(d, colourBy, cScale)})
+        .attr("fill", function(d){
+          if (colourBy == 'None'){return 'blue'}
+          else {return nodeAttr(d, colourBy, cScale)}
+        })
 
     }
 
@@ -1618,9 +1627,10 @@
     }
 
     function changeEdgeWidth(edgeWidth, plotType){
+      console.log(edgeWidth)
       var ewScale = d3.scaleLinear()
-                      .domain(0, d3.max(nodesGlobal, function(d){return +d.maxWeight}))
-                      .range([5,10])
+                      .domain([0, d3.max(edgesGlobal, function(d){return +d[edgeWidth]})])
+                      .range([1,10])
 
       d3.select("#" + plotType + "Plot")
         .selectAll("path")
@@ -1629,10 +1639,14 @@
           // console.log(d)
           // console.log(d.weight)
           var ret = nodeAttr(d, edgeWidth, ewScale)
-          console.log(ret)
+          console.log(ewScale.domain())
           return nodeAttr(d, edgeWidth, ewScale)})
     }
 
+    function nodeAttr(d, key, scale){
+      if (d[key] == undefined){return key}
+      else {return scale(d[key])}
+    }
     function changeThreshold(num, plotType){
       threshold = num
       d3.select("#" + plotType + "Plot")
