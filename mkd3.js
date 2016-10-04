@@ -329,29 +329,33 @@
                            d.radius = nodeAttr(d, sizeBy, rScale);
                            return d.radius;})
                          .on("mouseover", function(d){
-                           d3.select(this)
-                             .attr("r", function(d){
-                               return d.radius + d.radius/4
-                             })
-                             .style("stroke", d3.rgb(255,255,255,0.5))
-                             .style("stroke-width", function(d){return d.radius/2});
+                            d3.select(this)
+                              .attr("r", function(d){
+                                return d.radius + d.radius/4
+                              })
+                              .style("stroke", d3.rgb(255,255,255,0.5))
+                              .style("stroke-width", function(d){return d.radius/2});
 
-                           // Fix the node's position
-                           d.fx = d.x;
-                           d.fy = d.y;
+                            // Fix the node's position
+                            d.fx = d.x;
+                            d.fy = d.y;
 
-                           // Make tooltip
-                           var xPos = event.pageX + 20;
-                           var yPos = event.pageY - 20;
-                           makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs);
+                            // Make tooltip
+                            var xPos = event.pageX + 20;
+                            var yPos = event.pageY - 20;
+                            makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs);
 
-                           // Show the tooltip
-                           if (showToolTip == false){
-                             d3.select("#tooltip").classed("hidden", true);
-                           }
+                            // Show the tooltip
+                            if (showToolTip == false){
+                              d3.select("#tooltip").classed("hidden", true);
+                            }
 
-                           // Repel nodes
-                           repelNodes(simulation, d);
+                            // Repel nodes
+                            repelNodes(simulation, d);
+
+                            // Make Table
+                            makeNetworkTable(plotType, d.ID, edges)
+
                          })
                          .on("mouseout", function(d){
                            d3.select(this)
@@ -369,9 +373,9 @@
                            simulation.force("collide", d3.forceCollide().radius([1]));
                            simulation.alphaTarget(0).restart();
                          })
-                         .on("click", function(d){
-                           makeNetworkTable(plotType, d.ID, edges)
-                         })
+                        //  .on("click", function(d){
+                        //    makeNetworkTable(plotType, d.ID, edges)
+                        //  })
                          .call(d3.drag()
                            .on("start", dragStarted)
                            .on("drag", dragged)
@@ -571,10 +575,10 @@
            d3.select("#tooltip")
              .classed("hidden", true);
          })
-         .on("click", function(d){
-           makeStandardTable(d.year, plotType);
-
-         });
+        //  .on("click", function(d){
+        //    makeStandardTable(d.year, plotType);
+         //
+        //  });
 
 
     }
@@ -719,6 +723,10 @@
            var xPos = event.clientX + 20;
            var yPos = event.clientY - 20;
            makeMultiToolTip(xPos, yPos, d);
+
+           // Make Table
+           makeMultiTable(d.CPY, d.RPY,  plotType);
+
          })
          .on("mouseout", function(d){
            // Unhighlight the box
@@ -730,7 +738,7 @@
              .classed("hidden", true);
          })
          .on("click", function(d){
-           makeMultiTable(d.CPY, d.RPY,  plotType);
+          //  makeMultiTable(d.CPY, d.RPY,  plotType);
          })
 
     }
@@ -1593,7 +1601,7 @@
       d3.select("#" + plotType + "Plot")
         .selectAll("circle")
         .attr("fill", function(d){
-          if (colourBy == 'None'){return 'blue'}
+          if (colourBy == 'None'){return 'steelblue'}
           else {return nodeAttr(d, colourBy, cScale)}
         })
 
@@ -1607,8 +1615,9 @@
       d3.select("#" + plotType + "Plot")
           .selectAll("circle")
           .attr("r", function(d){
-            d.radius = nodeAttr(d, sizeBy, rScale);
-            return d.radius;})
+            if (sizeBy == 'None'){return 3}
+            else {d.radius = nodeAttr(d, sizeBy, rScale);
+                  return d.radius;}})
     }
 
     // Edge Functions
@@ -1627,7 +1636,6 @@
     }
 
     function changeEdgeWidth(edgeWidth, plotType){
-      console.log(edgeWidth)
       var ewScale = d3.scaleLinear()
                       .domain([0, d3.max(edgesGlobal, function(d){return +d[edgeWidth]})])
                       .range([1,10])
@@ -1635,12 +1643,10 @@
       d3.select("#" + plotType + "Plot")
         .selectAll("path")
         .style("stroke-width", function(d){
-          // console.log("******")
-          // console.log(d)
-          // console.log(d.weight)
-          var ret = nodeAttr(d, edgeWidth, ewScale)
-          console.log(ewScale.domain())
-          return nodeAttr(d, edgeWidth, ewScale)})
+          if (edgeWidth == 'None'){return 2}
+          else {var ret = nodeAttr(d, edgeWidth, ewScale)
+                return nodeAttr(d, edgeWidth, ewScale)}})
+
     }
 
     function nodeAttr(d, key, scale){
