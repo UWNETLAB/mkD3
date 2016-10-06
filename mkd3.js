@@ -77,6 +77,7 @@
       initIcons(plotType)
       initDivs(plotType)
       initToolTip(plotType)
+      initContextMenu(plotType)
       initStandardTable(plotType);
 
 
@@ -111,6 +112,7 @@
       initIcons(plotType)
       initDivs(plotType)
       initToolTip(plotType)
+      initContextMenu(plotType)
       initStandardTable(plotType);
 
       // Create the canvas(svg)
@@ -145,6 +147,7 @@
       initIcons(plotType)
       initDivs(plotType)
       initToolTip(plotType)
+      initContextMenu(plotType)
       initStandardTable(plotType);
 
 
@@ -186,6 +189,7 @@
        initIcons(plotType)
        initDivs(plotType)
        initNetworkTable(plotType)
+       initContextMenu(plotType)
        initToolTip(plotType)
 
        // Create the svg
@@ -373,9 +377,26 @@
                            simulation.force("collide", d3.forceCollide().radius([1]));
                            simulation.alphaTarget(0).restart();
                          })
-                        //  .on("click", function(d){
+                         .on("click", function(d){
                         //    makeNetworkTable(plotType, d.ID, edges)
-                        //  })
+                         })
+                         .on("contextmenu", function(d){
+                           event.preventDefault();
+
+                           var xPos = event.pageX + "px";
+                           var yPos = event.pageY + "px";
+
+                          //  document.getElementById("contextMenu").show(100);
+                           d3.select("#contextMenu")
+                             .classed("hidden", false)
+                             .style("top", yPos)
+                             .style("left", xPos)
+                             .attr("query", d.ID)
+
+                             // Remove the tooltip
+                             d3.select("#tooltip")
+                               .classed("hidden", true);
+                         })
                          .call(d3.drag()
                            .on("start", dragStarted)
                            .on("drag", dragged)
@@ -816,6 +837,36 @@
       divToolTip.className = "hidden";
     }
 
+    function initContextMenu(plotType){
+      var menu = document.createElement('ul');
+      menu.className = 'customContextMenu hidden';
+      menu.id = "contextMenu";
+
+      var item1 = document.createElement('li');
+      item1['data-action'] = 'google';
+      item1.appendChild(document.createTextNode("Search on Google Scholar"))
+      item1.addEventListener('click', contextMenuClick);
+
+
+      var item2 = document.createElement('li');
+      item2['data-action'] = 'pubMed';
+      item2.appendChild(document.createTextNode("Search on PubMed"))
+      item2.addEventListener('click', contextMenuClick);
+
+
+      menu.appendChild(item1)
+      menu.appendChild(item2)
+      document.body.appendChild(menu)
+
+      // Removes contextMenu when click occurs
+      d3.select("body")
+        .on("click", function(d){
+          d3.select("#contextMenu")
+            .classed("hidden", true)
+        })
+
+    }
+
     function initStandardTable(plotType){
       var header = "<thead><tr><th width=10%><b>Rank</b></th><th width=22%><b>Author</b></th>" +
                    "<th width=35%><b>Source Title</b></th><th width=17%><b>Year Published</b></th>" +
@@ -916,9 +967,41 @@
       makeIcon("info-circle", "Pop-up Info", showToolTip, plotType)
     }
 
+    // Context Menu Functions
+    // **********************
+    function contextMenuClick(){
+      d3.select("#contextMenu")
+        .classed("hidden", true)
+
+      query = this.parentElement.getAttribute("query").replace(" ", "+");
+
+      switch(this['data-action']){
+        case "google":
+          var preGoogle = 'https://scholar.google.ca/scholar?q='
+          contextMenuSearch(preGoogle+query)
+          break;
+        case "pubMed":
+          var prePubMed = 'https://www.ncbi.nlm.nih.gov/pubmed/?term='
+          contextMenuSearch(prePubMed+query)
+          break;
+        default:
+          alert("Please select an database to search")
+          break;
+      }
+    }
+
+    function contextMenuSearch(link){
+      var win = window.open(link);
+      if (win) {
+        win.focus()
+      } else {
+        alert("Please Allow popups for this website")
+      }
+
+    }
 
     // Icon Functions
-    // **************s
+    // **************
     function makeIcon(type, labelText, bool, plotType){
       var icon = document.createElement('span');
       icon.id = type + "Icon";
@@ -1653,6 +1736,7 @@
       if (d[key] == undefined){return key}
       else {return scale(d[key])}
     }
+
     function changeThreshold(num, plotType){
       threshold = num
       d3.select("#" + plotType + "Plot")
