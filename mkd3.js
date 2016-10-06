@@ -1390,6 +1390,27 @@
             d3.select("#" + plotType + "Table")
               .html(header + rows);
 
+            d3.selectAll("tr")
+              .on("contextmenu", function(d){
+                var row = this.innerHTML.split("</td>")
+                query = row[1].replace("<td>", "") + " " + row[2].replace("<td>", "") + " " + row[0].replace("<td>", "")
+                query = query.replace(/ /g, "+")
+
+                event.preventDefault();
+
+                var xPos = event.pageX + "px";
+                var yPos = event.pageY + "px";
+
+                d3.select("#contextMenu")
+                  .classed("hidden", false)
+                  .style("top", yPos)
+                  .style("left", xPos)
+                  .attr("query", query)
+
+                  // Remove the tooltip
+                  d3.select("#tooltip")
+                    .classed("hidden", true);
+              });
         }
       })
     }
