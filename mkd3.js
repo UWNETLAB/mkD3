@@ -364,7 +364,8 @@
                          .on("mouseout", function(d){
                            d3.select(this)
                              .attr("r", function(d){return d.radius})
-                             .style("stroke-width", 1);
+                             .style("stroke", d3.rgb(255,255,255))
+                             .style("stroke-width", 1)
 
                            // Unfix the node's position
                            d.fx = null;
