@@ -20,6 +20,10 @@ td              { padding: 8px;
                   border-bottom: 1px solid #ddd;
                   font-size: 12px;
                 }
+tr:hover        {background-color: #f3f3f3;
+                }
+/*th:hover        {background-color: white}*/
+
 .container.hidden,
 .panel.hidden,
 .hidden         { display: none;

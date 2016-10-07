@@ -368,8 +368,8 @@
                              .style("stroke-width", 1)
 
                            // Unfix the node's position
-                           d.fx = null;
-                           d.fy = null;
+                          //  d.fx = null;
+                          //  d.fy = null;
 
                            // Remove the tooltip
                            d3.select("#tooltip")
@@ -378,7 +378,10 @@
                            simulation.force("collide", d3.forceCollide().radius([1]));
                            simulation.alphaTarget(0).restart();
                          })
-                         .on("click", function(d){
+                         .on("dblclick", function(d){
+                           // Unfix the node's position
+                           d.fx = null;
+                           d.fy = null;
                          })
                          .on("contextmenu", function(d){
                            event.preventDefault();
@@ -516,8 +519,11 @@
 
        function dragEnded(d) {
          if (!d3.event.active) simulation.alphaTarget(0);
-         d.fx = null;
-         d.fy = null;
+        //  d.fx = null;
+        //  d.fy = null;
+         d.fx = d3.event.x;
+         d.fy = d3.event.y;
+
        }
 
     }
