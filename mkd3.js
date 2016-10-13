@@ -1878,11 +1878,12 @@
       img.src = 'data:image/svg+xml;base64,'+window.btoa(unescape(encodeURIComponent(svgStr)));
       img.src = 'data:image/svg+xml;base64, ' + window.btoa(svgStr)
 
-      var w = 2500,
-          h = 2500,
+      var w = width * 10,
+          h = height * 10,
           canvas = document.createElement("canvas");
       canvas.width = w;
       canvas.height = h;
+      canvas.style["fontFamily"] = "sans-serif"
       canvas.getContext("2d").drawImage(img,0,0,w,h)
 
       var imge = canvas.toDataURL("image/png", 1)
