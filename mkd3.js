@@ -1878,12 +1878,14 @@
       img.src = 'data:image/svg+xml;base64,'+window.btoa(unescape(encodeURIComponent(svgStr)));
       img.src = 'data:image/svg+xml;base64, ' + window.btoa(svgStr)
 
-      var canvas = document.createElement("canvas");
-      canvas.width = 800;
-      canvas.height = 800;
-      canvas.getContext("2d").drawImage(img,0,0,800,800)
+      var w = 2500,
+          h = 2500,
+          canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext("2d").drawImage(img,0,0,w,h)
 
-      var imge = canvas.toDataURL("image/png")
+      var imge = canvas.toDataURL("image/png", 1)
       window.open(imge)
 
     }
