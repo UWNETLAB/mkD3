@@ -971,6 +971,9 @@
 
       // ToolTip Icon
       makeIcon("info-circle", "Pop-up Info", showToolTip, plotType)
+
+      // Save Icon
+      makeIcon("floppy-o", "Save Graph", function(){console.log("Here")}, plotType)
     }
 
     // Context Menu Functions
@@ -1074,6 +1077,9 @@
         d3.selectAll("#" + plotType + "TableContainer")
           .classed("hidden", !showTable)
       }
+      else if (type == "floppy-o"){
+        svgToCanvas()
+      }
     }
 
 
@@ -1115,6 +1121,7 @@
         weight = + edges[e].weight;
         // Add to the source's degree
         source = edges[e].source;
+        // console.log(nodeById.get(source))
         nodeById.get(source).degree += weight;
 
         // Add to the target's degree
@@ -1590,7 +1597,7 @@
     }
 
 
-    // Console Functions
+    // Panel Functions
     // *****************
     function makePanel(nodes, edges, plotType){
       var nodeKeys = ['None']
@@ -1630,6 +1637,7 @@
       makeCheckBox(plotType, panel, "cbWeighted", "Weighted", edges.weighted, showHideWeights)
       makeSelect(plotType, 'edgeWidth', "Edge Width", panel, edgeKeys, edges.edgeWidth, changeEdgeWidth)
       makeRange(plotType, panel, 'threshold', "Edge Threshold", d3.max(edges, function(d){return +d.weight} ))
+
     }
 
     function makeRange(plotType, panel, id, labelText, max){
@@ -1809,6 +1817,74 @@
       }
     }
 
+    // Export Functions
+    // ****************
+    function saveSVG(){
+      // Select the first svg element
+      // Select the first svg element
+      var svg = d3.selectAll("svg").node(),
+        img = new Image(),
+        serializer = new XMLSerializer(),
+        svgStr = serializer.serializeToString(svg);
+
+      img.src = 'data:image/svg+xml;base64, ' + window.btoa(svgStr)
+
+      var canvas = document.createElement("canvas");
+      document.body.appendChild(canvas);
+      canvas.width = 800;
+      canvas.height = 800;
+      canvas.getContext("2d").drawImage(img,0,0,800,800)
+    }
+
+
+    function svgToCanvas(){
+      // http://stackoverflow.com/questions/11567668/svg-to-canvas-with-d3-js
+
+      // get styles from all required stylesheets
+      // http://www.coffeegnome.net/converting-svg-to-png-with-canvg/
+      var style = "\n";
+      var requiredSheets = ['styles.css']; // list of required CSS
+      for (var i=0; i<document.styleSheets.length; i++) {
+          var sheet = document.styleSheets[i];
+          if (sheet.href) {
+              var sheetName = sheet.href.split('/').pop();
+              if (requiredSheets.indexOf(sheetName) != -1) {
+                  var rules = sheet.rules;
+                  if (rules) {
+                      for (var j=0; j<rules.length; j++) {
+                          style += (rules[j].cssText + '\n');
+                      }
+                  }
+              }
+          }
+      }
+
+      var svg = d3.select("svg"),
+          img = new Image(),
+          serializer = new XMLSerializer(),
+          width = svg.node().getBBox().width,
+          height = svg.node().getBBox().height;
+
+      // prepend style to svg
+      svg.insert('defs',":first-child")
+      d3.select("svg defs")
+          .append('style')
+          .attr('type','text/css')
+          .html(style);
+
+      // generate IMG in new tab
+      var svgStr = serializer.serializeToString(svg.node());
+
+      img.src = 'data:image/svg+xml;base64,'+window.btoa(unescape(encodeURIComponent(svgStr)));
+      img.src = 'data:image/svg+xml;base64, ' + window.btoa(svgStr)
+
+      var canvas = document.createElement("canvas");
+      canvas.width = 800;
+      canvas.height = 800;
+      canvas.getContext("2d").drawImage(img,0,0,800,800)
+      window.open(img.src)
+
+    }
 
     exports.networkGraph = networkGraph;
     exports.standardBar = standardBar;
