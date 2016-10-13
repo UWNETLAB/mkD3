@@ -1882,7 +1882,9 @@
       canvas.width = 800;
       canvas.height = 800;
       canvas.getContext("2d").drawImage(img,0,0,800,800)
-      window.open(img.src)
+
+      var imge = canvas.toDataURL("image/png")
+      window.open(imge)
 
     }
 
