@@ -176,11 +176,15 @@
        // Define Constants
        var plotType = 'network';
 
+       var isolates = optionalAttrs['isolates'] != undefined ? optionalAttrs['isolates']: true;
+       var sizeBy = optionalAttrs['sizeBy'] != undefined ? optionalAttrs['sizeBy'] : "degree";
+       var colourBy = optionalAttrs['colourBy'] != undefined ? optionalAttrs['colourBy']: '#2479C1';
+
        var directed = optionalAttrs['directed'] != undefined ? optionalAttrs['directed'] : false;
        var weighted = optionalAttrs['weighted'] != undefined ? optionalAttrs['weighted'] : true;
-       var sizeBy = optionalAttrs['sizeBy'] != undefined ? optionalAttrs['sizeBy'] : "degree";
        var edgeWidth = optionalAttrs['edgeWidth'] != undefined ? optionalAttrs['edgeWidth']: 2;
-       var colourBy = optionalAttrs['colourBy'] != undefined ? optionalAttrs['colourBy']: '#2479C1';
+       var edgeThresh = optionalAttrs['edgeThresh'] != undefined? optionalAttrs['edgeThresh']: 1;
+
        var hideNodeAttrs = optionalAttrs['hideNodeAttrs'] != undefined ? optionalAttrs['hideNodeAttrs']: [];
        darkColour = colourBy;
 
@@ -249,6 +253,7 @@
            if(error){console.log(error)}
            edgesGlobal = edges;
            // Augment nodes
+           nodes['isolates'] = isolates;
            nodes['sizeBy'] = sizeBy;
            nodes['colourBy'] = colourBy;
            nodes['hiddenAttrs'] = nodeIgnore;
@@ -257,6 +262,7 @@
            edges['directed'] = directed;
            edges['weighted'] = weighted;
            edges['edgeWidth'] = edgeWidth;
+           edges['edgeThresh'] = edgeThresh;
            edges['hiddenAttrs'] = edgesIgnore;
            // Define Required Functions
            var nodeById = map$1(nodes, function(d){return d.ID;})
@@ -1078,7 +1084,8 @@
           .classed("hidden", !showTable)
       }
       else if (type == "floppy-o"){
-        svgToCanvas()
+        exportPNG()
+        // exportHTML()
       }
     }
 
@@ -1623,7 +1630,7 @@
       p.appendChild(nodeTitle)
       panel.appendChild(p)
 
-      makeCheckBox(plotType, panel, "cbIsolates", "Isolates", true, showHideIsolates)
+      makeCheckBox(plotType, panel, "cbIsolates", "Isolates", true, changeIsolates)
       makeSelect(plotType, 'sizeBy', "Node Size", panel, nodeKeys, nodes.sizeBy, changeSize);
       makeSelect(plotType, 'colourBy', "Colour By", panel, nodeKeys, nodes.colourBy, changeColour);
 
@@ -1633,15 +1640,14 @@
       p.appendChild(edgeTitle)
       panel.appendChild(p)
 
-      makeCheckBox(plotType, panel, "cbDirected", "Directed", edges.directed, showHideArrows)
-      makeCheckBox(plotType, panel, "cbWeighted", "Weighted", edges.weighted, showHideWeights)
+      makeCheckBox(plotType, panel, "cbDirected", "Directed", edges.directed, changeDirected)
+      makeCheckBox(plotType, panel, "cbWeighted", "Weighted", edges.weighted, changeWeighted)
       makeSelect(plotType, 'edgeWidth', "Edge Width", panel, edgeKeys, edges.edgeWidth, changeEdgeWidth)
       makeRange(plotType, panel, 'threshold', "Edge Threshold", d3.max(edges, function(d){return +d.weight} ))
 
     }
 
     function makeRange(plotType, panel, id, labelText, max){
-      console.log(max)
       var label = document.createElement('label')
       label.className = "panelOption";
       label.for = id;
@@ -1726,12 +1732,13 @@
       else {return scale(d[key])}
     }
 
-    function showHideIsolates(showIsolates, plotType){
+    function changeIsolates(showIsolates, plotType){
       d3.select("#" + plotType + "Plot").selectAll("circle")
         //  .classed("hidden", !showIsolates && function(d){console.log(d)
         //    return +d.degree <= threshold});
          .classed("hidden", !showIsolates && function(d){return +d.maxWeight < threshold});
       showIsolatesGlobal = showIsolates
+      nodesGlobal['isolates'] = showIsolates
     }
 
     function changeColour(colourBy, plotType){
@@ -1742,9 +1749,9 @@
         .selectAll("circle")
         .attr("fill", function(d){
           if (colourBy == 'None'){return 'steelblue'}
-          else {return nodeAttr(d, colourBy, cScale)}
-        })
+          else {return nodeAttr(d, colourBy, cScale)}})
 
+        nodesGlobal['colourBy'] = colourBy
     }
 
     function changeSize(sizeBy, plotType){
@@ -1756,23 +1763,29 @@
           .selectAll("circle")
           .attr("r", function(d){
             if (sizeBy == 'None'){return 3}
-            else {d.radius = nodeAttr(d, sizeBy, rScale);
-                  return d.radius;}})
+            else {
+              d.radius = nodeAttr(d, sizeBy, rScale);
+              return d.radius;}})
+
+      nodesGlobal['sizeBy'] = sizeBy;
     }
 
     // Edge Functions
     // **************
-    function showHideArrows(directed, plotType){
+    function changeDirected(directed, plotType){
       d3.select("#" + plotType + "Plot")
         .selectAll("path")
         .style("marker-end", directed?'url("#end")':'none')
 
+      edgesGlobal['directed'] = directed
     }
 
-    function showHideWeights(weighted, plotType){
+    function changeWeighted(weighted, plotType){
       d3.select("#" + plotType + "Plot")
         .selectAll("path")
         .style("opacity", weighted?function(d){return d.opacity}:0.3)
+
+      edgesGlobal['weighted'] = weighted;
     }
 
     function changeEdgeWidth(edgeWidth, plotType){
@@ -1787,11 +1800,8 @@
           else {var ret = nodeAttr(d, edgeWidth, ewScale)
                 return nodeAttr(d, edgeWidth, ewScale)}})
 
-    }
+      edgesGlobal['edgeWidth'] = edgeWidth;
 
-    function nodeAttr(d, key, scale){
-      if (d[key] == undefined){return key}
-      else {return scale(d[key])}
     }
 
     function changeThreshold(num, plotType){
@@ -1801,7 +1811,11 @@
         .classed("hidden", function(d){
           return (+d.weight < +num)
         })
-      showHideIsolates(showIsolatesGlobal, plotType)
+
+      edgesGlobal['edgeThresh'] = num;
+
+      changeIsolates(showIsolatesGlobal, plotType)
+
     }
 
     // Interactive Functions
@@ -1819,25 +1833,7 @@
 
     // Export Functions
     // ****************
-    function saveSVG(){
-      // Select the first svg element
-      // Select the first svg element
-      var svg = d3.selectAll("svg").node(),
-        img = new Image(),
-        serializer = new XMLSerializer(),
-        svgStr = serializer.serializeToString(svg);
-
-      img.src = 'data:image/svg+xml;base64, ' + window.btoa(svgStr)
-
-      var canvas = document.createElement("canvas");
-      document.body.appendChild(canvas);
-      canvas.width = 800;
-      canvas.height = 800;
-      canvas.getContext("2d").drawImage(img,0,0,800,800)
-    }
-
-
-    function svgToCanvas(){
+    function exportPNG(){
       // http://stackoverflow.com/questions/11567668/svg-to-canvas-with-d3-js
 
       // get styles from all required stylesheets
@@ -1884,12 +1880,56 @@
       canvas.width = w;
       canvas.height = h;
       canvas.style["fontFamily"] = "sans-serif"
+      canvas.style["color"] = "white"
       canvas.getContext("2d").drawImage(img,0,0,w,h)
 
       var imge = canvas.toDataURL("image/png", 1)
       window.open(imge)
 
     }
+
+    function exportHTML(){
+      // window.open(document.write(page))
+      // window.open().document.write(page)
+      header = '<!DOCTYPE html><head><script src="https://d3js.org/d3.v4.js"></script><script type="text/javascript" src="source/mkd3Simplified.js"></script><link rel="stylesheet" type="text/css" href="source/styles.css"></head>'
+
+      myHTMLDoc = header + "<body><script type = 'text/javascript'>" + makeExportFun() + "</script></body></html>"
+      var uri = "data:application/octet-stream;base64," + btoa(myHTMLDoc);
+      document.location = uri;
+
+      // window.open().document.write();
+      // console.log(makeExportFun())
+
+    }
+
+    function makeExportFun(){
+      var fun = "mkd3.networkGraph('coCite_edgeList.csv', 'coCite_nodeAttributes.csv',"
+
+      var optionalAttrsExport = "{";
+      var nodeAttrList = ['isolates', 'sizeBy', 'colourBy'];
+      for (var i=0; i<nodeAttrList.length; i++){
+        attr = String(nodeAttrList[i]);
+        str = attr + ":" + "'" + String(nodesGlobal[attr]) + "'" + ","
+        optionalAttrsExport += str
+      }
+
+      var edgeAttrList = ['directed', 'weighted', 'edgeWidth', 'edgeThresh'];
+      for (var i=0; i<edgeAttrList.length; i++){
+        attr = String(edgeAttrList[i]);
+        if (typeof(edgesGlobal[attr]) == "string"){
+          str = attr + ":" + "'" + String(edgesGlobal[attr]) + "'" + ","
+        } else {
+          str = attr + ":" + String(edgesGlobal[attr]) + ","
+        }
+        optionalAttrsExport += str
+      }
+      optionalAttrsExport = optionalAttrsExport.replace(/.$/,"}")
+
+      fun += optionalAttrsExport + ")"
+
+      return fun
+    }
+
 
     exports.networkGraph = networkGraph;
     exports.standardBar = standardBar;
