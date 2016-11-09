@@ -74,8 +74,8 @@
 
       // Initialize Everything
       initHead()
-      initIcons(plotType)
       initDivs(plotType)
+      initIcons(plotType)
       initToolTip(plotType)
       initContextMenu(plotType)
       initStandardTable(plotType);
@@ -109,8 +109,8 @@
 
       // Initialize Everything
       initHead()
-      initIcons(plotType)
       initDivs(plotType)
+      initIcons(plotType)
       initToolTip(plotType)
       initContextMenu(plotType)
       initStandardTable(plotType);
@@ -144,8 +144,8 @@
       // Create the div container
       // Initialize Everything
       initHead()
-      initIcons(plotType)
       initDivs(plotType)
+      initIcons(plotType)
       initToolTip(plotType)
       initContextMenu(plotType)
       initStandardTable(plotType);
@@ -190,8 +190,8 @@
 
        // This initializes the divs everything will be placed in
        initHead()
-       initIcons(plotType)
        initDivs(plotType)
+       initIcons(plotType)
        initNetworkTable(plotType)
        initContextMenu(plotType)
        initToolTip(plotType)
@@ -785,33 +785,69 @@
       container.id = plotType + "Container";
       container.className = "container";
 
+      // Create the title - Vertical
+      var title = document.createElement('div');
+      title.id = "title"
+
+      var imgLink = document.createElement('a')
+      imgLink.href = "http://networkslab.org/metaknowledge/"
+      var img = document.createElement("img");
+      img.id = "mkLogo"
+      img.src = "http://networkslab.org/metaknowledge/images/site-logo.png"
+      imgLink.appendChild(img)
+      title.appendChild(imgLink)
+
+      var mk = document.createElement('div')
+      mk.appendChild(document.createTextNode("metaknowledge"))
+      mk.id = 'mkTitle'
+      var mkLink = document.createElement('a')
+      mkLink.href = "http://networkslab.org/metaknowledge/"
+      mkLink.appendChild(mk)
+      title.appendChild(mkLink)
+
+      var netlab = document.createElement('div')
+      netlab.appendChild(document.createTextNode("NetLab, University of Waterloo"))
+      netlab.id = "netLab"
+      title.appendChild(netlab)
+
+      var auth = document.createElement('div')
+      auth.appendChild(document.createTextNode('Reid McIlroy-Young, John McLevey, & Jillian Anderson'))
+      auth.id = "titleAuthors"
+      title.appendChild(auth)
+
+
+
+
+      // title.appendChild(document.createTextNode("http://networkslab.org/metaknowledge/"))
+      container.appendChild(title)
+
       // Create the Visualization Area
       var visArea = document.createElement('div');
       visArea.id = plotType + "VisArea";
       visArea.className = "visArea";
 
-     // Create the Options Panel
-     var panel = document.createElement('div');
-     panel.id = plotType + "Panel";
-     panel.className = "panel";
-     visArea.appendChild(panel);
+      // Create the Options Panel
+      var panel = document.createElement('div');
+      panel.id = plotType + "Panel";
+      panel.className = "panel";
+      visArea.appendChild(panel);
 
-     // Create the plot
-     var plot = document.createElement('div')
-     plot.id = plotType + "Plot"
-     plot.className = "plot RPYS";
-     visArea.appendChild(plot);
+      // Create the plot
+      var plot = document.createElement('div')
+      plot.id = plotType + "Plot"
+      plot.className = "plot RPYS";
+      visArea.appendChild(plot);
 
-     container.appendChild(visArea);
+      container.appendChild(visArea);
 
-     // Create the table
-     var table = document.createElement('div')
-     table.id = plotType + "TableContainer";
-     table.className = "container";
+      // Create the table
+      var table = document.createElement('div')
+      table.id = plotType + "TableContainer";
+      table.className = "container";
 
-     container.appendChild(table);
+      container.appendChild(table);
 
-     document.body.appendChild(container);
+      document.body.appendChild(container);
     }
 
     function initHead(){
@@ -820,11 +856,6 @@
       document.head.appendChild(meta)
 
       document.title = "mkd3"
-
-      var cssLink = document.createElement('link')
-      cssLink.rel = "stylesheet"
-      cssLink.href = "mkd3/styles.css"
-      document.head.appendChild(cssLink)
 
       var d3Script = document.createElement('script')
       d3Script.src="https://d3js.org/d3.v4.js"
@@ -1035,7 +1066,12 @@
       var div = document.createElement('div')
       div.appendChild(icon)
       div.appendChild(label)
-      document.body.appendChild(div)
+
+      var firstChild = document.getElementById(plotType + "TableContainer")
+      var parent = document.getElementById(plotType + "Container")
+      parent.insertBefore(div, firstChild)
+      // parent.appendChild(div)
+      // document.body.appendChild(div)
     }
 
     function iconClick(type, bool, plotType){
