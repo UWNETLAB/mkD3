@@ -785,10 +785,10 @@
       container.id = plotType + "Container";
       container.className = "container";
 
-      // Create the title - Vertical
+      // Create the title - Vertical Layout
       var title = document.createElement('div');
       title.id = "title"
-
+      // Adding image
       var imgLink = document.createElement('a')
       imgLink.href = "http://networkslab.org/metaknowledge/"
       var img = document.createElement("img");
@@ -796,7 +796,7 @@
       img.src = "http://networkslab.org/metaknowledge/images/site-logo.png"
       imgLink.appendChild(img)
       title.appendChild(imgLink)
-
+      // Adding metaknowledge
       var mk = document.createElement('div')
       mk.appendChild(document.createTextNode("metaknowledge"))
       mk.id = 'mkTitle'
@@ -804,21 +804,16 @@
       mkLink.href = "http://networkslab.org/metaknowledge/"
       mkLink.appendChild(mk)
       title.appendChild(mkLink)
-
+      // Adding Affiliation
       var netlab = document.createElement('div')
       netlab.appendChild(document.createTextNode("NetLab, University of Waterloo"))
       netlab.id = "netLab"
       title.appendChild(netlab)
-
+      // Adding Authors
       var auth = document.createElement('div')
       auth.appendChild(document.createTextNode('Reid McIlroy-Young, John McLevey, & Jillian Anderson'))
       auth.id = "titleAuthors"
       title.appendChild(auth)
-
-
-
-
-      // title.appendChild(document.createTextNode("http://networkslab.org/metaknowledge/"))
       container.appendChild(title)
 
       // Create the Visualization Area
