@@ -361,7 +361,7 @@
                             }
 
                             // Repel nodes
-                            repelNodes(simulation, d);
+                            // repelNodes(simulation, d);
 
                             // Make Table
                             makeNetworkTable(plotType, d.ID, edges)
