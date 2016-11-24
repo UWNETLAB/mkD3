@@ -198,13 +198,21 @@
 
        // Create the svg
        var plotName = "#" + plotType + "Plot"
-       var svg = d3.select(plotName)
-                   .style("padding-bottom", "75%")
-                   .append("svg")
-                   .attr("id", plotType + "SVG")
-                   .attr("preserveAspectRatio", "xMinYMin meet")
-                   .attr("viewBox", "0 0 800 800")
-                   .classed("svg-content", true)
+       var svg =  d3.select(plotName)
+                    .style("padding-bottom", "75%")
+                    .append("svg")
+                    .attr("id", plotType + "SVG")
+                    .attr("preserveAspectRatio", "xMinYMin meet")
+                    .attr("viewBox", "0 0 800 800")
+                    .classed("svg-content", true)
+                    .on("dblclick", function(d){
+                      d3.selectAll("circle")
+                        .attr("fx", function(node){
+                          node.fx=null
+                          node.fy=null
+                          return null})
+                        .attr("fx", null)
+                    })
 
        // Initialize the simulation for the network
        var simulation = d3.forceSimulation()
@@ -739,26 +747,26 @@
       })
 
       svg.selectAll("rect.heatmap")
-         .data(boxDataset)
-         .enter()
-         .append("rect")
-         .attr("x", function(d, i){return xScale(+ d.RPY);})
-         .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
-         .attr("width", boxWidth)
-         .attr("height", boxHeight)
-         .attr("fill", function(d){return cScale(d.rank);})
-         .on("mouseover", function(d){
-           // Highlight the box
-           d3.select(this)
-             .attr("fill", 'lightsalmon');
+        .data(boxDataset)
+        .enter()
+        .append("rect")
+        .attr("x", function(d, i){return xScale(+ d.RPY);})
+        .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
+        .attr("width", boxWidth)
+        .attr("height", boxHeight)
+        .attr("fill", function(d){return cScale(d.rank);})
+        .on("mouseover", function(d){
+          // Highlight the box
+          d3.select(this)
+            .attr("fill", 'lightsalmon');
 
-           // Make tooltip
-           var xPos = event.clientX + 20;
-           var yPos = event.clientY - 20;
-           makeMultiToolTip(xPos, yPos, d);
+          // Make tooltip
+          var xPos = event.clientX + 20;
+          var yPos = event.clientY - 20;
+          makeMultiToolTip(xPos, yPos, d);
 
-           // Make Table
-           makeMultiTable(d.CPY, d.RPY,  plotType);
+          // Make Table
+          makeMultiTable(d.CPY, d.RPY,  plotType)
 
          })
          .on("mouseout", function(d){
@@ -785,10 +793,10 @@
       container.id = plotType + "Container";
       container.className = "container";
 
-      // Create the title - Vertical Layout
+      // Create the title - Vertical
       var title = document.createElement('div');
       title.id = "title"
-      // Adding image
+
       var imgLink = document.createElement('a')
       imgLink.href = "http://networkslab.org/metaknowledge/"
       var img = document.createElement("img");
@@ -796,7 +804,7 @@
       img.src = "http://networkslab.org/metaknowledge/images/site-logo.png"
       imgLink.appendChild(img)
       title.appendChild(imgLink)
-      // Adding metaknowledge
+
       var mk = document.createElement('div')
       mk.appendChild(document.createTextNode("metaknowledge"))
       mk.id = 'mkTitle'
@@ -804,16 +812,21 @@
       mkLink.href = "http://networkslab.org/metaknowledge/"
       mkLink.appendChild(mk)
       title.appendChild(mkLink)
-      // Adding Affiliation
+
       var netlab = document.createElement('div')
       netlab.appendChild(document.createTextNode("NetLab, University of Waterloo"))
       netlab.id = "netLab"
       title.appendChild(netlab)
-      // Adding Authors
+
       var auth = document.createElement('div')
       auth.appendChild(document.createTextNode('Reid McIlroy-Young, John McLevey, & Jillian Anderson'))
       auth.id = "titleAuthors"
       title.appendChild(auth)
+
+
+
+
+      // title.appendChild(document.createTextNode("http://networkslab.org/metaknowledge/"))
       container.appendChild(title)
 
       // Create the Visualization Area
@@ -1495,16 +1508,16 @@
                       })
 
           // Find the cutoff value for top 15 citations & filter
-          var topnum = 15;
-          if (yearData.length > topnum){
-            topval = yearData[topnum-1]["num-cites"];
-            // topval = yearData[topnum-1]["num-cites"];
-
-            yearData =  yearData.filter(function(d){
-                          return +d["num-cites"] >= topval;
-                          // return + d["num-cites"] >= topval;
-                        })
-          }
+          // var topnum = 15;
+          // if (yearData.length > topnum){
+          //   topval = yearData[topnum-1]["num-cites"];
+          //   // topval = yearData[topnum-1]["num-cites"];
+          //
+          //   yearData =  yearData.filter(function(d){
+          //                 return +d["num-cites"] >= topval;
+          //                 // return + d["num-cites"] >= topval;
+          //               })
+          // }
 
           // Create the html for the top values
           // Note:
