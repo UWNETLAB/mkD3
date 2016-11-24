@@ -198,13 +198,21 @@
 
        // Create the svg
        var plotName = "#" + plotType + "Plot"
-       var svg = d3.select(plotName)
-                   .style("padding-bottom", "75%")
-                   .append("svg")
-                   .attr("id", plotType + "SVG")
-                   .attr("preserveAspectRatio", "xMinYMin meet")
-                   .attr("viewBox", "0 0 800 800")
-                   .classed("svg-content", true)
+       var svg =  d3.select(plotName)
+                    .style("padding-bottom", "75%")
+                    .append("svg")
+                    .attr("id", plotType + "SVG")
+                    .attr("preserveAspectRatio", "xMinYMin meet")
+                    .attr("viewBox", "0 0 800 800")
+                    .classed("svg-content", true)
+                    .on("dblclick", function(d){
+                      d3.selectAll("circle")
+                        .attr("fx", function(node){
+                          node.fx=null
+                          node.fy=null
+                          return null})
+                        .attr("fx", null)
+                    })
 
        // Initialize the simulation for the network
        var simulation = d3.forceSimulation()
@@ -739,26 +747,26 @@
       })
 
       svg.selectAll("rect.heatmap")
-         .data(boxDataset)
-         .enter()
-         .append("rect")
-         .attr("x", function(d, i){return xScale(+ d.RPY);})
-         .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
-         .attr("width", boxWidth)
-         .attr("height", boxHeight)
-         .attr("fill", function(d){return cScale(d.rank);})
-         .on("mouseover", function(d){
-           // Highlight the box
-           d3.select(this)
-             .attr("fill", 'lightsalmon');
+        .data(boxDataset)
+        .enter()
+        .append("rect")
+        .attr("x", function(d, i){return xScale(+ d.RPY);})
+        .attr("y", function(d){return yScale(+ d.CPY)-boxHeight;})
+        .attr("width", boxWidth)
+        .attr("height", boxHeight)
+        .attr("fill", function(d){return cScale(d.rank);})
+        .on("mouseover", function(d){
+          // Highlight the box
+          d3.select(this)
+            .attr("fill", 'lightsalmon');
 
-           // Make tooltip
-           var xPos = event.clientX + 20;
-           var yPos = event.clientY - 20;
-           makeMultiToolTip(xPos, yPos, d);
+          // Make tooltip
+          var xPos = event.clientX + 20;
+          var yPos = event.clientY - 20;
+          makeMultiToolTip(xPos, yPos, d);
 
-           // Make Table
-           makeMultiTable(d.CPY, d.RPY,  plotType);
+          // Make Table
+          makeMultiTable(d.CPY, d.RPY,  plotType)
 
          })
          .on("mouseout", function(d){
