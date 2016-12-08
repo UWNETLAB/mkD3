@@ -60,20 +60,22 @@ path            { stroke: #404040;
 div.panel,
 div.miniGraph   { display: inline-block;
                   position: relative;
-                  width: 15%;
                   vertical-align: top;
                   /*margin: 1%;*/
-                  padding-top: 10%;
-                  padding-bottom: 25%;
-                  /*border-right: solid 2px gainsboro;*/
                   overflow: hidden;
                   z-index: 1;
                   white-space: nowrap;
                   /*background-color: gainsboro;*/
                   }
+div.panel       { padding-top: 10%;
+                  padding-bottom: 33%;
+                  border-right: solid 2px gainsboro;
+                  width: 14%;
+                }
+
 div.panelTitle  { width: 15%;}
 div.miniGraph   { width: 25%;}
-.icon           { margin: 3px;
+.icon, .fa       { margin: 3px;
                   /*color: steelblue;*/
                   margin-left: 0%;
                 }
@@ -280,11 +282,11 @@ div.smallMultiples
                 { width: 100%;
                 }
 svg.smallMultiples
-                { width: 100%;
-                  margin: 0.5%;
-                  position: absolute;
+                { width: 80%;
+                  margin-left: 10%;
+                  /*position: absolute;*/
                 }
-svg.smallMultiples.node
+/*svg.smallMultiples.node
                 { top: 0px;
                 }
 svg.smallMultiples.community
@@ -292,7 +294,7 @@ svg.smallMultiples.community
                 }
 svg.smallMultiples.author
                 { top: 400px;
-                }
+                }*/
 .smallMult path,
 .smallMult line { display: initial;
                   stroke: lightgrey;
@@ -300,5 +302,9 @@ svg.smallMultiples.author
                   stroke-width: 1.5px;
                 }
 
-.smallMult     { font-size: 2em;
-               }
+.smallMult.subTitle
+                { font-size: 1em;
+                  text-align: center;
+                  font-weight: bold;
+                  margin: 0px;
+                }

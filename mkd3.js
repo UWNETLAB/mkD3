@@ -199,7 +199,7 @@
        // This initializes the divs everything will be placed in
        initHead()
        initDivs(plotType)
-       initIcons(plotType)
+      //  initIcons(plotType)
        initNetworkTable(plotType)
        initContextMenu(plotType)
        initToolTip(plotType)
@@ -220,12 +220,6 @@
                           return null})
                         .attr("fx", null)
                     })
-       // Create the miniGraph svg
-      //  var miniGSVG = d3.select("#" + plotType + "MiniGraph")
-      //                .append("svg")
-      //                .attr("preserveAspectRatio", "xMinYMin meet")
-      //                .attr("viewBox", "0 0 300 275 ")
-      //                .attr("id", plotType + "MinigraphSVG")
 
        // Initialize the simulation for the network
        var simulation = d3.forceSimulation()
@@ -408,8 +402,8 @@
                                 d3.select("#tooltip").classed("hidden", true);
                               }
 
-                              // Draw svg in corner
-                              // makeMiniGraph(miniGSVG, d, citations)
+                              // Make Small multiples
+                              makeSmallMultiples(plotType, d, citations)
 
                               // Repel nodes
                               // repelNodes(simulation, d);
@@ -419,7 +413,6 @@
 
                            })
                            .on("click", function(d){
-                             makeSmallMultiples(plotType, d, citations)
                            })
                            .on("mouseout", function(d){
                              d3.select(this)
@@ -1007,8 +1000,8 @@
     }
 
     function initNetworkTable(plotType){
-      var header = "<thead><tr>" + "<th width=40%><b>Source Node</b></th>" +
-                                   "<th width=40%><b>Target Node</b></th>" +
+      var header = "<thead><tr>" + "<th width=40%><b>Node A</b></th>" +
+                                   "<th width=40%><b>Node B</b></th>" +
                                    "<th width=20%><b>Edge Weight</b></th>" +
                    "</tr></thead>"
 
@@ -1438,11 +1431,11 @@
       if (typeof(yrange) == "object"){
         yScale = d3.scaleLinear()
                    .domain([yrange[0], yrange[1]])
-                   .range([200,50])
+                   .range([180,30])
       } else {
         yScale = d3.scaleLinear()
                    .domain([0, d3.max(data, function(d){return +d["num-cites"]})])
-                   .range([200,50])
+                   .range([180,30])
       }
 
       // Find the total years
@@ -1470,12 +1463,12 @@
 
       svg.append("g")
          .attr("class", "y axis smallMult")
-         .attr("transform", "translate(50,0)")
+         .attr("transform", "translate(48,0)")
          .call(yAxis);
 
       svg.append("g")
          .attr("class", "x axis")
-         .attr("transform", "translate(" + barWidth/2 + ",200)")
+         .attr("transform", "translate(" + barWidth/2 + ",180)")
          .call(xAxis)
 
       svg.selectAll("rect")
@@ -1486,7 +1479,7 @@
          .attr("y", function(d){return yScale(d["num-cites"])})
          .attr("width", barWidth)
          .attr("height", function(d){
-           return 200 - yScale(d["num-cites"])})
+           return 180 - yScale(d["num-cites"])})
         //  .attr("fill", "#77787B")
         //  .attr("fill", "#5D6D7E")
          .attr("fill", "#212F3D")
@@ -1497,7 +1490,7 @@
       // Make the title
       svg.append("text")
          .attr("x", 150)
-         .attr("y", 32)
+         .attr("y", 20)
          .attr("font-size", 11)
          .attr("text-anchor", "middle")
          .text(node);
@@ -1508,29 +1501,73 @@
     // Small Multiples
     // ***************
     function makeSmallMultiples(plotType, node, citations){
-
+      if (document.getElementById("networkMiniGraph").childNodes.length == 0){
+        // Citation History Title Div
         var TitleDiv = d3.select("#" + plotType + "MiniGraph")
                          .append("div")
-                         .attr("id", "SmallMultTitles")
+                         .attr("id", "smallMultiplesTitle")
                          .append("p")
                          .attr("class", "title")
                          .append("text")
                          .text("Citation History")
-                         .classed("title", true)
+
+        // Node Title Div
+        var NodeTitleDiv = d3.select("#" + plotType + "MiniGraph")
+                             .append("div")
+                             .attr("id", "smNodeTitle")
+                             .append("p")
+                             .attr("class", "smallMult subTitle")
+                             .append("text")
+                             .text("Article")
+        // Node SVG Div
+        var NodeSVGDiv = d3.select("#" + plotType + "MiniGraph")
+                         .append("div")
+                         .attr("id", "smNodeSVGDiv")
+
+        // Community Title Div
+        var CommTitleDiv = d3.select("#" + plotType + "MiniGraph")
+                             .append("div")
+                             .attr("id", "smCommTitle")
+                             .append("p")
+                             .attr("class", "smallMult subTitle")
+                             .append("text")
+                             .text("Community")
+        // Community SVG Div
+        var CommSVGDiv = d3.select("#" + plotType + "MiniGraph")
+                         .append("div")
+                         .attr("id", "smCommSVGDiv")
+
+        // Author Title Div
+        var AuthTitleDiv = d3.select("#" + plotType + "MiniGraph")
+                             .append("div")
+                             .attr("id", "smAuthTitle")
+                             .append("p")
+                             .attr("class", "smallMult subTitle")
+                             .append("text")
+                             .text("Author")
+
+        // Author SVG Div
+        var AuthSVGDiv = d3.select("#" + plotType + "MiniGraph")
+                         .append("div")
+                         .attr("id", "smAuthSVGDiv")
       }
+
 
       // Create the Article Citation History Graph
       // ****************************************
-      var svgArticle = d3.select("#" + plotType + "MiniGraph")
-                         .append("svg")
-                         .attr("preserveAspectRatio", "xMinYMin meet")
-                         .attr("viewBox", "0 0 300 225 ")
-                         .attr("id", node.ID + "smallMultipleArticle")
-                         .classed("smallMultiples", true)
-                         .classed("node", true)
-                         .on("dblclick", function(d){
-                           this.remove()
-                         })
+      d3.select("#smNodeSVGDiv")
+        .select("svg")
+        .remove()
+      var svgNode = d3.select("#smNodeSVGDiv")
+                      .append("svg")
+                      .attr("preserveAspectRatio", "xMinYMin meet")
+                      .attr("viewBox", "0 0 300 225 ")
+                      .attr("id", "smNodeSVG")
+                      .classed("smallMultiples", true)
+                      .classed("node", true)
+                      .on("dblclick", function(d){
+                        this.remove()
+                      })
 
       // Determine the extent of values
       var ymax = d3.max(citations, function(d){return +d["num-cites"]})
@@ -1543,20 +1580,65 @@
       // Sort the citations
       var data = data.sort(function(a,b){return a.CPY - b.CPY;})
 
-      makeMiniGraph(svgArticle, node.ID, data, "cite-string", xrange,[0,ymax])
+      makeMiniGraph(svgNode, node.ID, data, "cite-string", xrange,[0,ymax])
+
+
+      // Create the Community Citation History Graph
+      // *******************************************
+      // Remove Old Graph
+      d3.select("#smCommSVGDiv")
+        .select("svg")
+        .remove()
+      var svgComm = d3.select("#smCommSVGDiv")
+                      .append("svg")
+                      .attr("preserveAspectRatio", "xMinYMin meet")
+                      .attr("viewBox", "0 0 300 225 ")
+                      .attr("id", "smCommSVG")
+                      .classed("smallMultiples", true)
+                      .classed("community", true)
+                      .on("dblclick", function(d){
+                        this.remove()
+                      })
+      // Filter the citations
+      var data = citations.filter(function(d){
+        return d["community"] == node["community"];
+      })
+
+      // Aggregate the data
+      var commCitsByYear = {};
+      data.forEach(function(a){
+        if (a['CPY'] in commCitsByYear){
+          commCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
+        } else {
+          var obj = {"CPY": Number(a['CPY']), "num-cites": Number(a["num-cites"])}
+          commCitsByYear[a['CPY']] = obj;
+        }
+      })
+
+      // Convert to an array of objects
+      var Commarray = Object.values(commCitsByYear)
+
+      // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
+      var xrange = d3.extent(citations, function(d){return +d["CPY"]})
+
+      makeMiniGraph(svgComm, "Article Community ID = " + node["community"], Commarray, "community", xrange,[0,400])
 
       // Create the Author Citation History Graph
       // ****************************************
-      var svgAuthor = d3.select("#" + plotType + "MiniGraph")
-                         .append("svg")
-                         .attr("preserveAspectRatio", "xMinYMin meet")
-                         .attr("viewBox", "0 0 300 225 ")
-                         .attr("id", node.ID + "smallMultipleAuthor")
-                         .classed("smallMultiples", true)
-                         .classed("author", true)
-                         .on("dblclick", function(d){
-                           this.remove()
-                         })
+      // Remove Old Graph
+      d3.select("#smAuthSVGDiv")
+        .select("svg")
+        .remove()
+      var svgAuthor = d3.select("#smAuthSVGDiv")
+                        .append("svg")
+                        .attr("preserveAspectRatio", "xMinYMin meet")
+                        .attr("viewBox", "0 0 300 225 ")
+                        .attr("id", "smAuthSVG")
+                        .classed("smallMultiples", true)
+                        .classed("author", true)
+                        .on("dblclick", function(d){
+                        this.remove()
+                        })
 
       // Filter the citations
       var data = citations.filter(function(d){
@@ -1582,45 +1664,9 @@
       // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
       var xrange = d3.extent(citations, function(d){return +d["CPY"]})
 
-      makeMiniGraph(svgAuthor, node.ID.split(",")[0], array, "author", xrange,[0,500])
+      makeMiniGraph(svgAuthor, node.ID.split(",")[0], array, "author", xrange,[0,400])
 
 
-      // Create the Community Citation History Graph
-      // *******************************************
-      var svgComm = d3.select("#" + plotType + "MiniGraph")
-                      .append("svg")
-                      .attr("preserveAspectRatio", "xMinYMin meet")
-                      .attr("viewBox", "0 0 300 225 ")
-                      .attr("id", node.ID + "smallMultipleCommunity")
-                      .classed("smallMultiples", true)
-                      .classed("community", true)
-                      .on("dblclick", function(d){
-                        this.remove()
-                      })
-
-      // Filter the citations
-      var data = citations.filter(function(d){
-        return d["community"] == node["community"];
-      })
-
-      // Aggregate the data
-      var commCitsByYear = {};
-      data.forEach(function(a){
-        if (a['CPY'] in commCitsByYear){
-          commCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
-        } else {
-          var obj = {"CPY": Number(a['CPY']), "num-cites": Number(a["num-cites"])}
-          commCitsByYear[a['CPY']] = obj;
-        }
-      })
-
-      // Convert to an array of objects
-      var Commarray = Object.values(commCitsByYear)
-
-      // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
-      var xrange = d3.extent(citations, function(d){return +d["CPY"]})
-
-      makeMiniGraph(svgComm, "Community " + node["community"], Commarray, "community", xrange,[0,500])
 
     }
 
