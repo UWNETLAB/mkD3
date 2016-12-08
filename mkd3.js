@@ -88,7 +88,15 @@
                   .attr("id", "plot")
                   .attr("preserveAspectRatio", "xMinYMin meet")
                   .attr("viewBox", "0 0 800 400")
-                  .classed("svg-content", true);
+                  .classed("svg-content", true)
+
+      // svg.append("text")
+      //    .attr("font-family", 'FontAwesome')
+      //    .attr('font-size', '2em')
+      //    .attr('y', 50)
+      //    .attr('x', 760)
+      //    .text(function(d) { return '\uf080' })
+      //    .attr('class', "miniIcon")
 
       // Read in the dataset
       var dataset;
@@ -172,7 +180,7 @@
       });
     }
 
-    function networkGraph(edgeFile, nodeFile, optionalAttrs = {}){
+    function networkGraph(edgeFile, nodeFile, citationFile, optionalAttrs = {}){
        // Define Constants
        var plotType = 'network';
 
@@ -199,7 +207,6 @@
        // Create the svg
        var plotName = "#" + plotType + "Plot"
        var svg =  d3.select(plotName)
-                    .style("padding-bottom", "75%")
                     .append("svg")
                     .attr("id", plotType + "SVG")
                     .attr("preserveAspectRatio", "xMinYMin meet")
@@ -213,6 +220,12 @@
                           return null})
                         .attr("fx", null)
                     })
+       // Create the miniGraph svg
+      //  var miniGSVG = d3.select("#" + plotType + "MiniGraph")
+      //                .append("svg")
+      //                .attr("preserveAspectRatio", "xMinYMin meet")
+      //                .attr("viewBox", "0 0 300 275 ")
+      //                .attr("id", plotType + "MinigraphSVG")
 
        // Initialize the simulation for the network
        var simulation = d3.forceSimulation()
@@ -260,261 +273,295 @@
            // If there is an error, print it to the console
            if(error){console.log(error)}
            edgesGlobal = edges;
-           // Augment nodes
-           nodes['isolates'] = isolates;
-           nodes['sizeBy'] = sizeBy;
-           nodes['colourBy'] = colourBy;
-           nodes['hiddenAttrs'] = nodeIgnore;
+           d3.csv(citationFile, function(error, citations){
+             if(error){console.log(error)}
+             // Augment nodes
+             nodes['isolates'] = isolates;
+             nodes['sizeBy'] = sizeBy;
+             nodes['colourBy'] = colourBy;
+             nodes['hiddenAttrs'] = nodeIgnore;
 
-           // Augment edges
-           edges['directed'] = directed;
-           edges['weighted'] = weighted;
-           edges['edgeWidth'] = edgeWidth;
-           edges['edgeThresh'] = edgeThresh;
-           edges['hiddenAttrs'] = edgesIgnore;
-           // Define Required Functions
-           var nodeById = map$1(nodes, function(d){return d.ID;})
+             // Augment edges
+             edges['directed'] = directed;
+             edges['weighted'] = weighted;
+             edges['edgeWidth'] = edgeWidth;
+             edges['edgeThresh'] = edgeThresh;
+             edges['hiddenAttrs'] = edgesIgnore;
 
-           // Perform Required Node calculations
-           nodeCalculations(nodes, edges, directed);
+             var nodeById = map$1(nodes, function(d){return d.ID.toUpperCase();})
 
-           // Create a scale for the nodes' radii
-           // Note: domain depends on sizeBy parameter
-           if (typeof(sizeBy) != 'number'){
-             var rScale = d3.scaleLinear()
-                            .domain([0, d3.max(nodes, function(d){return d[sizeBy]})])
-                            .range([3,20])
-           } else {
-             var rScale = d3.scaleLinear()
-                            .domain([sizeBy, sizeBy])
-                            .range([sizeBy, sizeBy])
-           }
+             citations = citations.map(function(c){
+               var nodeIDList = c["cite-string"].split(",", 3)
+               var nodeID = nodeIDList.join(",").toUpperCase()
+               node = nodeById.get(nodeID)
+               if(node != undefined){
+                 c["community"] = node["community"];
+               } else {
+                 c["community"] = undefined;
+               }
+               return c;
+             })
 
-           // Create a scale for the node's colour
-           // This colour palette has been adapted from Stephen Few's Book 'Show Me the Numbers'
-           var cScale = d3.scaleOrdinal(['#5da5da','#faa43a','#60bd68','#f17cb0',
-                                         '#4d4d4d','#b2912f','#decf3f','#f15854', '#ABABAB']);
+            // citations = citations.map(function(c){
+            //   nodes.forEach(function(n){
+            //     if(c["cite-string"].toUpperCase().includes(n.ID.toUpperCase())){
+            //       c["community"] = n["community"]
+            //       return c
+            //     }
+            //   })
+            //   return c
+            // })
 
-           // Create a scale for the edges' opacity (alpha)
-           var aScale = d3.scalePow()
-                          .domain(d3.extent(edges, function(d){return d.weight;}))
-                          .range([0.2, 1])
-                          .exponent(8)
+             // Define Required Functions
+             var nodeById = map$1(nodes, function(d){return d.ID;})
 
-           // Create the edges (links) between nodes
-           var link = svg.append("g")
-                         .attr("class", "links")
-                         .attr("id", "links")
-                         .selectAll("path")
-                         .data(edges)
-                         .enter()
-                         .append("path")
-                         .attr("stroke-width", StrokeWidth(edgeWidth))
-                         .style("marker-end",  directed?"url(#end)":"none")
-                         .style("opacity", function(d){
-                            if (d.weight){
-                              d.opacity = aScale(d.weight)
-                              return d.opacity}
-                            else {return 0.3}})
+             // Perform Required Node calculations
+             nodeCalculations(nodes, edges, directed);
 
-           // Create the end markers
-           // Code adapted from http://bl.ocks.org/d3noob/5141278
-           svg.append("svg:defs").selectAll("marker")
-              .data(["end"])      // Different link/path types can be defined here
-              .enter().append("svg:marker")    // This section adds in the arrows
-              .attr("id", String)
-              .attr("viewBox", "0 -5 10 10")
-              .attr("refX", 10)
-              .attr("refY", 0)
-              .attr("markerWidth", 4)
-              .attr("markerHeight", 3)
-              .attr("orient", "auto")
-              .append("svg:path")
-              .attr("d", "M0,-5L10,0L0,5")
-              .attr("fill", "404040")
-              .style("opacity", "0.8")
+             // Create a scale for the nodes' radii
+             // Note: domain depends on sizeBy parameter
+             if (typeof(sizeBy) != 'number'){
+               var rScale = d3.scaleLinear()
+                              .domain([0, d3.max(nodes, function(d){return d[sizeBy]})])
+                              .range([3,20])
+             } else {
+               var rScale = d3.scaleLinear()
+                              .domain([sizeBy, sizeBy])
+                              .range([sizeBy, sizeBy])
+             }
 
-           // Create the nodes
-           var node = svg.append("g")
-                         .attr("class", "nodes")
-                         .selectAll("circle")
-                         .data(nodes)
-                         .enter()
-                         .append("circle")
-                         .attr("fill", "steelblue")
-                         .attr("fill", function(d){return nodeAttr(d, colourBy, cScale)})
-                         .attr("r", function(d){
-                           d.radius = nodeAttr(d, sizeBy, rScale);
-                           return d.radius;})
-                         .on("mouseover", function(d){
-                            d3.select(this)
-                              .attr("r", function(d){
-                                return d.radius + d.radius/4
-                              })
-                              .style("stroke", d3.rgb(255,255,255,0.5))
-                              .style("stroke-width", function(d){return d.radius/2});
+             // Create a scale for the node's colour
+             // This colour palette has been adapted from Stephen Few's Book 'Show Me the Numbers'
+             var cScale = d3.scaleOrdinal(['#5da5da','#faa43a','#60bd68','#f17cb0',
+                                           '#4d4d4d','#b2912f','#decf3f','#f15854', '#ABABAB']);
 
-                            // Fix the node's position
-                            d.fx = d.x;
-                            d.fy = d.y;
+             // Create a scale for the edges' opacity (alpha)
+             var aScale = d3.scalePow()
+                            .domain(d3.extent(edges, function(d){return d.weight;}))
+                            .range([0.2, 1])
+                            .exponent(8)
 
-                            // Make tooltip
-                            var xPos = event.pageX + 20;
-                            var yPos = event.pageY - 20;
-                            makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs);
+             // Create the edges (links) between nodes
+             var link = svg.append("g")
+                           .attr("class", "links")
+                           .attr("id", "links")
+                           .selectAll("path")
+                           .data(edges)
+                           .enter()
+                           .append("path")
+                           .attr("stroke-width", StrokeWidth(edgeWidth))
+                           .style("marker-end",  directed?"url(#end)":"none")
+                           .style("opacity", function(d){
+                              if (d.weight){
+                                d.opacity = aScale(d.weight)
+                                return d.opacity}
+                              else {return 0.3}})
 
-                            // Show the tooltip
-                            if (showToolTip == false){
-                              d3.select("#tooltip").classed("hidden", true);
-                            }
+             // Create the end markers
+             // Code adapted from http://bl.ocks.org/d3noob/5141278
+             svg.append("svg:defs").selectAll("marker")
+                .data(["end"])      // Different link/path types can be defined here
+                .enter().append("svg:marker")    // This section adds in the arrows
+                .attr("id", String)
+                .attr("viewBox", "0 -5 10 10")
+                .attr("refX", 10)
+                .attr("refY", 0)
+                .attr("markerWidth", 4)
+                .attr("markerHeight", 3)
+                .attr("orient", "auto")
+                .append("svg:path")
+                .attr("d", "M0,-5L10,0L0,5")
+                .attr("fill", "404040")
+                .style("opacity", "0.8")
 
-                            // Repel nodes
-                            // repelNodes(simulation, d);
+             // Create the nodes
+             var node = svg.append("g")
+                           .attr("class", "nodes")
+                           .selectAll("circle")
+                           .data(nodes)
+                           .enter()
+                           .append("circle")
+                           .attr("fill", "steelblue")
+                           .attr("fill", function(d){return nodeAttr(d, colourBy, cScale)})
+                           .attr("r", function(d){
+                             d.radius = nodeAttr(d, sizeBy, rScale);
+                             return d.radius;})
+                           .on("mouseover", function(d){
+                              d3.select(this)
+                                .attr("r", function(d){
+                                  return d.radius + d.radius/4
+                                })
+                                .style("stroke", d3.rgb(255,255,255,0.5))
+                                .style("stroke-width", function(d){return d.radius/2});
 
-                            // Make Table
-                            makeNetworkTable(plotType, d.ID, edges)
+                              // Fix the node's position
+                              d.fx = d.x;
+                              d.fy = d.y;
 
-                         })
-                         .on("mouseout", function(d){
-                           d3.select(this)
-                             .attr("r", function(d){return d.radius})
-                             .style("stroke", d3.rgb(255,255,255))
-                             .style("stroke-width", 1)
+                              // Make tooltip
+                              var xPos = event.pageX + 20;
+                              var yPos = event.pageY - 20;
+                              makeNetworkToolTip(xPos, yPos, d, hideNodeAttrs);
 
-                           // Unfix the node's position
-                          //  d.fx = null;
-                          //  d.fy = null;
+                              // Show the tooltip
+                              if (showToolTip == false){
+                                d3.select("#tooltip").classed("hidden", true);
+                              }
 
-                           // Remove the tooltip
-                           d3.select("#tooltip")
-                             .classed("hidden", true);
+                              // Draw svg in corner
+                              // makeMiniGraph(miniGSVG, d, citations)
 
-                           simulation.force("collide", d3.forceCollide().radius([1]));
-                           simulation.alphaTarget(0).restart();
-                         })
-                         .on("dblclick", function(d){
-                           // Unfix the node's position
-                           d.fx = null;
-                           d.fy = null;
-                         })
-                         .on("contextmenu", function(d){
-                           event.preventDefault();
+                              // Repel nodes
+                              // repelNodes(simulation, d);
 
-                           var xPos = event.pageX + "px";
-                           var yPos = event.pageY + "px";
+                              // Make Table
+                              makeNetworkTable(plotType, d.ID, edges)
 
-                          //  document.getElementById("contextMenu").show(100);
-                           d3.select("#contextMenu")
-                             .classed("hidden", false)
-                             .style("top", yPos)
-                             .style("left", xPos)
-                             .attr("query", d.ID)
+                           })
+                           .on("click", function(d){
+                             makeSmallMultiples(plotType, d, citations)
+                           })
+                           .on("mouseout", function(d){
+                             d3.select(this)
+                               .attr("r", function(d){return d.radius})
+                               .style("stroke", d3.rgb(255,255,255))
+                               .style("stroke-width", 1)
+
+                             // Unfix the node's position
+                            //  d.fx = null;
+                            //  d.fy = null;
 
                              // Remove the tooltip
                              d3.select("#tooltip")
                                .classed("hidden", true);
-                         })
-                         .call(d3.drag()
-                           .on("start", dragStarted)
-                           .on("drag", dragged)
-                           .on("end", dragEnded));
 
-           // Add Tick (progress simulation)
-           simulation
-                .nodes(nodes)
-                .on("tick", ticked);
+                             simulation.force("collide", d3.forceCollide().radius([1]));
+                             simulation.alphaTarget(0).restart();
+                           })
+                           .on("dblclick", function(d){
+                             // Unfix the node's position
+                             d.fx = null;
+                             d.fy = null;
+                           })
+                           .on("contextmenu", function(d){
+                             event.preventDefault();
 
-           // Update the Charge Force
-           simulation
-                .force("charge")
-                .strength(function(d){
-                  if (d.degree == 0) {return -3}
-                  var max = d3.max(nodes, function(d){return d.degree})
-                  var factor = Math.pow(0.999, (6*nodes.length-7500)) + 1;
-                  return -factor * Math.cos((Math.PI * d.degree)/(max/2))-4;
-                  return -2500 * Math.cos((Math.PI * d.degree)/(max/2))-4;
-                })
+                             var xPos = event.pageX + "px";
+                             var yPos = event.pageY + "px";
 
-           // Update the Link Force
-           simulation
-                 .force("link")
-                 .links(edges)
-                 .distance(function(d){
-                   // Create a link scale
-                   var lScale = d3.scaleLinear()
-                                  .domain(d3.extent(edges, function(d){
-                                    return (d.source.degree + d.target.degree)/d.weight/d.weight;
-                                  }))
-                                  .range([7, width/2])
+                            //  document.getElementById("contextMenu").show(100);
+                             d3.select("#contextMenu")
+                               .classed("hidden", false)
+                               .style("top", yPos)
+                               .style("left", xPos)
+                               .attr("query", d.ID)
 
-                   // Use filter to copy the edges array
-                   var sortedEdges = edges.filter(function(d){return true});
+                               // Remove the tooltip
+                               d3.select("#tooltip")
+                                 .classed("hidden", true);
+                           })
+                           .call(d3.drag()
+                             .on("start", dragStarted)
+                             .on("drag", dragged)
+                             .on("end", dragEnded));
 
-                   // Sort the edges by the sum of node degrees
-                   sortedEdges.sort(function(a,b){
-                     var asum = a.source.degree + a.target.degree;
-                     var bsum = b.source.degree + b.target.degree;
-                     return asum - bsum;
+             // Add Tick (progress simulation)
+             simulation
+                  .nodes(nodes)
+                  .on("tick", ticked);
+
+             // Update the Charge Force
+             simulation
+                  .force("charge")
+                  .strength(function(d){
+                    if (d.degree == 0) {return -3}
+                    var max = d3.max(nodes, function(d){return d.degree})
+                    var factor = Math.pow(0.999, (6*nodes.length-7500)) + 1;
+                    return -factor * Math.cos((Math.PI * d.degree)/(max/2))-4;
+                    return -2500 * Math.cos((Math.PI * d.degree)/(max/2))-4;
+                  })
+
+             // Update the Link Force
+             simulation
+                   .force("link")
+                   .links(edges)
+                   .distance(function(d){
+                     // Create a link scale
+                     var lScale = d3.scaleLinear()
+                                    .domain(d3.extent(edges, function(d){
+                                      return (d.source.degree + d.target.degree)/d.weight/d.weight;
+                                    }))
+                                    .range([7, width/2])
+
+                     // Use filter to copy the edges array
+                     var sortedEdges = edges.filter(function(d){return true});
+
+                     // Sort the edges by the sum of node degrees
+                     sortedEdges.sort(function(a,b){
+                       var asum = a.source.degree + a.target.degree;
+                       var bsum = b.source.degree + b.target.degree;
+                       return asum - bsum;
+                     })
+                     // Find the 25th quartile value
+                     var edgeQuantile25 = d3.quantile(sortedEdges, 0.25, function(d){return d.source.degree + d.target.degree})
+
+                     // Use filter to copy the nodes array
+                     var sortedNodes = nodes.filter(function(d){return true})
+
+                     // Sort the nodes by their degree
+                     sortedNodes.sort(function(a, b){return a.degree - b.degree;})
+
+                     //Find the 75th quartile value
+                     var nodeQuantile75 = d3.quantile(sortedNodes, 0.75, function(d){return d.degree})
+
+                     // Find the degrees of the connected nodes
+                     sdeg = d.source.degree;
+                     tdeg = d.target.degree;
+                     if (sdeg > nodeQuantile75  && tdeg > nodeQuantile75  && sdeg + tdeg > edgeQuantile25){
+                       return lScale((sdeg+tdeg)/d.weight/d.weight);
+                     }
+
+                     return Math.min(rScale(sdeg), rScale(tdeg)) +
+                            Math.max(rScale(sdeg), rScale(tdeg)) + 5;
                    })
-                   // Find the 25th quartile value
-                   var edgeQuantile25 = d3.quantile(sortedEdges, 0.25, function(d){return d.source.degree + d.target.degree})
 
-                   // Use filter to copy the nodes array
-                   var sortedNodes = nodes.filter(function(d){return true})
+             // Simulation Functions
+             // ********************
+             function ticked() {
+               link.attr("d", function(d){
+                 // Total difference in x and y from source to target
+                 diffX = d.target.x - d.source.x;
+                 diffY = d.target.y - d.source.y;
 
-                   // Sort the nodes by their degree
-                   sortedNodes.sort(function(a, b){return a.degree - b.degree;})
+                 // Length of path from center of source node to center of target node
+                 pathLength = Math.sqrt((diffX*diffX)+(diffY*diffY));
 
-                   //Find the 75th quartile value
-                   var nodeQuantile75 = d3.quantile(sortedNodes, 0.75, function(d){return d.degree})
+                 // x and y distances from center to outside edge of target node
+                 if (pathLength != 0){
+                   offsetX = (diffX * d.target.radius) / pathLength;
+                   offsetY = (diffY * d.target.radius) / pathLength;
+                 } else {
+                   offsetX = (diffX * d.target.radius);
+                   offsetY = (diffY * d.target.radius);
+                 }
 
-                   // Find the degrees of the connected nodes
-                   sdeg = d.source.degree;
-                   tdeg = d.target.degree;
-                   if (sdeg > nodeQuantile75  && tdeg > nodeQuantile75  && sdeg + tdeg > edgeQuantile25){
-                     return lScale((sdeg+tdeg)/d.weight/d.weight);
-                   }
+                 ret = "M" + d.source.x + "," + d.source.y + "L" + (d.target.x - offsetX) + "," + (d.target.y - offsetY);
+                 return ret
+               })
 
-                   return Math.min(rScale(sdeg), rScale(tdeg)) +
-                          Math.max(rScale(sdeg), rScale(tdeg)) + 5;
-                 })
+               // link
+               //    .attr("x1", function(d) { return d.source.x; })
+               //    .attr("y1", function(d) { return d.source.y; })
+               //    .attr("x2", function(d) { return d.target.x; })
+               //    .attr("y2", function(d) { return d.target.y; });
 
-           // Simulation Functions
-           // ********************
-           function ticked() {
-             link.attr("d", function(d){
-               // Total difference in x and y from source to target
-               diffX = d.target.x - d.source.x;
-               diffY = d.target.y - d.source.y;
+               node
+                  .attr("cx", function(d) {return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
+                  .attr("cy", function(d) {return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
+             }
 
-               // Length of path from center of source node to center of target node
-               pathLength = Math.sqrt((diffX*diffX)+(diffY*diffY));
-
-               // x and y distances from center to outside edge of target node
-               if (pathLength != 0){
-                 offsetX = (diffX * d.target.radius) / pathLength;
-                 offsetY = (diffY * d.target.radius) / pathLength;
-               } else {
-                 offsetX = (diffX * d.target.radius);
-                 offsetY = (diffY * d.target.radius);
-               }
-
-               ret = "M" + d.source.x + "," + d.source.y + "L" + (d.target.x - offsetX) + "," + (d.target.y - offsetY);
-               return ret
-             })
-
-             // link
-             //    .attr("x1", function(d) { return d.source.x; })
-             //    .attr("y1", function(d) { return d.source.y; })
-             //    .attr("x2", function(d) { return d.target.x; })
-             //    .attr("y2", function(d) { return d.target.y; });
-
-             node
-                .attr("cx", function(d) {return d.x = Math.max(radius, Math.min(width - radius, d.x)); })
-                .attr("cy", function(d) {return d.y = Math.max(radius, Math.min(height- radius, d.y)); });
-           }
-
-           makePanel(nodes, edges, plotType)
+             makePanel(nodes, edges, plotType)
+           })
          })
        })
 
@@ -616,11 +663,6 @@
            d3.select("#tooltip")
              .classed("hidden", true);
          })
-        //  .on("click", function(d){
-        //    makeStandardTable(d.year, plotType);
-         //
-        //  });
-
 
     }
 
@@ -818,12 +860,10 @@
       netlab.id = "netLab"
       title.appendChild(netlab)
 
-      var auth = document.createElement('div')
-      auth.appendChild(document.createTextNode('Reid McIlroy-Young, John McLevey, & Jillian Anderson'))
-      auth.id = "titleAuthors"
-      title.appendChild(auth)
-
-
+      // var auth = document.createElement('div')
+      // auth.appendChild(document.createTextNode('Reid McIlroy-Young, John McLevey, & Jillian Anderson'))
+      // auth.id = "titleAuthors"
+      // title.appendChild(auth)
 
 
       // title.appendChild(document.createTextNode("http://networkslab.org/metaknowledge/"))
@@ -838,15 +878,45 @@
       var panel = document.createElement('div');
       panel.id = plotType + "Panel";
       panel.className = "panel";
+
+      var panelIcon = document.createElement('div')
+      panelIcon.id = plotType + "PanelIcon"
+      panelIcon.className = "fa fa-lg fa-cog icon"
+      panel.appendChild(panelIcon)
+
       visArea.appendChild(panel);
+
 
       // Create the plot
       var plot = document.createElement('div')
-      plot.id = plotType + "Plot"
-      plot.className = "plot RPYS";
+      plot.id = plotType + "Plot";
+      if (plotType == "network"){
+        plot.className = "plot network";
+      } else{
+        plot.className = "plot RPYS";
+      }
       visArea.appendChild(plot);
 
+      // Create the other mini graphs
+      var miniG = document.createElement('div')
+      miniG.id = plotType + "MiniGraph"
+      miniG.className = "miniGraph"
+
+      // var miniGIcon = document.createElement('div')
+      // miniGIcon.id = plotType + "MiniGraphIcon"
+      // miniGIcon.className = "fa fa-lg fa-bar-chart icon"
+      //
+      // miniG.appendChild(miniGIcon)
+      //
+      visArea.appendChild(miniG)
       container.appendChild(visArea);
+
+      // Create the small multiples' div
+      var smallMult = document.createElement('div')
+      smallMult.id = plotType + "smallMultiples"
+      smallMult.className = "smallMultiples"
+      container.appendChild(smallMult)
+
 
       // Create the table
       var table = document.createElement('div')
@@ -1340,6 +1410,219 @@
 
     }
 
+    // MiniGraph Creation
+    // ******************
+    function makeMiniGraph(svg, node, data, type, xrange=0, yrange=0){
+      // Clear canvas
+      svg.selectAll("*").remove()
+
+      // // Filter the citations
+      // var data = citations.filter(function(d){
+      //   return d[type].toUpperCase().includes(node.ID.toUpperCase());
+      // })
+      //
+      // // Sort the citations
+      // var data = data.sort(function(a,b){return a.CPY - b.CPY;})
+
+      if (typeof(xrange) == "object"){
+        xScale = d3.scaleLinear()
+                   .domain([xrange[0], xrange[1]])
+                   .range([50,250])
+      } else {
+        xScale = d3.scaleLinear()
+                   .domain(d3.extent(data, function(d){return d.CPY}))
+                   .range([50, 250])
+      }
+
+      // Create the YScale
+      if (typeof(yrange) == "object"){
+        yScale = d3.scaleLinear()
+                   .domain([yrange[0], yrange[1]])
+                   .range([200,50])
+      } else {
+        yScale = d3.scaleLinear()
+                   .domain([0, d3.max(data, function(d){return +d["num-cites"]})])
+                   .range([200,50])
+      }
+
+      // Find the total years
+      var totalYears = d3.max(data, function(d){return d.CPY}) -
+                       d3.min(data, function(d){return d.CPY}) + 1
+      if(typeof(xrange)=="object"){
+        var totalYears = xrange[1] - xrange[0] + 1
+      }
+
+      // Set some import dimensions
+      var barWidth = 100*(1+2*totalYears)/totalYears/totalYears
+
+      // Make Axes
+      var formatAsChar = d3.format("c");
+
+      var xAxis = d3.axisBottom(xScale)
+                    .tickFormat(formatAsChar)
+                    .tickArguments([5])
+
+      var yAxis = d3.axisLeft(yScale)
+                    // .tickSizeInner(-200-barWidth)
+                    .tickFormat(formatAsChar)
+                    .tickArguments([4])
+                    // .tickValues([0,10,20,30])
+
+      svg.append("g")
+         .attr("class", "y axis smallMult")
+         .attr("transform", "translate(50,0)")
+         .call(yAxis);
+
+      svg.append("g")
+         .attr("class", "x axis")
+         .attr("transform", "translate(" + barWidth/2 + ",200)")
+         .call(xAxis)
+
+      svg.selectAll("rect")
+         .data(data)
+         .enter()
+         .append("rect")
+         .attr("x", function(d){return xScale(d.CPY)})
+         .attr("y", function(d){return yScale(d["num-cites"])})
+         .attr("width", barWidth)
+         .attr("height", function(d){
+           return 200 - yScale(d["num-cites"])})
+        //  .attr("fill", "#77787B")
+        //  .attr("fill", "#5D6D7E")
+         .attr("fill", "#212F3D")
+         .attr("fill", "#4D4D4D")
+         .attr("stroke", "white")
+         .attr("stroke-width", 0.5)
+
+      // Make the title
+      svg.append("text")
+         .attr("x", 150)
+         .attr("y", 32)
+         .attr("font-size", 11)
+         .attr("text-anchor", "middle")
+         .text(node);
+
+    }
+
+
+    // Small Multiples
+    // ***************
+    function makeSmallMultiples(plotType, node, citations){
+
+        var TitleDiv = d3.select("#" + plotType + "MiniGraph")
+                         .append("div")
+                         .attr("id", "SmallMultTitles")
+                         .append("p")
+                         .attr("class", "title")
+                         .append("text")
+                         .text("Citation History")
+                         .classed("title", true)
+      }
+
+      // Create the Article Citation History Graph
+      // ****************************************
+      var svgArticle = d3.select("#" + plotType + "MiniGraph")
+                         .append("svg")
+                         .attr("preserveAspectRatio", "xMinYMin meet")
+                         .attr("viewBox", "0 0 300 225 ")
+                         .attr("id", node.ID + "smallMultipleArticle")
+                         .classed("smallMultiples", true)
+                         .classed("node", true)
+                         .on("dblclick", function(d){
+                           this.remove()
+                         })
+
+      // Determine the extent of values
+      var ymax = d3.max(citations, function(d){return +d["num-cites"]})
+      var xrange = d3.extent(citations, function(d){return +d["CPY"]})
+
+      // Filter the citations
+      var data = citations.filter(function(d){
+        return d["cite-string"].toUpperCase().includes(node.ID.toUpperCase());
+      })
+      // Sort the citations
+      var data = data.sort(function(a,b){return a.CPY - b.CPY;})
+
+      makeMiniGraph(svgArticle, node.ID, data, "cite-string", xrange,[0,ymax])
+
+      // Create the Author Citation History Graph
+      // ****************************************
+      var svgAuthor = d3.select("#" + plotType + "MiniGraph")
+                         .append("svg")
+                         .attr("preserveAspectRatio", "xMinYMin meet")
+                         .attr("viewBox", "0 0 300 225 ")
+                         .attr("id", node.ID + "smallMultipleAuthor")
+                         .classed("smallMultiples", true)
+                         .classed("author", true)
+                         .on("dblclick", function(d){
+                           this.remove()
+                         })
+
+      // Filter the citations
+      var data = citations.filter(function(d){
+        return d["author"].toUpperCase().includes(node.ID.split(",")[0].toUpperCase());
+      })
+
+      // Aggregate the data
+      var authorCitsByYear = {};
+      data.forEach(function(a){
+        if (a['CPY'] in authorCitsByYear){
+          authorCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
+          // authorCitsByYear[a['CPY']] += Number(a["num-cites"])
+        } else {
+          var obj = {"CPY": Number(a['CPY']), "num-cites": Number(a["num-cites"])}
+          authorCitsByYear[a['CPY']] = obj;
+          // authorCitsByYear[a['CPY']] = Number(a["num-cites"])
+        }
+      })
+
+      // Convert to an array of objects
+      var array = Object.values(authorCitsByYear)
+
+      // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
+      var xrange = d3.extent(citations, function(d){return +d["CPY"]})
+
+      makeMiniGraph(svgAuthor, node.ID.split(",")[0], array, "author", xrange,[0,500])
+
+
+      // Create the Community Citation History Graph
+      // *******************************************
+      var svgComm = d3.select("#" + plotType + "MiniGraph")
+                      .append("svg")
+                      .attr("preserveAspectRatio", "xMinYMin meet")
+                      .attr("viewBox", "0 0 300 225 ")
+                      .attr("id", node.ID + "smallMultipleCommunity")
+                      .classed("smallMultiples", true)
+                      .classed("community", true)
+                      .on("dblclick", function(d){
+                        this.remove()
+                      })
+
+      // Filter the citations
+      var data = citations.filter(function(d){
+        return d["community"] == node["community"];
+      })
+
+      // Aggregate the data
+      var commCitsByYear = {};
+      data.forEach(function(a){
+        if (a['CPY'] in commCitsByYear){
+          commCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
+        } else {
+          var obj = {"CPY": Number(a['CPY']), "num-cites": Number(a["num-cites"])}
+          commCitsByYear[a['CPY']] = obj;
+        }
+      })
+
+      // Convert to an array of objects
+      var Commarray = Object.values(commCitsByYear)
+
+      // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
+      var xrange = d3.extent(citations, function(d){return +d["CPY"]})
+
+      makeMiniGraph(svgComm, "Community " + node["community"], Commarray, "community", xrange,[0,500])
+
+    }
 
     // Table Functions
     // ***************
@@ -1780,7 +2063,8 @@
       d3.select("#" + plotType + "Plot").selectAll("circle")
         //  .classed("hidden", !showIsolates && function(d){console.log(d)
         //    return +d.degree <= threshold});
-         .classed("hidden", !showIsolates && function(d){return +d.maxWeight < threshold});
+         .classed("hidden", !showIsolates && function(d){
+           return +d.maxWeight < threshold});
       showIsolatesGlobal = showIsolates
       nodesGlobal['isolates'] = showIsolates
     }

@@ -27,6 +27,7 @@ tr:hover        {background-color: #f3f3f3;
 
 .container.hidden,
 .panel.hidden,
+.miniGraph.hidden,
 .hidden         { display: none;
                 }
 .links line,
@@ -38,11 +39,11 @@ path            { stroke: #404040;
                 }
 .container      { display: inline-block;
                   position: relative;
-                  width: 80%;
+                  width: 95%;
                   padding-bottom: 45%;
                   vertical-align: top;
-                  margin-left: 10%;
-                  margin-right: 10%;
+                  margin-left: 5%;
+                  margin-right: 5%;
                   overflow-x: hidden;
                   overflow-y: scroll;
                 }
@@ -56,9 +57,10 @@ path            { stroke: #404040;
                   overflow-y: scroll;
                   border: solid gainsboro;
                 }
-div.panel       { display: inline-block;
+div.panel,
+div.miniGraph   { display: inline-block;
                   position: relative;
-                  width: 0%;
+                  width: 15%;
                   vertical-align: top;
                   /*margin: 1%;*/
                   padding-top: 10%;
@@ -67,7 +69,10 @@ div.panel       { display: inline-block;
                   overflow: hidden;
                   z-index: 1;
                   white-space: nowrap;
+                  /*background-color: gainsboro;*/
                   }
+div.panelTitle  { width: 15%;}
+div.miniGraph   { width: 25%;}
 .icon           { margin: 3px;
                   /*color: steelblue;*/
                   margin-left: 0%;
@@ -118,10 +123,10 @@ span.range      { position: absolute;
                 }
 .plot           { display: inline-block;
                   position: relative;
-                  width: 75%;
-                  margin-left: 12.5%;
+                  width: 60%;
+                  /*margin-left: 12.5%;*/
                 }
-.plot.network   { padding-bottom: 75%;
+.plot.network   { padding-bottom: 60%;
                 }
 .plot.RPYS      { padding-bottom: 37.5%;
                   overflow-x: visible;
@@ -252,3 +257,48 @@ a               { text-decoration: none;
                   text-rendering: optimizeLegibility;
                 }
 #title          { margin-bottom: 5px;}
+
+.fa-bar-chart,
+.fa-cog         { color: #4C4C4C;
+                  top: 0px;
+                  position: absolute;
+                  margin: 10px;
+                }
+.fa-cog         { left: 0px;
+                }
+.fa-bar-chart   { right: 0px}
+
+#networkMinigraphSVG
+                { width: 100%;
+                  position: absolute;
+                  top: 0;
+                  right: 0;
+                  background-color: white;
+                }
+
+div.smallMultiples
+                { width: 100%;
+                }
+svg.smallMultiples
+                { width: 100%;
+                  margin: 0.5%;
+                  position: absolute;
+                }
+svg.smallMultiples.node
+                { top: 0px;
+                }
+svg.smallMultiples.community
+                { top: 200px;
+                }
+svg.smallMultiples.author
+                { top: 400px;
+                }
+.smallMult path,
+.smallMult line { display: initial;
+                  stroke: lightgrey;
+                  opacity: 1;
+                  stroke-width: 1.5px;
+                }
+
+.smallMult     { font-size: 2em;
+               }
