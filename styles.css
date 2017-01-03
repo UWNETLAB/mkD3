@@ -61,39 +61,40 @@ div.panel,
 div.miniGraph   { display: inline-block;
                   position: relative;
                   vertical-align: top;
-                  /*margin: 1%;*/
+                  padding-top: 5%;
+                  padding-bottom: 36.2%;
                   overflow: hidden;
                   z-index: 1;
                   white-space: nowrap;
-                  /*background-color: gainsboro;*/
+                  width: 20%;
                   }
-div.panel       { padding-top: 10%;
-                  padding-bottom: 33%;
+div.panel       {
                   border-right: solid 2px gainsboro;
-                  width: 14%;
                 }
-
+div.miniGraph   { border-left: solid 2px gainsboro;
+                  padding-bottom: 4.7%;
+                }
 div.panelTitle  { width: 15%;}
-div.miniGraph   { width: 25%;}
 .icon, .fa       { margin: 3px;
                   /*color: steelblue;*/
                   margin-left: 0%;
                 }
 .iconText       { margin: 3px;
                 }
-.panelTitle     { margin-left: 10px;
+div.icons    { margin-left: 11px;}
+.panelTitle     { margin-left: 5%;
                   font-weight: bold;
                   margin-top: 18px;
                   margin-bottom: 5px;
                   font-size: 1.1em;
                 }
-.panelOption    { margin-left: 15px;
-                  margin-right: 10px;
+.panelOption    { margin-left: 5%;
+                  margin-right: 5%;
                   font-weight: lighter;
                   white-space: nowrap;
                   font-size: 0.9em;
                 }
-.checkBox       { margin-right: 10px;
+.checkBox       { margin-right: 5%;
                   position: absolute;
                   right: 0px;
                 }
@@ -105,15 +106,15 @@ div.miniGraph   { width: 25%;}
                   line-height: 1;
                   border-radius: 0;
                   height: 18px;
-                  margin-right: 5px;
-                  margin-left: 5px;
+                  margin-right: 2.5%;
+                  margin-left: 2.5%;
                   vertical-align: middle;
                   position: absolute;
                   right: 0px;
                 }
 input#threshold.range
-                { margin-right: 10px;
-                  margin-left: 20px;
+                { margin-right: 5%;
+                  margin-left: 10%;
                   position: absolute;
                   width: 60%;
                   left: 0px;
@@ -121,14 +122,14 @@ input#threshold.range
                 }
 span.range      { position: absolute;
                   right: 0px;
-                  margin-right: 10px;
+                  margin-right: 5%;
                 }
 .plot           { display: inline-block;
                   position: relative;
-                  width: 60%;
+                  width: 79%;
                   /*margin-left: 12.5%;*/
                 }
-.plot.network   { padding-bottom: 60%;
+.plot.network   { padding-bottom: 59%;
                 }
 .plot.RPYS      { padding-bottom: 37.5%;
                   overflow-x: visible;
@@ -266,7 +267,7 @@ a               { text-decoration: none;
                   position: absolute;
                   margin: 10px;
                 }
-.fa-cog         { left: 0px;
+.fa-cog         { left: 3px;
                 }
 .fa-bar-chart   { right: 0px}
 
@@ -282,8 +283,8 @@ div.smallMultiples
                 { width: 100%;
                 }
 svg.smallMultiples
-                { width: 80%;
-                  margin-left: 10%;
+                { width: 100%;
+                  /*margin-left: 5%;*/
                   /*position: absolute;*/
                 }
 /*svg.smallMultiples.node
@@ -303,8 +304,23 @@ svg.smallMultiples.author
                 }
 
 .smallMult.subTitle
-                { font-size: 1em;
+                { font-size: 0.9em;
                   text-align: center;
                   font-weight: bold;
                   margin: 0px;
+                  /*margin-top: 10px;*/
+                }
+div.statistics  {
+                  font-weight: lighter;
+                  font-size: 0.9 em;
+                }
+p.statistics    { margin-top: 0.5em;
+                  text-align: left;
+                  margin-left: 5%;
+                }
+.smallMult.title{ margin-bottom: 0.5em;
+                  font-size: 1.1em;
+                  text-align: left;
+                  margin-left: 5%;
+                  margin-bottom: 20px;
                 }

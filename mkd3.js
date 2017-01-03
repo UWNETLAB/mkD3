@@ -41,7 +41,7 @@
     // ********************
     var showToolTip = true,
         showTable   = true,
-        showOptionPanel = false
+        showOptionPanel = true
     // Initialize RPYS Variables
     var rpysFile = undefined;
     var citFile = undefined;
@@ -403,7 +403,7 @@
                               }
 
                               // Make Small multiples
-                              makeSmallMultiples(plotType, d, citations)
+                              makeSmallMultiples(plotType, d, citations, nodes.length, edges.length)
 
                               // Repel nodes
                               // repelNodes(simulation, d);
@@ -875,6 +875,7 @@
       var panelIcon = document.createElement('div')
       panelIcon.id = plotType + "PanelIcon"
       panelIcon.className = "fa fa-lg fa-cog icon"
+      panelIcon.onclick = function(d){iconClick("cog", showOptionPanel, plotType)}
       panel.appendChild(panelIcon)
 
       visArea.appendChild(panel);
@@ -890,18 +891,20 @@
       }
       visArea.appendChild(plot);
 
-      // Create the other mini graphs
-      var miniG = document.createElement('div')
-      miniG.id = plotType + "MiniGraph"
-      miniG.className = "miniGraph"
+      if (plotType == "network"){
+        // Create the other mini graphs
+        var miniG = document.createElement('div')
+        miniG.id = plotType + "MiniGraph"
+        miniG.className = "miniGraph"
 
-      // var miniGIcon = document.createElement('div')
-      // miniGIcon.id = plotType + "MiniGraphIcon"
-      // miniGIcon.className = "fa fa-lg fa-bar-chart icon"
-      //
-      // miniG.appendChild(miniGIcon)
-      //
-      visArea.appendChild(miniG)
+        var miniGIcon = document.createElement('div')
+        miniGIcon.id = plotType + "MiniGraphIcon"
+        miniGIcon.className = "fa fa-lg fa-bar-chart icon"
+
+        miniG.appendChild(miniGIcon)
+        visArea.appendChild(miniG)
+      }
+
       container.appendChild(visArea);
 
       // Create the small multiples' div
@@ -1071,8 +1074,8 @@
     }
 
     function initIcons(plotType){
-      // Cog Icon
-      makeIcon("cog", "Options Panel", showOptionPanel, plotType)
+      // // Cog Icon
+      // makeIcon("cog", "Options Panel", showOptionPanel, plotType)
 
       // Table Icon
       makeIcon("table", "Table", showTable, plotType)
@@ -1123,7 +1126,7 @@
       var icon = document.createElement('span');
       icon.id = type + "Icon";
       icon.className = "fa fa-" + type + " fa-lg icon";
-      icon.style.color = bool?"steelblue":"darkgrey"
+      icon.style.color = bool?"#4D4D4D":"darkgrey"
       icon.onclick = function(d){
         iconClick(type, bool, plotType)};
 
@@ -1135,12 +1138,13 @@
       label.appendChild(text);
 
       var div = document.createElement('div')
+      div.className = "icons"
       div.appendChild(icon)
       div.appendChild(label)
 
-      var firstChild = document.getElementById(plotType + "TableContainer")
-      var parent = document.getElementById(plotType + "Container")
-      parent.insertBefore(div, firstChild)
+      var firstChild = document.getElementById(plotType + "Panel")
+      var parent = document.getElementById(plotType + "Panel")
+      parent.appendChild(div)
       // parent.appendChild(div)
       // document.body.appendChild(div)
     }
@@ -1152,7 +1156,7 @@
         showToolTip = !showToolTip;
         // Update the icon colour
         d3.selectAll("#info-circleIcon")
-          .style("color", function(d){return showToolTip?"steelblue":"darkgrey"})
+          .style("color", function(d){return showToolTip?"#4D4D4D":"darkgrey"})
      }
       else if (type == "cog"){
         // Update the value of showOptionPanel
@@ -1160,23 +1164,37 @@
 
        // Update the icon colour
         d3.selectAll("#cogIcon")
-          .style("color", function(d){return showOptionPanel?"steelblue":"darkgrey"})
+          .style("color", function(d){return showOptionPanel?"#4D4D4D":"darkgrey"})
 
         // Hide the console & adjust the plot
+        var panWidth = "20px"
+        var curMargin = parseFloat(d3.select("#" + plotType + "Plot").style("margin-left"))
+        var curWidth = parseFloat(d3.select("#" + plotType + "Panel").style("width"))
+
         d3.select("#" + plotType + "Panel")
-          .style("width", function(d){return showOptionPanel?"0%":"22%"})
+          .style("width", function(d){return showOptionPanel?"0%":"20%"})
           .style("border-right", "solid 2px gainsboro")
           .transition()
           .duration(500)
-          .styleTween("width", function(d){return showOptionPanel?d3.interpolate("0%", "22%"):d3.interpolate("22%", "0%")})
+          .styleTween("width", function(d){return showOptionPanel?d3.interpolate("0%", "20%"):d3.interpolate("20%", "0%")})
           // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("48%", "25%"):d3.interpolate("25%", "48%")})
           .transition()
           .delay(100)
           .style("border-right", function(d){return showOptionPanel?"solid 2px gainsboro":"none"})
+
         d3.select("#" + plotType + "Plot")
           .transition()
           .duration(500)
-          .styleTween("margin-left", function(d){return showOptionPanel?d3.interpolate("12.5%", "0%"):d3.interpolate("0%", "12.5%")})
+          .styleTween("margin-left", function(d){
+            if (parseInt(curWidth)==0){
+              return d3.interpolate(curMargin + "px", curWidth/2 + "px")
+            } else {
+              return d3.interpolate(curMargin + "px", curMargin + curWidth/2 + "px")
+            }
+            // return showOptionPanel?d3.interpolate(curMargin+"px", "0%")
+            //                       :d3.interpolate("0%", curMargin+curWidth/2+"px")})
+            return showOptionPanel?d3.interpolate("10%", "0%")
+                                  :d3.interpolate("0%", "10%")})
           // .styleTween("width", function(d){return showOptionPanel?d3.interpolate("97%","75%"):d3.interpolate("75%","97%")})
           // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("100%","77%"):d3.interpolate("77%","100%")})
       }
@@ -1185,7 +1203,7 @@
         showTable = !showTable;
         // Update the icon colour
         d3.selectAll("#tableIcon")
-          .style("color", function(d){return showTable?"steelblue":"darkgrey"})
+          .style("color", function(d){return showTable?"#4D4D4D":"darkgrey"})
         // Show/Hide the table
         d3.selectAll("#" + plotType + "TableContainer")
           .classed("hidden", !showTable)
@@ -1500,17 +1518,40 @@
 
     // Small Multiples
     // ***************
-    function makeSmallMultiples(plotType, node, citations){
-      if (document.getElementById("networkMiniGraph").childNodes.length == 0){
+    function makeSmallMultiples(plotType, node, citations, numNodes, numEdges){
+      if (document.getElementById("networkMiniGraph").childNodes.length == 1){
+        // // Basic Stats Title
+        // var StatTitleDiv = d3.select("#" + plotType + "MiniGraph")
+        //                      .append("div")
+        //                      .attr("id", "smStatTitle")
+        //                      .append("p")
+        //                      .attr("class", "smallMult title")
+        //                      .append("text")
+        //                      .text("Graph Statistics")
+        //
+        // // Basic Stats Div
+        // var density = numEdges/((numNodes*(numNodes-1)/2))
+        // var StatDiv = d3.select("#" + plotType + "MiniGraph")
+        //                  .append("div")
+        //                  .attr("id", "smBasicStats")
+        //                  .attr("class", "statistics")
+        //                  .append("p")
+        //                  .attr("class", "smallMult statistics")
+        //                  .append("text")
+        //                  .html("Nodes: <b>" + numNodes + "</b><br/>")
+        //                  .append("text")
+        //                  .html("Edges: <b>" + numEdges + "</b><br/>")
+        //                  .append("text")
+        //                  .html("Density: <b>" + density.toFixed(3) + "</b><br/>")
+        //
         // Citation History Title Div
         var TitleDiv = d3.select("#" + plotType + "MiniGraph")
                          .append("div")
                          .attr("id", "smallMultiplesTitle")
                          .append("p")
-                         .attr("class", "title")
+                         .attr("class", "smallMult title")
                          .append("text")
-                         .text("Citation History")
-
+                         .html("Citations within </br> Record Collection")
         // Node Title Div
         var NodeTitleDiv = d3.select("#" + plotType + "MiniGraph")
                              .append("div")
@@ -1537,19 +1578,19 @@
                          .append("div")
                          .attr("id", "smCommSVGDiv")
 
-        // Author Title Div
-        var AuthTitleDiv = d3.select("#" + plotType + "MiniGraph")
-                             .append("div")
-                             .attr("id", "smAuthTitle")
-                             .append("p")
-                             .attr("class", "smallMult subTitle")
-                             .append("text")
-                             .text("Author")
-
-        // Author SVG Div
-        var AuthSVGDiv = d3.select("#" + plotType + "MiniGraph")
-                         .append("div")
-                         .attr("id", "smAuthSVGDiv")
+        // // Author Title Div
+        // var AuthTitleDiv = d3.select("#" + plotType + "MiniGraph")
+        //                      .append("div")
+        //                      .attr("id", "smAuthTitle")
+        //                      .append("p")
+        //                      .attr("class", "smallMult subTitle")
+        //                      .append("text")
+        //                      .text("Author")
+        //
+        // // Author SVG Div
+        // var AuthSVGDiv = d3.select("#" + plotType + "MiniGraph")
+        //                  .append("div")
+        //                  .attr("id", "smAuthSVGDiv")
       }
 
 
@@ -1580,7 +1621,7 @@
       // Sort the citations
       var data = data.sort(function(a,b){return a.CPY - b.CPY;})
 
-      makeMiniGraph(svgNode, node.ID, data, "cite-string", xrange,[0,ymax])
+      makeMiniGraph(svgNode, node.ID, data, "cite-string")
 
 
       // Create the Community Citation History Graph
@@ -1621,50 +1662,50 @@
       // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
       var xrange = d3.extent(citations, function(d){return +d["CPY"]})
 
-      makeMiniGraph(svgComm, "Article Community ID = " + node["community"], Commarray, "community", xrange,[0,400])
+      makeMiniGraph(svgComm, "Article Community ID = " + node["community"], Commarray, "community")
 
       // Create the Author Citation History Graph
       // ****************************************
       // Remove Old Graph
-      d3.select("#smAuthSVGDiv")
-        .select("svg")
-        .remove()
-      var svgAuthor = d3.select("#smAuthSVGDiv")
-                        .append("svg")
-                        .attr("preserveAspectRatio", "xMinYMin meet")
-                        .attr("viewBox", "0 0 300 225 ")
-                        .attr("id", "smAuthSVG")
-                        .classed("smallMultiples", true)
-                        .classed("author", true)
-                        .on("dblclick", function(d){
-                        this.remove()
-                        })
-
-      // Filter the citations
-      var data = citations.filter(function(d){
-        return d["author"].toUpperCase().includes(node.ID.split(",")[0].toUpperCase());
-      })
-
-      // Aggregate the data
-      var authorCitsByYear = {};
-      data.forEach(function(a){
-        if (a['CPY'] in authorCitsByYear){
-          authorCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
-          // authorCitsByYear[a['CPY']] += Number(a["num-cites"])
-        } else {
-          var obj = {"CPY": Number(a['CPY']), "num-cites": Number(a["num-cites"])}
-          authorCitsByYear[a['CPY']] = obj;
-          // authorCitsByYear[a['CPY']] = Number(a["num-cites"])
-        }
-      })
-
-      // Convert to an array of objects
-      var array = Object.values(authorCitsByYear)
-
-      // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
-      var xrange = d3.extent(citations, function(d){return +d["CPY"]})
-
-      makeMiniGraph(svgAuthor, node.ID.split(",")[0], array, "author", xrange,[0,400])
+      // d3.select("#smAuthSVGDiv")
+      //   .select("svg")
+      //   .remove()
+      // var svgAuthor = d3.select("#smAuthSVGDiv")
+      //                   .append("svg")
+      //                   .attr("preserveAspectRatio", "xMinYMin meet")
+      //                   .attr("viewBox", "0 0 300 225 ")
+      //                   .attr("id", "smAuthSVG")
+      //                   .classed("smallMultiples", true)
+      //                   .classed("author", true)
+      //                   .on("dblclick", function(d){
+      //                   this.remove()
+      //                   })
+      //
+      // // Filter the citations
+      // var data = citations.filter(function(d){
+      //   return d["author"].toUpperCase().includes(node.ID.split(",")[0].toUpperCase());
+      // })
+      //
+      // // Aggregate the data
+      // var authorCitsByYear = {};
+      // data.forEach(function(a){
+      //   if (a['CPY'] in authorCitsByYear){
+      //     authorCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
+      //     // authorCitsByYear[a['CPY']] += Number(a["num-cites"])
+      //   } else {
+      //     var obj = {"CPY": Number(a['CPY']), "num-cites": Number(a["num-cites"])}
+      //     authorCitsByYear[a['CPY']] = obj;
+      //     // authorCitsByYear[a['CPY']] = Number(a["num-cites"])
+      //   }
+      // })
+      //
+      // // Convert to an array of objects
+      // var array = Object.values(authorCitsByYear)
+      //
+      // // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
+      // var xrange = d3.extent(citations, function(d){return +d["CPY"]})
+      //
+      // makeMiniGraph(svgAuthor, node.ID.split(",")[0], array, "author", xrange,[0,400])
 
 
 
@@ -1745,7 +1786,7 @@
             var yearData = data.filter(function(d){
               return (Math.floor(d.CPY) == CPY && Math.floor(d.RPY) == RPY);
             })
-
+            console.log(yearData)
             // Sort the years data by number of citations
             yearData =  yearData.sort(function(a, b){
                           return b["num-cites"] - a["num-cites"];
