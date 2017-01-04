@@ -64,7 +64,7 @@ div.miniGraph   { display: inline-block;
                   padding-top: 5%;
                   padding-bottom: 36.2%;
                   overflow: hidden;
-                  z-index: 1;
+                  z-index: 0.9;
                   white-space: nowrap;
                   width: 20%;
                   }
@@ -73,6 +73,8 @@ div.panel       {
                 }
 div.miniGraph   { border-left: solid 2px gainsboro;
                   padding-bottom: 4.7%;
+                  position: absolute;
+                  right: 0;
                 }
 div.panelTitle  { width: 15%;}
 .icon, .fa       { margin: 3px;
@@ -81,7 +83,10 @@ div.panelTitle  { width: 15%;}
                 }
 .iconText       { margin: 3px;
                 }
-div.icons    { margin-left: 11px;}
+div.icons       { margin-left: 11px;}
+.panelIcon      { position: absolute;
+                  z-index: 1;
+                }
 .panelTitle     { margin-left: 5%;
                   font-weight: bold;
                   margin-top: 18px;
@@ -126,13 +131,14 @@ span.range      { position: absolute;
                 }
 .plot           { display: inline-block;
                   position: relative;
-                  width: 79%;
                   /*margin-left: 12.5%;*/
                 }
 .plot.network   { padding-bottom: 59%;
+                  width: 59%;
                 }
 .plot.RPYS      { padding-bottom: 37.5%;
                   overflow-x: visible;
+                  width: 79%;
                 }
 .console        { display: inline-block;
                   position: relative;

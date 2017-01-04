@@ -41,7 +41,8 @@
     // ********************
     var showToolTip = true,
         showTable   = true,
-        showOptionPanel = true
+        showOptionPanel = true,
+        showGraphPanel = true
     // Initialize RPYS Variables
     var rpysFile = undefined;
     var citFile = undefined;
@@ -199,7 +200,6 @@
        // This initializes the divs everything will be placed in
        initHead()
        initDivs(plotType)
-      //  initIcons(plotType)
        initNetworkTable(plotType)
        initContextMenu(plotType)
        initToolTip(plotType)
@@ -867,19 +867,18 @@
       visArea.id = plotType + "VisArea";
       visArea.className = "visArea";
 
+      // Create the cog icon
+      var panelIcon = document.createElement('div')
+      panelIcon.id = plotType + "PanelIcon"
+      panelIcon.className = "fa fa-lg fa-cog panelIcon icon"
+      panelIcon.onclick = function(d){iconClick("cog", showOptionPanel, plotType)}
+      visArea.appendChild(panelIcon)
+
       // Create the Options Panel
       var panel = document.createElement('div');
       panel.id = plotType + "Panel";
       panel.className = "panel";
-
-      var panelIcon = document.createElement('div')
-      panelIcon.id = plotType + "PanelIcon"
-      panelIcon.className = "fa fa-lg fa-cog icon"
-      panelIcon.onclick = function(d){iconClick("cog", showOptionPanel, plotType)}
-      panel.appendChild(panelIcon)
-
       visArea.appendChild(panel);
-
 
       // Create the plot
       var plot = document.createElement('div')
@@ -892,16 +891,17 @@
       visArea.appendChild(plot);
 
       if (plotType == "network"){
+        // Create the graph panel icon
+        var miniGIcon = document.createElement('div')
+        miniGIcon.id = plotType + "MiniGraphIcon"
+        miniGIcon.className = "fa fa-lg fa-bar-chart panelIcon icon"
+        miniGIcon.onclick = function(d){iconClick("bar-chart", showGraphPanel , plotType)}
+        visArea.appendChild(miniGIcon)
+
         // Create the other mini graphs
         var miniG = document.createElement('div')
         miniG.id = plotType + "MiniGraph"
         miniG.className = "miniGraph"
-
-        var miniGIcon = document.createElement('div')
-        miniGIcon.id = plotType + "MiniGraphIcon"
-        miniGIcon.className = "fa fa-lg fa-bar-chart icon"
-
-        miniG.appendChild(miniGIcon)
         visArea.appendChild(miniG)
       }
 
@@ -1162,14 +1162,9 @@
         // Update the value of showOptionPanel
         showOptionPanel = !showOptionPanel;
 
-       // Update the icon colour
-        d3.selectAll("#cogIcon")
-          .style("color", function(d){return showOptionPanel?"#4D4D4D":"darkgrey"})
-
         // Hide the console & adjust the plot
-        var panWidth = "20px"
         var curMargin = parseFloat(d3.select("#" + plotType + "Plot").style("margin-left"))
-        var curWidth = parseFloat(d3.select("#" + plotType + "Panel").style("width"))
+        var tenpc = parseFloat(d3.select("#networkVisArea").style("width")) * 0.1
 
         d3.select("#" + plotType + "Panel")
           .style("width", function(d){return showOptionPanel?"0%":"20%"})
@@ -1177,7 +1172,6 @@
           .transition()
           .duration(500)
           .styleTween("width", function(d){return showOptionPanel?d3.interpolate("0%", "20%"):d3.interpolate("20%", "0%")})
-          // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("48%", "25%"):d3.interpolate("25%", "48%")})
           .transition()
           .delay(100)
           .style("border-right", function(d){return showOptionPanel?"solid 2px gainsboro":"none"})
@@ -1186,17 +1180,19 @@
           .transition()
           .duration(500)
           .styleTween("margin-left", function(d){
-            if (parseInt(curWidth)==0){
-              return d3.interpolate(curMargin + "px", curWidth/2 + "px")
+            if (showOptionPanel){
+              return d3.interpolate(curMargin, parseFloat(curMargin) - tenpc + "px")
             } else {
-              return d3.interpolate(curMargin + "px", curMargin + curWidth/2 + "px")
+              return d3.interpolate(curMargin + "%", parseFloat(curMargin) + tenpc + "px")
             }
-            // return showOptionPanel?d3.interpolate(curMargin+"px", "0%")
-            //                       :d3.interpolate("0%", curMargin+curWidth/2+"px")})
-            return showOptionPanel?d3.interpolate("10%", "0%")
-                                  :d3.interpolate("0%", "10%")})
-          // .styleTween("width", function(d){return showOptionPanel?d3.interpolate("97%","75%"):d3.interpolate("75%","97%")})
-          // .styleTween("padding-bottom", function(d){return showOptionPanel?d3.interpolate("100%","77%"):d3.interpolate("77%","100%")})
+          })
+          .styleTween("margin-right", function(d){
+            if (showOptionPanel){
+              return d3.interpolate(curMargin, parseFloat(curMargin) - tenpc + "px")
+            } else {
+              return d3.interpolate(curMargin + "%", parseFloat(curMargin) + tenpc + "px")
+            }
+          })
       }
       else if (type == "table"){
         // Update the value of showTable
@@ -1211,6 +1207,41 @@
       else if (type == "floppy-o"){
         exportPNG()
         // exportHTML()
+      }
+      else if (type == "bar-chart"){
+        showGraphPanel = !showGraphPanel
+
+        // Hide the console & adjust the plot
+        var tenpc = parseFloat(d3.select("#networkVisArea").style("width")) * 0.1
+        var curMargin = parseFloat(d3.select("#" + plotType + "Plot").style("margin-left"))
+
+        d3.select("#" + plotType + "MiniGraph")
+          .style("width", function(d){return showGraphPanel?"0%":"20%"})
+          .style("border-left", "solid 2px gainsboro")
+          .transition()
+          .duration(500)
+          .styleTween("width", function(d){return showGraphPanel?d3.interpolate("0%", "20%"):d3.interpolate("20%", "0%")})
+          .transition()
+          .delay(100)
+          .style("border-left", function(d){return showGraphPanel?"solid 2px gainsboro":"none"})
+
+        d3.select("#" + plotType + "Plot")
+          .transition()
+          .duration(500)
+          .styleTween("margin-left", function(d){
+            if (showGraphPanel){
+              return d3.interpolate(curMargin, parseFloat(curMargin) - tenpc + "px")
+            } else {
+              return d3.interpolate(curMargin + "%", parseFloat(curMargin) + tenpc + "px")
+            }
+          })
+          .styleTween("margin-right", function(d){
+            if (showGraphPanel){
+              return d3.interpolate(curMargin, parseFloat(curMargin) - tenpc + "px")
+            } else {
+              return d3.interpolate(curMargin + "%", parseFloat(curMargin) + tenpc + "px")
+            }
+          })
       }
     }
 
@@ -1519,7 +1550,7 @@
     // Small Multiples
     // ***************
     function makeSmallMultiples(plotType, node, citations, numNodes, numEdges){
-      if (document.getElementById("networkMiniGraph").childNodes.length == 1){
+      if (document.getElementById("networkMiniGraph").childNodes.length == 0){
         // // Basic Stats Title
         // var StatTitleDiv = d3.select("#" + plotType + "MiniGraph")
         //                      .append("div")
