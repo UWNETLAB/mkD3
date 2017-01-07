@@ -203,6 +203,7 @@
        initNetworkTable(plotType)
        initContextMenu(plotType)
        initToolTip(plotType)
+      //  initIcons(plotType)
 
        // Create the svg
        var plotName = "#" + plotType + "Plot"
@@ -554,6 +555,7 @@
              }
 
              makePanel(nodes, edges, plotType)
+             initIcons(plotType)
            })
          })
        })
@@ -1142,7 +1144,6 @@
       div.appendChild(icon)
       div.appendChild(label)
 
-      var firstChild = document.getElementById(plotType + "Panel")
       var parent = document.getElementById(plotType + "Panel")
       parent.appendChild(div)
       // parent.appendChild(div)
@@ -1172,7 +1173,7 @@
           .transition()
           .duration(500)
           .styleTween("width", function(d){return showOptionPanel?d3.interpolate("0%", "20%"):d3.interpolate("20%", "0%")})
-          .transition()
+          .transition ()
           .delay(100)
           .style("border-right", function(d){return showOptionPanel?"solid 2px gainsboro":"none"})
 
@@ -1455,6 +1456,7 @@
     // MiniGraph Creation
     // ******************
     function makeMiniGraph(svg, node, data, type, xrange=0, yrange=0){
+      if (type != "community"){console.log(data)}
       // Clear canvas
       svg.selectAll("*").remove()
 
@@ -1550,6 +1552,7 @@
     // Small Multiples
     // ***************
     function makeSmallMultiples(plotType, node, citations, numNodes, numEdges){
+      var communityExist = (node["community"] != undefined)
       if (document.getElementById("networkMiniGraph").childNodes.length == 0){
         // // Basic Stats Title
         // var StatTitleDiv = d3.select("#" + plotType + "MiniGraph")
@@ -1574,7 +1577,7 @@
         //                  .html("Edges: <b>" + numEdges + "</b><br/>")
         //                  .append("text")
         //                  .html("Density: <b>" + density.toFixed(3) + "</b><br/>")
-        //
+
         // Citation History Title Div
         var TitleDiv = d3.select("#" + plotType + "MiniGraph")
                          .append("div")
@@ -1596,18 +1599,21 @@
                          .append("div")
                          .attr("id", "smNodeSVGDiv")
 
-        // Community Title Div
-        var CommTitleDiv = d3.select("#" + plotType + "MiniGraph")
-                             .append("div")
-                             .attr("id", "smCommTitle")
-                             .append("p")
-                             .attr("class", "smallMult subTitle")
-                             .append("text")
-                             .text("Community")
-        // Community SVG Div
-        var CommSVGDiv = d3.select("#" + plotType + "MiniGraph")
-                         .append("div")
-                         .attr("id", "smCommSVGDiv")
+        if (communityExist){
+          // Community Title Div
+          var CommTitleDiv = d3.select("#" + plotType + "MiniGraph")
+                               .append("div")
+                               .attr("id", "smCommTitle")
+                               .append("p")
+                               .attr("class", "smallMult subTitle")
+                               .append("text")
+                               .text("Community")
+          // Community SVG Div
+          var CommSVGDiv = d3.select("#" + plotType + "MiniGraph")
+                           .append("div")
+                           .attr("id", "smCommSVGDiv")
+        }
+
 
         // // Author Title Div
         // var AuthTitleDiv = d3.select("#" + plotType + "MiniGraph")
@@ -1645,55 +1651,79 @@
       var ymax = d3.max(citations, function(d){return +d["num-cites"]})
       var xrange = d3.extent(citations, function(d){return +d["CPY"]})
 
+      // Find the category of node
+      var category = classifyNode(node.ID)
+
       // Filter the citations
       var data = citations.filter(function(d){
-        return d["cite-string"].toUpperCase().includes(node.ID.toUpperCase());
-      })
-      // Sort the citations
-      var data = data.sort(function(a,b){return a.CPY - b.CPY;})
-
-      makeMiniGraph(svgNode, node.ID, data, "cite-string")
-
-
-      // Create the Community Citation History Graph
-      // *******************************************
-      // Remove Old Graph
-      d3.select("#smCommSVGDiv")
-        .select("svg")
-        .remove()
-      var svgComm = d3.select("#smCommSVGDiv")
-                      .append("svg")
-                      .attr("preserveAspectRatio", "xMinYMin meet")
-                      .attr("viewBox", "0 0 300 225 ")
-                      .attr("id", "smCommSVG")
-                      .classed("smallMultiples", true)
-                      .classed("community", true)
-                      .on("dblclick", function(d){
-                        this.remove()
-                      })
-      // Filter the citations
-      var data = citations.filter(function(d){
-        return d["community"] == node["community"];
+        if (category == "cite-string"){
+          return d[category].toUpperCase().includes(node.ID.toUpperCase());
+        } else {
+          return d[category].toUpperCase() == node.ID.toUpperCase()
+        }
       })
 
       // Aggregate the data
-      var commCitsByYear = {};
+      var catCitsByYear = {};
       data.forEach(function(a){
-        if (a['CPY'] in commCitsByYear){
-          commCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
+        if (a['CPY'] in catCitsByYear){
+          catCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
         } else {
           var obj = {"CPY": Number(a['CPY']), "num-cites": Number(a["num-cites"])}
-          commCitsByYear[a['CPY']] = obj;
+          catCitsByYear[a['CPY']] = obj;
         }
       })
 
       // Convert to an array of objects
-      var Commarray = Object.values(commCitsByYear)
+      var catArray = Object.values(catCitsByYear)
+      console.log(catArray)
+      // Sort the citations
+      // var data = data.sort(function(a,b){return a.CPY - b.CPY;})
 
-      // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
-      var xrange = d3.extent(citations, function(d){return +d["CPY"]})
+      makeMiniGraph(svgNode, node.ID, catArray, category)
 
-      makeMiniGraph(svgComm, "Article Community ID = " + node["community"], Commarray, "community")
+
+      // Create the Community Citation History Graph
+      // *******************************************
+      if (communityExist){
+        // Remove Old Graph
+        d3.select("#smCommSVGDiv")
+          .select("svg")
+          .remove()
+        var svgComm = d3.select("#smCommSVGDiv")
+                        .append("svg")
+                        .attr("preserveAspectRatio", "xMinYMin meet")
+                        .attr("viewBox", "0 0 300 225 ")
+                        .attr("id", "smCommSVG")
+                        .classed("smallMultiples", true)
+                        .classed("community", true)
+                        .on("dblclick", function(d){
+                          this.remove()
+                        })
+        // Filter the citations
+        var data = citations.filter(function(d){
+          return d["community"] == node["community"];
+        })
+
+        // Aggregate the data
+        var commCitsByYear = {};
+        data.forEach(function(a){
+          if (a['CPY'] in commCitsByYear){
+            commCitsByYear[a['CPY']]['num-cites'] += Number(a["num-cites"])
+          } else {
+            var obj = {"CPY": Number(a['CPY']), "num-cites": Number(a["num-cites"])}
+            commCitsByYear[a['CPY']] = obj;
+          }
+        })
+
+        // Convert to an array of objects
+        var Commarray = Object.values(commCitsByYear)
+
+        // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
+        var xrange = d3.extent(citations, function(d){return +d["CPY"]})
+
+        makeMiniGraph(svgComm, "Article Community ID = " + node["community"], Commarray, "community")
+      }
 
       // Create the Author Citation History Graph
       // ****************************************
@@ -2214,6 +2244,24 @@
               return d.radius;}})
 
       nodesGlobal['sizeBy'] = sizeBy;
+    }
+
+    function classifyNode(nodeID){
+      function containsNumbers(str){
+        var regex = /\d/g;
+        return regex.test(str);
+      }
+      function isAllCaps(str){
+        return str == str.toUpperCase()
+      }
+
+      if (containsNumbers(nodeID)){
+        var num = parseFloat(nodeID)
+        if (num.toString() == nodeID){return "year"}
+        else {return "cite-string"}
+      }
+      else if (isAllCaps(nodeID)){return "journal"}
+      else {return "author"}
     }
 
     // Edge Functions
