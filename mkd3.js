@@ -880,6 +880,16 @@
       var panel = document.createElement('div');
       panel.id = plotType + "Panel";
       panel.className = "panel";
+
+      var optionDiv = document.createElement('div');
+      optionDiv.id = plotType + "OptionDiv";
+      panel.appendChild(optionDiv)
+
+      var iconDiv = document.createElement('div');
+      iconDiv.id = plotType + "IconDiv";
+      iconDiv.className = "iconDiv"
+      panel.appendChild(iconDiv)
+
       visArea.appendChild(panel);
 
       // Create the plot
@@ -1144,10 +1154,9 @@
       div.appendChild(icon)
       div.appendChild(label)
 
-      var parent = document.getElementById(plotType + "Panel")
+
+      var parent = document.getElementById(plotType + "IconDiv")
       parent.appendChild(div)
-      // parent.appendChild(div)
-      // document.body.appendChild(div)
     }
 
     function iconClick(type, bool, plotType){
@@ -1165,7 +1174,8 @@
 
         // Hide the console & adjust the plot
         var curMargin = parseFloat(d3.select("#" + plotType + "Plot").style("margin-left"))
-        var tenpc = parseFloat(d3.select("#networkVisArea").style("width")) * 0.1
+        var tenpc = parseFloat(d3.select("#" + plotType + "VisArea").style("width")) * 0.1
+        var margpc = Math.round(curMargin/(tenpc*10)*100)
 
         d3.select("#" + plotType + "Panel")
           .style("width", function(d){return showOptionPanel?"0%":"20%"})
@@ -1182,16 +1192,20 @@
           .duration(500)
           .styleTween("margin-left", function(d){
             if (showOptionPanel){
-              return d3.interpolate(curMargin, parseFloat(curMargin) - tenpc + "px")
+              return d3.interpolate(margpc, margpc + 10 + "%")
+              // return d3.interpolate(curMargin, parseFloat(curMargin) + tenpc + "px")
             } else {
-              return d3.interpolate(curMargin + "%", parseFloat(curMargin) + tenpc + "px")
+              return d3.interpolate(margpc, margpc - 10 + "%")
+              // return d3.interpolate(curMargin + "%", parseFloat(curMargin) - tenpc + "px")
             }
           })
           .styleTween("margin-right", function(d){
             if (showOptionPanel){
-              return d3.interpolate(curMargin, parseFloat(curMargin) - tenpc + "px")
+              return d3.interpolate(margpc, margpc + 10 + "%")
+              // return d3.interpolate(curMargin, parseFloat(curMargin) + tenpc + "px")
             } else {
-              return d3.interpolate(curMargin + "%", parseFloat(curMargin) + tenpc + "px")
+              return d3.interpolate(margpc, margpc - 10 + "%")
+              // return d3.interpolate(curMargin + "%", parseFloat(curMargin) - tenpc + "px")
             }
           })
       }
@@ -1456,7 +1470,6 @@
     // MiniGraph Creation
     // ******************
     function makeMiniGraph(svg, node, data, type, xrange=0, yrange=0){
-      if (type != "community"){console.log(data)}
       // Clear canvas
       svg.selectAll("*").remove()
 
@@ -1496,7 +1509,7 @@
         var totalYears = xrange[1] - xrange[0] + 1
       }
 
-      // Set some import dimensions
+      // Set some important dimensions
       var barWidth = 100*(1+2*totalYears)/totalYears/totalYears
 
       // Make Axes
@@ -1591,6 +1604,7 @@
                              .append("div")
                              .attr("id", "smNodeTitle")
                              .append("p")
+                             .attr("id", "categoryTitle")
                              .attr("class", "smallMult subTitle")
                              .append("text")
                              .text("Article")
@@ -1654,10 +1668,23 @@
       // Find the category of node
       var category = classifyNode(node.ID)
 
+      if (category == "cite-string"){
+        label = "Article"
+      } else if (category == "RPY"){
+        label = "Year"
+      } else {
+        label = category.toUpperCase()[0] + category.substr(1)
+      }
+
+      var title = document.getElementById("categoryTitle")
+      title.innerHTML = "<text>" + label + "</text>"
+
       // Filter the citations
       var data = citations.filter(function(d){
         if (category == "cite-string"){
           return d[category].toUpperCase().includes(node.ID.toUpperCase());
+        } else if (category == 'RPY'){
+          return Math.round(d[category]) == parseInt(node.ID)
         } else {
           return d[category].toUpperCase() == node.ID.toUpperCase()
         }
@@ -1676,7 +1703,6 @@
 
       // Convert to an array of objects
       var catArray = Object.values(catCitsByYear)
-      console.log(catArray)
       // Sort the citations
       // var data = data.sort(function(a,b){return a.CPY - b.CPY;})
 
@@ -1700,10 +1726,23 @@
                         .on("dblclick", function(d){
                           this.remove()
                         })
+
         // Filter the citations
+        var nodeById = map$1(nodesGlobal, function(d){return d.ID.toUpperCase().split(',',3).join(',');})
         var data = citations.filter(function(d){
+          if (category == "RPY"){
+            var n = nodeById.get(Math.round(d[category]).toString())
+          } else {
+            var n = nodeById.get(d[category].toUpperCase().split(',',3).join(','))
+          }
+          if (n == undefined){
+            return false;
+          } else {
+            return n["community"] == node["community"]
+          }
           return d["community"] == node["community"];
         })
+
 
         // Aggregate the data
         var commCitsByYear = {};
@@ -1722,7 +1761,7 @@
         // // var ymax = d3.max(citations, function(d){return +d["num-cites"]})
         var xrange = d3.extent(citations, function(d){return +d["CPY"]})
 
-        makeMiniGraph(svgComm, "Article Community ID = " + node["community"], Commarray, "community")
+        makeMiniGraph(svgComm, label + " Community ID = " + node["community"], Commarray, "community")
       }
 
       // Create the Author Citation History Graph
@@ -1847,7 +1886,6 @@
             var yearData = data.filter(function(d){
               return (Math.floor(d.CPY) == CPY && Math.floor(d.RPY) == RPY);
             })
-            console.log(yearData)
             // Sort the years data by number of citations
             yearData =  yearData.sort(function(a, b){
                           return b["num-cites"] - a["num-cites"];
@@ -2097,7 +2135,7 @@
         }
       }
 
-      var panel = document.getElementById(plotType + "Panel")
+      var panel = document.getElementById(plotType + "OptionDiv")
 
       var p = document.createElement('p')
       p.className = "panelTitle"
@@ -2257,7 +2295,7 @@
 
       if (containsNumbers(nodeID)){
         var num = parseFloat(nodeID)
-        if (num.toString() == nodeID){return "year"}
+        if (num.toString() == nodeID){return "RPY"}
         else {return "cite-string"}
       }
       else if (isAllCaps(nodeID)){return "journal"}

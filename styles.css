@@ -54,25 +54,27 @@ path            { stroke: #404040;
                   width: 99%;
                   vertical-align: top;
                   overflow-x: hidden;
-                  overflow-y: scroll;
+                  overflow-y: hidden;
+                  /*overflow-y: scroll;*/
                   border: solid gainsboro;
                 }
 div.panel,
 div.miniGraph   { display: inline-block;
-                  position: relative;
+                  position: absolute;
                   vertical-align: top;
                   padding-top: 5%;
-                  padding-bottom: 36.2%;
+                  /*padding-bottom: 28%;*/
                   overflow: hidden;
                   z-index: 0.9;
                   white-space: nowrap;
                   width: 20%;
+                  height: 100%;
                   }
 div.panel       {
                   border-right: solid 2px gainsboro;
                 }
 div.miniGraph   { border-left: solid 2px gainsboro;
-                  padding-bottom: 4.7%;
+                  /*padding-bottom: 13.7%;*/
                   position: absolute;
                   right: 0;
                 }
@@ -131,14 +133,15 @@ span.range      { position: absolute;
                 }
 .plot           { display: inline-block;
                   position: relative;
-                  /*margin-left: 12.5%;*/
+                  margin-left: 20%;
+                  height: 100%;
                 }
 .plot.network   { padding-bottom: 59%;
                   width: 59%;
                 }
 .plot.RPYS      { padding-bottom: 37.5%;
                   overflow-x: visible;
-                  width: 79%;
+                  width: 75%;
                 }
 .console        { display: inline-block;
                   position: relative;
@@ -329,4 +332,7 @@ p.statistics    { margin-top: 0.5em;
                   text-align: left;
                   margin-left: 5%;
                   margin-bottom: 20px;
+                }
+.iconDiv        { position: absolute;
+                  bottom: 50px;
                 }
